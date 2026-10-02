@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Admin — AI Video Producer Portfolio</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { ink: '#050505', panel: '#0d0f0d', muted: '#82867e', accent: '#CCFF00' },
+    fontFamily: { display: ['"Space Grotesk"', 'sans-serif'], sans: ['Inter', 'sans-serif'], mono: ['"JetBrains Mono"', 'monospace'] },
+  } } };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #050505; background-image: radial-gradient(ellipse 60% 30% at 15% -10%, rgba(204,255,0,.06), transparent 60%); }
+  .font-display { font-family: 'Space Grotesk', sans-serif; } .font-mono { font-family: 'JetBrains Mono', monospace; }
+  * { -webkit-tap-highlight-color: transparent; }
+  ::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-thumb { background: #1c1f1b; border-radius: 8px; } ::-webkit-scrollbar-thumb:hover { background: #CCFF00; }
+  *:focus-visible { outline: 2px solid #CCFF00; outline-offset: 2px; }
+
+  /* ---- shared components ---- */
+  .card { background: #0d0f0d; border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 18px; }
+  @media (min-width: 640px) { .card { padding: 24px; } }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 600; }
+  .card-sub { color: #82867e; font-size: .85rem; margin: 2px 0 16px; }
+  .label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #82867e; margin-bottom: 6px; }
+  .hint { display: block; font-size: 12px; color: #6b6f66; margin-top: 6px; line-height: 1.45; }
+  .input { width: 100%; min-height: 46px; padding: 0 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.1); border-radius: 8px; color: #eef0ec; font-size: 15px; outline: none; transition: border-color .15s, box-shadow .15s; }
+  textarea.input { padding: 12px 14px; line-height: 1.5; resize: vertical; min-height: 90px; }
+  select.input { background-color: #0d0f0d; }
+  .input:focus { border-color: #CCFF00; box-shadow: 0 0 0 3px rgba(204,255,0,.12); }
+  .input::placeholder { color: #565a52; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 8px; font-size: 14px; font-weight: 500; color: #eef0ec; background: transparent; border: 1px solid rgba(255,255,255,.14); cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .btn:hover { border-color: rgba(204,255,0,.5); color: #CCFF00; }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+  .btn:disabled:hover { border-color: rgba(255,255,255,.14); color: #eef0ec; }
+  .btn-primary { background: #CCFF00; color: #050505; border-color: #CCFF00; }
+  .btn-primary:hover { color: #050505; box-shadow: 0 0 20px rgba(204,255,0,.35); }
+  .btn-danger:hover { border-color: #f87171; color: #f87171; }
+  .btn-sm { min-height: 38px; padding: 0 12px; font-size: 13px; }
+  .btn-icon { width: 36px; padding: 0; flex-shrink: 0; }
+  .pill { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: #a3a79c; white-space: nowrap; }
+  .pill-accent { color: #CCFF00; border-color: rgba(204,255,0,.4); background: rgba(204,255,0,.08); }
+  .pill-order { font-family: 'JetBrains Mono', monospace; font-size: 11px; width: 26px; height: 26px; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: rgba(204,255,0,.1); color: #CCFF00; border: 1px solid rgba(204,255,0,.35); flex-shrink: 0; }
+  .savebar { display: flex; justify-content: flex-end; gap: 10px; padding-top: 6px; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 100; padding: 11px 18px; border-radius: 10px; background: #131513; border: 1px solid rgba(204,255,0,.5); font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
+
+  /* ---- sidebar: fixed on desktop, slide-in drawer on mobile ---- */
+  #sidebar { position: fixed; inset: 0 auto 0 0; width: 260px; z-index: 60; display: flex; flex-direction: column; background: #080a08; border-right: 1px solid rgba(255,255,255,.09); transform: translateX(-100%); transition: transform .25s ease; }
+  #sidebar.open { transform: none; }
+  @media (min-width: 1024px) { #sidebar { transform: none; } }
+  #scrim { position: fixed; inset: 0; z-index: 55; background: rgba(0,0,0,.7); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  #scrim.open { opacity: 1; pointer-events: auto; } @media (min-width: 1024px) { #scrim { display: none; } }
+  .nav-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #a3a79c; font-size: 14px; font-weight: 500; text-align: left; cursor: pointer; transition: all .15s; }
+  .nav-item:hover:not(.disabled) { color: #fff; background: rgba(255,255,255,.05); }
+  .nav-item.active { background: #CCFF00; color: #050505; }
+  .nav-item.disabled { opacity: .4; cursor: not-allowed; }
+  .nav-item.disabled .pill { margin-left: auto; }
+
+  /* ---- list rows (portfolio + hero banners) ---- */
+  .vrow { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 12px; }
+  .vthumb { width: 68px; height: 50px; flex-shrink: 0; border-radius: 6px; object-fit: cover; background: #0a0a0a; border: 1px solid rgba(255,255,255,.1); }
+  .vthumb-wide { width: 92px; height: 56px; }
+  .reorder-grp { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+  .reorder-grp .btn-icon { min-height: 20px; height: 20px; width: 28px; font-size: 11px; line-height: 1; }
+
+  /* ---- modal (shared by video + banner forms) ---- */
+  .modal-overlay { position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  @media (min-width: 640px) { .modal-overlay { align-items: center; padding: 20px; } }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.75); }
+  .modal-panel { position: relative; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; background: #0d0f0d; border: 1px solid rgba(255,255,255,.1); border-radius: 18px 18px 0 0; padding: 22px; transform: translateY(16px); transition: transform .25s ease; }
+  @media (min-width: 640px) { .modal-panel { border-radius: 16px; transform: translateY(8px) scale(.98); } }
+  .modal-overlay.open .modal-panel { transform: none; }
+
+  /* ---- mini live preview (scoped so it never collides with the real site's classes) ---- */
+  .pv-hero { position: relative; aspect-ratio: 16/7; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); background: #000 center/cover; }
+  .pv-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85), transparent 60%); }
+  .pv-hero .txt { position: absolute; left: 14px; right: 14px; bottom: 10px; z-index: 1; }
+  .pv-strip-item { position: relative; flex: 0 0 auto; width: 96px; height: 60px; border-radius: 8px; background: #0a0a0a center/cover; border: 1px solid rgba(255,255,255,.1); overflow: hidden; }
+  .pv-strip-item.first { border-color: #CCFF00; box-shadow: 0 0 0 1px rgba(204,255,0,.5); }
+  .pv-strip-item span { position: absolute; top: 3px; left: 3px; font-family: 'JetBrains Mono', monospace; font-size: 9px; background: rgba(0,0,0,.65); color: #CCFF00; padding: 1px 4px; border-radius: 4px; }
+  .pv-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 64px; gap: 8px; grid-auto-flow: dense; }
+  .pv-grid .size-normal { grid-column: span 1; grid-row: span 1; } .pv-grid .size-tall { grid-column: span 1; grid-row: span 2; }
+  .pv-grid .size-wide { grid-column: span 2; grid-row: span 1; } .pv-grid .size-big { grid-column: span 2; grid-row: span 2; }
+  .pv-item { border-radius: 6px; background: #0a0a0a center/cover; border: 1px solid rgba(255,255,255,.08); }
+</style>
+</head>
+<body class="bg-ink text-[#eef0ec] antialiased">
+
+  <aside id="sidebar">
+    <div class="px-5 h-16 flex items-center border-b border-white/10 shrink-0">
+      <div><p class="font-mono text-[10px] text-muted leading-none">ADMIN_PANEL</p><p class="font-display font-semibold mt-1">Portfolio CMS</p></div>
+    </div>
+    <nav id="sideNav" class="flex-1 p-3 space-y-1"></nav>
+    <div class="p-3 border-t border-white/10 space-y-2">
+      <button id="exportBtn" class="btn btn-primary w-full" type="button">⭳ Publish (Download data.js)</button>
+      <button id="resetBtn" class="btn btn-sm w-full" type="button">Reset demo data</button>
+    </div>
+  </aside>
+  <div id="scrim"></div>
+
+  <div class="lg:pl-[260px] min-h-screen">
+    <header class="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 sm:px-6 lg:px-10 bg-ink/90 backdrop-blur border-b border-white/10">
+      <button id="menuBtn" class="lg:hidden btn btn-sm" style="min-height:38px;width:38px;padding:0" type="button" aria-label="Open menu">☰</button>
+      <p id="pageTitle" class="font-display font-semibold flex-1"></p>
+      <span class="pill hidden sm:inline-flex">Static site · saved to this browser</span>
+    </header>
+    <main id="view" class="p-4 sm:p-6 lg:p-10 max-w-4xl mx-auto"></main>
+  </div>
+
+  <!-- Add / Edit PORTFOLIO video modal -->
+  <div id="videoModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-backdrop" data-close-video></div>
+    <div class="modal-panel">
+      <div class="flex items-center justify-between mb-5"><p id="videoModalTitle" class="card-title">Add video</p><button class="btn btn-sm btn-icon" type="button" aria-label="Close" data-close-video>✕</button></div>
+      <form id="videoForm" class="space-y-4">
+        <input type="hidden" id="v-id" />
+        <label class="block"><span class="label">PROJECT TITLE</span><input id="v-title" class="input" maxlength="120" required /></label>
+        <div class="grid grid-cols-2 gap-4">
+          <label class="block"><span class="label">CATEGORY</span><select id="v-category" class="input"></select></label>
+          <label class="block"><span class="label">MASONRY GRID SIZE</span>
+            <select id="v-size" class="input">
+              <option value="size-normal">size-normal</option><option value="size-wide">size-wide</option>
+              <option value="size-tall">size-tall</option><option value="size-big">size-big</option>
+            </select></label>
+        </div>
+        <label class="block"><span class="label">VIDEO URL (MP4)</span><input id="v-video" class="input" type="url" placeholder="https://…/clip.mp4" required /></label>
+        <label class="block"><span class="label">THUMBNAIL IMAGE URL</span><input id="v-thumb" class="input" type="url" placeholder="https://…/thumb.jpg" required /></label>
+        <label class="block"><span class="label">TOOLS USED</span><input id="v-tools" class="input" placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags in the cinematic modal.</span></label>
+        <label class="block"><span class="label">DETAILED DESCRIPTION</span><textarea id="v-desc" class="input" rows="4" placeholder="Shown inside the frontend case-study modal."></textarea></label>
+        <p id="v-error" class="text-sm text-red-400 hidden"></p>
+        <div class="savebar"><button type="button" class="btn" data-close-video>Cancel</button><button type="submit" class="btn btn-primary">Save video</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add / Edit HERO BANNER modal -->
+  <div id="bannerModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-backdrop" data-close-banner></div>
+    <div class="modal-panel">
+      <div class="flex items-center justify-between mb-5"><p id="bannerModalTitle" class="card-title">Add hero banner</p><button class="btn btn-sm btn-icon" type="button" aria-label="Close" data-close-banner>✕</button></div>
+      <form id="bannerForm" class="space-y-4">
+        <input type="hidden" id="b-id" />
+        <label class="block"><span class="label">TITLE</span><input id="b-title" class="input" maxlength="120" required placeholder="Solstice" /></label>
+        <label class="block"><span class="label">SUBTITLE / TAGLINE</span><input id="b-subtitle" class="input" maxlength="160" placeholder="A generative-first spot for a fragrance launch." /></label>
+        <label class="block"><span class="label">VIDEO URL (MP4)</span><input id="b-video" class="input" type="url" placeholder="https://…/clip.mp4" required /></label>
+        <label class="block"><span class="label">THUMBNAIL IMAGE URL (POSTER)</span><input id="b-thumb" class="input" type="url" placeholder="https://…/poster.jpg" required /><span class="hint">Shown behind the headline before the video plays, and as the poster frame.</span></label>
+        <label class="block"><span class="label">TOOLS USED</span><input id="b-tools" class="input" placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags in the cinematic case-study pop-up.</span></label>
+        <label class="block"><span class="label">DETAILED DESCRIPTION / CASE STUDY</span><textarea id="b-desc" class="input" rows="4" placeholder="Shown when a visitor clicks this banner — opens the same cinematic modal as portfolio items."></textarea></label>
+        <p id="b-error" class="text-sm text-red-400 hidden"></p>
+        <div class="savebar"><button type="button" class="btn" data-close-banner>Cancel</button><button type="submit" class="btn btn-primary">Save banner</button></div>
+      </form>
+    </div>
+  </div>
+
+<script>
+/* ==========================================================================
+   DATA — shape matches window.SITE_DATA written by "Publish (Download data.js)":
+     SITE_DATA = { hero: { headline, subheadline, banners[] }, about, seo, filters,
+                   categoryLabel, portfolio[] }
+   hero.banners[] = multiple full-width hero banners (Billy-Bowman-style),
+   each independently playable AND clickable to open the same cinematic
+   case-study modal as a portfolio item. Array order === render order on the
+   live site — reorder with the ↑ / ↓ controls below, no separate index field
+   needed. Portfolio items work the same way.
+   ========================================================================== */
+const STORAGE_KEY = 'aivp_admin_data_v2';
+const SIZE_SEED = ['size-wide','size-tall','size-normal','size-normal','size-big','size-normal','size-tall','size-wide','size-normal','size-normal'];
+const DEFAULT_DATA = {
+  hero: {
+    headline: "Video, directed for the age of generative film.",
+    subheadline: "Osman Onur Tekin — an editor and producer working between traditional post and AI-generated footage.",
+    banners: [
+      { id: 1, title: "Solstice", subtitle: "A generative-first spot for a fragrance launch.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", thumbnailUrl: "https://picsum.photos/seed/kai-v1/1600/900", description: "A generative-first spot for a fragrance launch, shot entirely from AI plates and finished with practical color and sound.", tools: ["Runway Gen-3","Midjourney","DaVinci Resolve"] },
+      { id: 2, title: "Glass Hour", subtitle: "A short narrative piece exploring memory.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", thumbnailUrl: "https://picsum.photos/seed/kai-v3/1600/900", description: "A short narrative piece exploring memory, generated frame-by-frame and hand-graded for a filmic tone.", tools: ["Runway Gen-3","ElevenLabs"] },
+      { id: 3, title: "Aether", subtitle: "A brand film for a sustainable materials studio.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", thumbnailUrl: "https://picsum.photos/seed/kai-v5/1600/900", description: "A brand film for a sustainable materials studio, pairing generated textures with macro live footage.", tools: ["Runway Gen-3","Midjourney","DaVinci Resolve"] },
+    ],
+  },
+  about: {
+    content: "I'm an editor and producer working at the intersection of traditional post-production and generative video. My process has shifted from cutting footage to directing it — briefing models, curating generations, then finishing everything in a real timeline with color, sound design and pacing a prompt alone can't give you.\n\nClients come to me for commercials and short-form content that needs to look expensive on a fraction of a traditional shoot's budget and timeline — without looking like AI slop.",
+    workflow: [
+      { title: "Concept & script", text: "Defining story, shot list and reference world before anything is generated." },
+      { title: "AI generation", text: "Directing footage through generative models, iterating for consistency." },
+      { title: "Edit & grade", text: "Cutting the story for real, then color and finishing in a proper NLE." },
+      { title: "Sound & delivery", text: "Sound design, mix, and exports tailored to every platform it ships on." },
+    ],
+  },
+  seo: { siteTitle: "Osman Onur Tekin — AI Video Editor & Producer", metaDescription: "Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work.", logoText: "Osman Tekin", email: "", formspreeEndpoint: "" },
+  filters: [ { label: "Vertical (9:16)", value: "vertical" }, { label: "AI Commercials", value: "commercial" }, { label: "Narrative", value: "narrative" }, { label: "Brand Films", value: "brand" } ],
+  categoryLabel: { commercial: "AI Commercial", vertical: "Vertical", narrative: "Narrative", brand: "Brand Film" },
+  portfolio: [
+    { id: 1, title: "Solstice", category: "commercial", thumbnailUrl: "https://picsum.photos/seed/kai-v1/1200/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", createdAt: "2026-01-10", description: "A generative-first spot for a fragrance launch, shot entirely from AI plates and finished with practical color and sound.", tools: ["Runway Gen-3","Midjourney","DaVinci Resolve"], size: SIZE_SEED[0] },
+    { id: 2, title: "Vertical Story, 01", category: "vertical", thumbnailUrl: "https://picsum.photos/seed/kai-v2/700/1100", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", createdAt: "2025-11-02", description: "A nine-part vertical series built for Instagram, blending generated backdrops with live talent.", tools: ["Kling AI","Pika","Premiere Pro"], size: SIZE_SEED[1] },
+    { id: 3, title: "Glass Hour", category: "narrative", thumbnailUrl: "https://picsum.photos/seed/kai-v3/700/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", createdAt: "2025-10-18", description: "A short narrative piece exploring memory, generated frame-by-frame and hand-graded for a filmic tone.", tools: ["Runway Gen-3","ElevenLabs"], size: SIZE_SEED[2] },
+    { id: 4, title: "Reel Series, Ep. 2", category: "vertical", thumbnailUrl: "https://picsum.photos/seed/kai-v4/700/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", createdAt: "2025-09-30", description: "Episodic vertical content for a lifestyle brand's always-on social calendar.", tools: ["Pika","CapCut"], size: SIZE_SEED[3] },
+    { id: 5, title: "Aether", category: "brand", thumbnailUrl: "https://picsum.photos/seed/kai-v5/1200/1200", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", createdAt: "2025-06-14", description: "A brand film for a sustainable materials studio, pairing generated textures with macro live footage.", tools: ["Runway Gen-3","Midjourney","DaVinci Resolve"], size: SIZE_SEED[4] },
+    { id: 6, title: "Product Drop Teaser", category: "commercial", thumbnailUrl: "https://picsum.photos/seed/kai-v6/700/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4", createdAt: "2025-05-02", description: "A fifteen-second teaser built to tease a product drop across paid and organic channels.", tools: ["Kling AI","Premiere Pro"], size: SIZE_SEED[5] },
+    { id: 7, title: "Vertical Story, 02", category: "vertical", thumbnailUrl: "https://picsum.photos/seed/kai-v7/700/1100", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", createdAt: "2025-03-21", description: "Continuation of the vertical story format, this time centered on a travel narrative.", tools: ["Pika","ElevenLabs"], size: SIZE_SEED[6] },
+    { id: 8, title: "Midnight Run", category: "narrative", thumbnailUrl: "https://picsum.photos/seed/kai-v8/1200/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", createdAt: "2024-12-11", description: "A neo-noir narrative short built around a single generated character across twelve shots.", tools: ["Runway Gen-3","DaVinci Resolve"], size: SIZE_SEED[7] },
+    { id: 9, title: "Launch Spot: Nova", category: "commercial", thumbnailUrl: "https://picsum.photos/seed/kai-v9/700/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", createdAt: "2024-09-05", description: "Launch film for a consumer tech product, mixing studio footage with AI-extended environments.", tools: ["Kling AI","Midjourney"], size: SIZE_SEED[8] },
+    { id: 10, title: "Studio Reel", category: "brand", thumbnailUrl: "https://picsum.photos/seed/kai-v10/700/700", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", createdAt: "2024-07-19", description: "A reel produced for an internal creative studio, showcasing range across formats.", tools: ["Runway Gen-3","Pika"], size: SIZE_SEED[9] },
+  ],
+};
+
+const clone = o => JSON.parse(JSON.stringify(o));
+function loadState() { try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch (e) { console.warn('Could not read saved data, using defaults.', e); } return clone(DEFAULT_DATA); }
+function migrate(s) {                                   // fills in fields added by later steps for existing localStorage saves
+  s.about = { ...clone(DEFAULT_DATA.about), ...s.about };
+  s.seo = { ...clone(DEFAULT_DATA.seo), ...(s.seo || {}) };
+  if (!Array.isArray(s.about.workflow) || !s.about.workflow.length) s.about.workflow = clone(DEFAULT_DATA.about.workflow);
+
+  // hero: upgrade every banner to the full schema (id / subtitle / description / tools),
+  // and migrate a legacy single `featuredVideoIds: [id]` pointer into an independent banner
+  // so nobody's existing featured video silently disappears when this step lands.
+  if (!Array.isArray(s.hero.banners) || !s.hero.banners.length) {
+    const fromOld = (s.hero.featuredVideoIds || []).map(id => s.portfolio.find(v => v.id === id)).filter(Boolean)
+      .map(p => ({ title: p.title, videoUrl: p.videoUrl, thumbnailUrl: p.thumbnailUrl, subtitle: '', description: p.description || '', tools: p.tools || [] }));
+    s.hero.banners = fromOld.length ? fromOld : clone(DEFAULT_DATA.hero.banners);
+  }
+  let nextBid = s.hero.banners.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
+  s.hero.banners = s.hero.banners.map(b => ({
+    id: b.id || nextBid++, title: b.title || '', subtitle: b.subtitle || '', videoUrl: b.videoUrl || '',
+    thumbnailUrl: b.thumbnailUrl || '', description: b.description || '', tools: Array.isArray(b.tools) ? b.tools : [],
+  }));
+  delete s.hero.featuredVideoIds;
+  return s;
+}
+let STATE = migrate(loadState());
+function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const $ = (sel, root = document) => root.querySelector(sel);
+function moveInArray(arr, index, dir) { const j = index + dir; if (j < 0 || j >= arr.length) return false; [arr[index], arr[j]] = [arr[j], arr[index]]; return true; }
+
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); }
+
+/* ---------------- sidebar nav ---------------- */
+const NAV = [
+  { id: 'hero', label: 'Hero Banners' },
+  { id: 'portfolio', label: 'Portfolio' },
+  { id: 'about', label: 'About & Process' },
+  { id: 'seo', label: 'SEO & Settings' },
+  { id: 'inbox', label: 'Inbox', soon: true },
+];
+const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, about: renderAboutView, seo: renderSeoView };
+let activeView = 'hero';
+function renderNav() {
+  $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
+    <span class="flex-1 text-left">${n.label}</span>${n.soon ? '<span class="pill">soon</span>' : ''}</button>`).join('');
+}
+$('#sideNav').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b && !b.disabled) goTo(b.dataset.view); });
+function goTo(view) { activeView = view; renderNav(); closeDrawer(); $('#pageTitle').textContent = NAV.find(n => n.id === view).label; VIEWS[view](); }
+
+/* mobile drawer */
+const sidebar = $('#sidebar'), scrim = $('#scrim');
+function openDrawer() { sidebar.classList.add('open'); scrim.classList.add('open'); }
+function closeDrawer() { sidebar.classList.remove('open'); scrim.classList.remove('open'); }
+$('#menuBtn').addEventListener('click', openDrawer); scrim.addEventListener('click', closeDrawer);
+
+/* ================= MODULE 1 — Hero Banners (multi, reorderable) ================= */
+function renderHeroView() {
+  const view = $('#view');
+  view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">Hero banners</p><p class="card-sub">Full-width banners stacked vertically down the homepage — the first row below is the top of the page. Reorder with ↑ / ↓. Each banner shows its title, subtitle, video and a “view case study” button that opens the cinematic pop-up (description + tools).</p></div>
+      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="bannerCount"></p><button id="addBannerBtn" class="btn btn-primary btn-sm" type="button">+ Add hero banner</button></div>
+      <div id="bannerList" class="space-y-2"></div>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Page meta</p><p class="card-sub">Fallback headline/subheadline used for SEO &amp; social-share previews — independent of the banners above.</p></div>
+      <label class="block"><span class="label">META HEADLINE</span><input id="h-headline" class="input" maxlength="200" /></label>
+      <label class="block"><span class="label">META SUBHEADLINE</span><textarea id="h-sub" class="input" rows="2" maxlength="300"></textarea></label>
+      <div class="savebar"><button id="h-save" class="btn btn-primary" type="button">Save meta</button></div>
+    </div>
+
+    <div class="card mt-6">
+      <p class="card-title mb-1">Live preview</p><p class="card-sub">Mini-map of the live page: banners appear top-to-bottom in exactly this order.</p>
+      <div id="pv-stack" class="space-y-3 max-h-[520px] overflow-y-auto pr-1"></div>
+    </div>`;
+
+  $('#addBannerBtn').addEventListener('click', () => openBannerForm(null));
+  $('#h-headline').value = STATE.hero.headline; $('#h-sub').value = STATE.hero.subheadline;
+  $('#h-save').addEventListener('click', () => {
+    STATE.hero.headline = $('#h-headline').value.trim(); STATE.hero.subheadline = $('#h-sub').value.trim();
+    persist(); toast('Page meta saved.');
+  });
+  paintBanners();
+}
+function paintBanners() {
+  const banners = STATE.hero.banners;
+  $('#bannerCount').textContent = `${banners.length} banner${banners.length === 1 ? '' : 's'}`;
+  $('#bannerList').innerHTML = banners.length ? banners.map((b, i) => `
+    <div class="vrow" data-id="${b.id}">
+      <span class="pill-order">${i + 1}</span>
+      <img class="vthumb vthumb-wide" src="${esc(b.thumbnailUrl)}" alt="" onerror="this.style.visibility='hidden'" />
+      <div class="min-w-0 flex-1">
+        <p class="text-sm truncate">${esc(b.title) || '(untitled banner)'}</p>
+        <p class="text-xs text-muted truncate mt-0.5">${esc(b.subtitle) || '—'}</p>
+      </div>
+      <div class="reorder-grp">
+        <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-icon" data-down ${i === banners.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>
+      <button class="btn btn-sm" type="button" data-edit="${b.id}">Edit</button>
+      <button class="btn btn-sm btn-danger" type="button" data-del="${b.id}">Delete</button>
+    </div>`).join('') : '<p class="text-sm text-muted">No hero banners yet — click "Add hero banner" to create your first one.</p>';
+
+  $('#bannerList').querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBannerForm(Number(btn.dataset.edit))));
+  $('#bannerList').querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeBanner(Number(btn.dataset.del))));
+  $('#bannerList').querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderBanner(Number(e.target.closest('[data-id]').dataset.id), -1)));
+  $('#bannerList').querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderBanner(Number(e.target.closest('[data-id]').dataset.id), 1)));
+  paintHeroPreview();
+}
+function reorderBanner(id, dir) {
+  const i = STATE.hero.banners.findIndex(b => b.id === id);
+  if (!moveInArray(STATE.hero.banners, i, dir)) return;
+  persist(); paintBanners();
+}
+function paintHeroPreview() {
+  const banners = STATE.hero.banners;
+  $('#pv-stack').innerHTML = banners.length ? banners.map((b, i) => `
+    <div class="pv-hero" style="background-image:url('${esc(b.thumbnailUrl)}')">
+      <div class="txt">
+        <p class="font-mono text-[10px] text-accent mb-1">${String(i + 1).padStart(2, '0')} / ${String(banners.length).padStart(2, '0')}${i === 0 ? ' // TOP OF PAGE' : ''}</p>
+        <p class="font-display text-base sm:text-lg leading-tight">${esc(b.title) || 'Untitled'}</p>
+        <p class="text-xs text-muted mt-0.5">${esc(b.subtitle)}</p>
+      </div>
+    </div>`).join('') : '<p class="text-sm text-muted">No banners yet.</p>';
+}
+
+function openBannerForm(id) {
+  const item = id ? STATE.hero.banners.find(b => b.id === id) : null;
+  $('#bannerModalTitle').textContent = item ? 'Edit hero banner' : 'Add hero banner';
+  $('#b-id').value = item ? item.id : '';
+  $('#b-title').value = item?.title || ''; $('#b-subtitle').value = item?.subtitle || '';
+  $('#b-video').value = item?.videoUrl || ''; $('#b-thumb').value = item?.thumbnailUrl || '';
+  $('#b-tools').value = (item?.tools || []).join(', '); $('#b-desc').value = item?.description || '';
+  $('#b-error').classList.add('hidden');
+  $('#bannerModal').classList.add('open'); $('#bannerModal').setAttribute('aria-hidden', 'false');
+}
+function closeBannerForm() { $('#bannerModal').classList.remove('open'); $('#bannerModal').setAttribute('aria-hidden', 'true'); }
+document.querySelectorAll('[data-close-banner]').forEach(el => el.addEventListener('click', closeBannerForm));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#bannerModal').classList.contains('open')) closeBannerForm(); });
+
+$('#bannerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('#b-title').value.trim(), videoUrl = $('#b-video').value.trim(), thumbnailUrl = $('#b-thumb').value.trim();
+  if (!title || !videoUrl || !thumbnailUrl) { $('#b-error').textContent = 'Title, Video URL and Thumbnail URL are required.'; $('#b-error').classList.remove('hidden'); return; }
+  const payload = { title, subtitle: $('#b-subtitle').value.trim(), videoUrl, thumbnailUrl, description: $('#b-desc').value.trim(), tools: $('#b-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+  const idRaw = $('#b-id').value;
+  if (idRaw) { const i = STATE.hero.banners.findIndex(b => b.id === Number(idRaw)); STATE.hero.banners[i] = { ...STATE.hero.banners[i], ...payload }; }
+  else { const nextId = STATE.hero.banners.reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE.hero.banners.push({ id: nextId, ...payload }); }
+  persist(); closeBannerForm(); paintBanners();
+  toast(idRaw ? 'Banner updated.' : 'Banner added.');
+});
+function removeBanner(id) {
+  if (!confirm('Delete this hero banner? This cannot be undone.')) return;
+  STATE.hero.banners = STATE.hero.banners.filter(b => b.id !== id);
+  persist(); paintBanners(); toast('Banner deleted.');
+}
+
+/* ================= MODULE 2 — Portfolio CRUD (reorderable) ================= */
+function renderPortfolioView() {
+  const view = $('#view');
+  view.innerHTML = `
+    <div class="flex items-center justify-between mb-5"><p class="text-sm text-muted" id="vCount"></p><button id="addBtn" class="btn btn-primary btn-sm" type="button">+ Add new video</button></div>
+    <p class="text-xs text-muted -mt-3 mb-4">Reorder with ↑ / ↓ — array order is render order on the live grid, top to bottom, left to right.</p>
+    <div id="vlist" class="space-y-2"></div>
+    <div class="card mt-8">
+      <p class="card-title mb-1">Live masonry preview</p><p class="card-sub">Reflects each video's grid-size setting and order instantly.</p>
+      <div class="pv-grid" id="pv-grid"></div>
+    </div>`;
+  $('#addBtn').addEventListener('click', () => openForm(null));
+  paintList();
+}
+function paintList() {
+  const items = STATE.portfolio;
+  $('#vCount').textContent = `${items.length} video(s)`;
+  const list = $('#vlist');
+  list.innerHTML = items.length ? items.map((v, i) => `
+    <div class="vrow" data-id="${v.id}">
+      <span class="pill-order">${i + 1}</span>
+      <img class="vthumb" src="${esc(v.thumbnailUrl)}" alt="" onerror="this.style.visibility='hidden'" />
+      <div class="min-w-0 flex-1"><p class="text-sm truncate">${esc(v.title)}</p>
+        <div class="flex gap-2 mt-1 flex-wrap"><span class="pill pill-accent">${esc(v.category)}</span><span class="pill">${esc(v.size)}</span></div></div>
+      <div class="reorder-grp">
+        <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-icon" data-down ${i === items.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>
+      <button class="btn btn-sm" type="button" data-edit="${v.id}">Edit</button>
+      <button class="btn btn-sm btn-danger" type="button" data-del="${v.id}">Delete</button>
+    </div>`).join('') : '<p class="text-sm text-muted">No videos yet — click "Add new video" to create your first one.</p>';
+  list.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openForm(Number(b.dataset.edit))));
+  list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => removeVideo(Number(b.dataset.del))));
+  list.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', e => reorderVideo(Number(e.target.closest('[data-id]').dataset.id), -1)));
+  list.querySelectorAll('[data-down]').forEach(b => b.addEventListener('click', e => reorderVideo(Number(e.target.closest('[data-id]').dataset.id), 1)));
+  paintGridPreview();
+}
+function reorderVideo(id, dir) {
+  const i = STATE.portfolio.findIndex(v => v.id === id);
+  if (!moveInArray(STATE.portfolio, i, dir)) return;
+  persist(); paintList();
+}
+function paintGridPreview() {
+  $('#pv-grid').innerHTML = STATE.portfolio.map(v => `<div class="pv-item ${esc(v.size)}" style="background-image:url('${esc(v.thumbnailUrl)}')" title="${esc(v.title)}"></div>`).join('');
+}
+
+function fillCategorySelect() { $('#v-category').innerHTML = STATE.filters.map(f => `<option value="${f.value}">${esc(f.label)}</option>`).join(''); }
+function openForm(id) {
+  fillCategorySelect();
+  const item = id ? STATE.portfolio.find(v => v.id === id) : null;
+  $('#videoModalTitle').textContent = item ? 'Edit video' : 'Add video';
+  $('#v-id').value = item ? item.id : '';
+  $('#v-title').value = item?.title || ''; $('#v-category').value = item?.category || STATE.filters[0]?.value || '';
+  $('#v-size').value = item?.size || 'size-normal'; $('#v-video').value = item?.videoUrl || ''; $('#v-thumb').value = item?.thumbnailUrl || '';
+  $('#v-tools').value = (item?.tools || []).join(', '); $('#v-desc').value = item?.description || '';
+  $('#v-error').classList.add('hidden');
+  $('#videoModal').classList.add('open'); $('#videoModal').setAttribute('aria-hidden', 'false');
+}
+function closeForm() { $('#videoModal').classList.remove('open'); $('#videoModal').setAttribute('aria-hidden', 'true'); }
+document.querySelectorAll('[data-close-video]').forEach(el => el.addEventListener('click', closeForm));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#videoModal').classList.contains('open')) closeForm(); });
+
+$('#videoForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const title = $('#v-title').value.trim(), videoUrl = $('#v-video').value.trim(), thumbnailUrl = $('#v-thumb').value.trim();
+  if (!title || !videoUrl || !thumbnailUrl) { $('#v-error').textContent = 'Title, Video URL and Thumbnail URL are required.'; $('#v-error').classList.remove('hidden'); return; }
+  const payload = { title, category: $('#v-category').value, videoUrl, thumbnailUrl, size: $('#v-size').value, description: $('#v-desc').value.trim(), tools: $('#v-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+  const idRaw = $('#v-id').value;
+  if (idRaw) { const i = STATE.portfolio.findIndex(v => v.id === Number(idRaw)); STATE.portfolio[i] = { ...STATE.portfolio[i], ...payload }; }
+  else { const nextId = STATE.portfolio.reduce((m, v) => Math.max(m, v.id), 0) + 1; STATE.portfolio.push({ id: nextId, createdAt: new Date().toISOString().slice(0, 10), ...payload }); }
+  persist(); closeForm(); paintList();
+  toast(idRaw ? 'Video updated.' : 'Video added.');
+});
+async function removeVideo(id) {
+  if (!confirm('Delete this video? This cannot be undone.')) return;
+  STATE.portfolio = STATE.portfolio.filter(v => v.id !== id);
+  persist(); paintList(); toast('Video deleted.');
+}
+
+/* ================= MODULE 3 — About & Process steps ================= */
+function renderAboutView() {
+  const view = $('#view');
+  view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">About — bio</p><p class="card-sub">Main paragraph(s) in the About section. Leave a blank line between paragraphs.</p></div>
+      <label class="block"><span class="label">BIO TEXT</span><textarea id="a-content" class="input" rows="8" maxlength="2000"></textarea></label>
+      <div class="savebar"><button id="a-save" class="btn btn-primary" type="button">Save bio</button></div>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Process steps</p><p class="card-sub">The numbered workflow list shown next to your bio. Reorder, rename, or rewrite each step.</p></div>
+      <div id="steps-list" class="space-y-3"></div>
+      <button id="add-step" class="btn btn-sm" type="button">+ Add step</button>
+      <div class="savebar"><button id="steps-save" class="btn btn-primary" type="button">Save steps</button></div>
+    </div>
+
+    <div class="card mt-6">
+      <p class="card-title mb-1">Live preview</p><p class="card-sub">Updates as you type — nothing is saved until you click Save.</p>
+      <div class="grid sm:grid-cols-2 gap-8">
+        <div id="pv-bio" class="text-sm text-muted leading-relaxed space-y-3"></div>
+        <ol id="pv-steps" class="space-y-4"></ol>
+      </div>
+    </div>`;
+
+  const q = sel => view.querySelector(sel);
+  q('#a-content').value = STATE.about.content;
+  let steps = STATE.about.workflow.map(s => ({ ...s }));   // local draft — committed to STATE on "Save steps"
+
+  // ---- bio: live preview + save ----
+  function paintBio() { q('#pv-bio').innerHTML = (q('#a-content').value || '').split(/\n{2,}/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('') || '<p class="text-[#565a52]">Bio preview…</p>'; }
+  paintBio();
+  q('#a-content').addEventListener('input', paintBio);
+  q('#a-save').addEventListener('click', () => { STATE.about.content = q('#a-content').value.trim(); persist(); toast('Bio saved.'); });
+
+  // ---- process steps: edit, reorder, preview, save ----
+  function paintSteps() {
+    q('#steps-list').innerHTML = steps.map((s, i) => `
+      <div class="p-3 rounded-lg border border-white/10 space-y-2" data-row="${i}">
+        <div class="flex items-center gap-2">
+          <span class="pill pill-accent shrink-0">${String(i + 1).padStart(2, '0')}</span>
+          <input class="input flex-1" data-f="title" maxlength="60" placeholder="Step title" value="${esc(s.title)}" />
+          <div class="flex gap-1 shrink-0">
+            <button type="button" class="btn btn-sm" style="width:36px;padding:0" data-up aria-label="Move up">↑</button>
+            <button type="button" class="btn btn-sm" style="width:36px;padding:0" data-down aria-label="Move down">↓</button>
+            <button type="button" class="btn btn-sm btn-danger" style="width:36px;padding:0" data-remove aria-label="Remove">✕</button>
+          </div>
+        </div>
+        <textarea class="input" rows="2" maxlength="300" data-f="text" placeholder="Short description">${esc(s.text)}</textarea>
+      </div>`).join('') || '<p class="text-sm text-muted">No steps yet — click "+ Add step".</p>';
+    paintStepsPreview();
+  }
+  function paintStepsPreview() {
+    q('#pv-steps').innerHTML = steps.map((s, i) => `<li class="flex gap-4"><span class="font-mono text-accent text-sm pt-0.5">${String(i + 1).padStart(2, '0')}</span>
+      <div><p class="font-display text-sm">${esc(s.title) || 'Step title…'}</p><p class="text-muted text-xs mt-0.5">${esc(s.text)}</p></div></li>`).join('');
+  }
+  paintSteps();
+  q('#steps-list').addEventListener('input', e => {
+    const row = e.target.closest('[data-row]'); if (!row) return;
+    steps[Number(row.dataset.row)][e.target.dataset.f] = e.target.value;
+    paintStepsPreview();                                   // live preview only — full repaint (with renumbering) waits for structural changes
+  });
+  q('#steps-list').addEventListener('click', e => {
+    const row = e.target.closest('[data-row]'); if (!row) return;
+    const i = Number(row.dataset.row);
+    if (e.target.closest('[data-remove]')) { steps.splice(i, 1); return paintSteps(); }
+    if (e.target.closest('[data-up]') && i > 0) { [steps[i - 1], steps[i]] = [steps[i], steps[i - 1]]; return paintSteps(); }
+    if (e.target.closest('[data-down]') && i < steps.length - 1) { [steps[i + 1], steps[i]] = [steps[i], steps[i + 1]]; return paintSteps(); }
+  });
+  q('#add-step').addEventListener('click', () => { steps.push({ title: 'New step', text: '' }); paintSteps(); });
+  q('#steps-save').addEventListener('click', () => {
+    STATE.about.workflow = steps.map(s => ({ title: s.title.trim(), text: s.text.trim() })).filter(s => s.title);
+    persist(); steps = STATE.about.workflow.map(s => ({ ...s })); paintSteps();
+    toast('Process steps saved.');
+  });
+}
+
+
+/* ================= MODULE 4 — SEO & Settings (+ contact-form delivery) ================= */
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+function normalizeEndpoint(v) { v = (v || '').trim(); return /^[A-Za-z0-9]{6,}$/.test(v) ? 'https://formspree.io/f/' + v : v; }
+const isFormspreeUrl = v => /^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/.test(v);
+function describeRoute(seo) {
+  const ep = normalizeEndpoint(seo.formspreeEndpoint), to = (seo.email || '').trim();
+  if (isFormspreeUrl(ep)) return { provider: 'formspree', url: ep, text: 'Formspree → delivers to the Gmail verified on that Formspree form' + (to ? ' (should be ' + to + ')' : '') };
+  if (EMAIL_RE.test(to)) return { provider: 'formsubmit', url: 'https://formsubmit.co/ajax/' + encodeURIComponent(to), text: 'FormSubmit → delivers directly to ' + to + ' (one-time activation email on first message)' };
+  return { provider: null, text: 'Not configured — the live form will show an error until you set an email or Formspree endpoint' };
+}
+
+function renderSeoView() {
+  const view = $('#view');
+  view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">SEO &amp; branding</p><p class="card-sub">Browser tab title, search-result description and the logo text in the nav.</p></div>
+      <label class="block"><span class="label">BROWSER / SITE TITLE</span><input id="s-title" class="input" maxlength="120" /></label>
+      <label class="block"><span class="label">META DESCRIPTION</span><textarea id="s-desc" class="input" rows="3" maxlength="300"></textarea></label>
+      <label class="block"><span class="label">LOGO TEXT</span><input id="s-logo" class="input" maxlength="40" /></label>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Contact form delivery</p><p class="card-sub">Messages from the contact form go straight to your inbox — no mail client, no backend. No messages are stored on the site.</p></div>
+      <label class="block"><span class="label">CONTACT EMAIL (your Gmail)</span><input id="s-email" class="input" type="email" placeholder="you@gmail.com" maxlength="120" />
+        <span class="hint">Shown on the site. Also the recipient when no Formspree endpoint is set (FormSubmit mode).</span></label>
+      <label class="block"><span class="label">FORMSPREE ENDPOINT (recommended, optional)</span><input id="s-endpoint" class="input" placeholder="https://formspree.io/f/abcdwxyz" maxlength="120" />
+        <span class="hint">Create a free form at formspree.io, set its email to your Gmail, and paste the form URL (or just the ID). Formspree routes by the form, so the recipient is whatever Gmail is registered there — this field can't change it.</span></label>
+      <div class="rounded-md border border-white/10 px-4 py-3"><p class="label mb-1">ACTIVE ROUTE</p><p id="s-route" class="text-sm"></p></div>
+      <div class="savebar flex flex-wrap gap-3">
+        <button id="s-save" class="btn btn-primary" type="button">Save settings</button>
+        <button id="s-test" class="btn" type="button">Send test message</button>
+      </div>
+      <p class="hint">After saving, click “Publish (Download data.js)” and re-upload data.js to apply changes on the live site.</p>
+    </div>`;
+
+  const q = sel => view.querySelector(sel);
+  const S = STATE.seo;
+  q('#s-title').value = S.siteTitle; q('#s-desc').value = S.metaDescription; q('#s-logo').value = S.logoText;
+  q('#s-email').value = S.email; q('#s-endpoint').value = S.formspreeEndpoint;
+  const draft = () => ({ email: q('#s-email').value.trim(), formspreeEndpoint: normalizeEndpoint(q('#s-endpoint').value) });
+  const paintRoute = () => { q('#s-route').textContent = describeRoute(draft()).text; };
+  q('#s-email').addEventListener('input', paintRoute); q('#s-endpoint').addEventListener('input', paintRoute); paintRoute();
+
+  q('#s-save').addEventListener('click', () => {
+    const d = draft();
+    if (d.email && !EMAIL_RE.test(d.email)) return toast('That contact email doesn\'t look valid.');
+    if (d.formspreeEndpoint && !isFormspreeUrl(d.formspreeEndpoint)) return toast('Endpoint must look like https://formspree.io/f/abcdwxyz');
+    STATE.seo = { siteTitle: q('#s-title').value.trim(), metaDescription: q('#s-desc').value.trim(), logoText: q('#s-logo').value.trim(), email: d.email, formspreeEndpoint: d.formspreeEndpoint };
+    persist(); q('#s-endpoint').value = d.formspreeEndpoint; paintRoute(); toast('Settings saved.');
+  });
+
+  q('#s-test').addEventListener('click', async () => {
+    const d = draft(), route = describeRoute(d);
+    if (!route.provider) return toast('Set an email or Formspree endpoint first.');
+    const btn = q('#s-test'); btn.disabled = true;
+    const payload = { name: 'Admin test', email: d.email || 'test@example.com', message: 'Test message from the Admin Panel — your contact form is wired up.', wants_to_work: 'Yes', _subject: 'Portfolio contact form — test' };
+    if (route.provider === 'formsubmit') { payload._template = 'table'; payload._captcha = 'false'; }
+    try {
+      const res = await fetch(route.url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(payload) });
+      let data = {}; try { data = await res.json(); } catch (_) {}
+      if (!res.ok || (data.errors && data.errors.length) || data.success === 'false') throw new Error((data.errors && data.errors[0] && data.errors[0].message) || data.message || 'HTTP ' + res.status);
+      toast(route.provider === 'formsubmit' ? 'Sent — check Gmail for the FormSubmit activation email (also spam).' : 'Test sent — check your inbox.');
+    } catch (err) { console.error(err); toast('Test failed: ' + err.message); }
+    btn.disabled = false;
+  });
+}
+
+/* ================= Publish — export window.SITE_DATA as data.js ================= */
+function toDataJS(state) {
+  return `// Generated by the Admin Panel on ${new Date().toISOString()}
+// Drop this file next to index.html and add:  <script src="data.js"><\/script>
+// placed BEFORE index.html's main inline <script> block.
+//
+// Primary export: window.SITE_DATA = { hero, about, seo, filters, categoryLabel, portfolio }
+//   - seo.email / seo.formspreeEndpoint → where the contact form delivers messages (see index.html)
+//   - hero.banners[]  → multiple hero banners; ARRAY ORDER IS RENDER ORDER (set via ↑ / ↓ in the admin panel)
+//   - portfolio[]     → masonry grid items; ARRAY ORDER IS RENDER ORDER too
+//
+// Back-compat: HERO / ABOUT / FILTERS / CATEGORY_LABEL / PORTFOLIO are also exported as plain
+// consts pointing at the same objects, so a frontend still reading those old globals keeps working.
+
+window.SITE_DATA = ${JSON.stringify(state, null, 2)};
+
+const HERO = window.SITE_DATA.hero;
+const ABOUT = window.SITE_DATA.about;
+const FILTERS = window.SITE_DATA.filters;
+const CATEGORY_LABEL = window.SITE_DATA.categoryLabel;
+const PORTFOLIO = window.SITE_DATA.portfolio;
+`;
+}
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([toDataJS(STATE)], { type: 'text/javascript' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'data.js'; a.click(); URL.revokeObjectURL(a.href);
+  toast('data.js downloaded.');
+});
+$('#resetBtn').addEventListener('click', () => {
+  if (!confirm('Reset to the original demo content? Your edits in this browser will be lost.')) return;
+  STATE = clone(DEFAULT_DATA); persist(); goTo(activeView); toast('Reset to defaults.');
+});
+
+/* ---------------- boot ---------------- */
+renderNav(); goTo('hero');
+</script>
+</body>
+</html>

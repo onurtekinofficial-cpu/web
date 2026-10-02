@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Osman Onur Tekin — AI Video Editor &amp; Producer</title>
+<meta name="description" content="Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work." />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { ink: '#050505', panel: '#0d0f0d', muted: '#82867e', accent: '#CCFF00' },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root { color-scheme: dark; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif; background: #050505;
+    background-image: radial-gradient(ellipse 60% 40% at 25% -10%, rgba(204,255,0,0.08), transparent 60%);
+  }
+  .font-display { font-family: 'Space Grotesk', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* faint technical grid texture */
+  .grid-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.5;
+    background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 44px 44px; mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%); }
+
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #050505; }
+  ::-webkit-scrollbar-thumb { background: #1c1f1b; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #CCFF00; }
+  *:focus-visible { outline: 2px solid #CCFF00; outline-offset: 2px; }
+  * { -webkit-tap-highlight-color: transparent; }
+
+  .hover-accent { transition: color .25s ease; }
+  .hover-accent:hover { color: #CCFF00; }
+  .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+
+  /* solid, elevated header — deep black with a top bevel highlight and a real drop shadow, not a blur */
+  .nav-elevated {
+    background: linear-gradient(to bottom, #0b0b0b, #050505);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -14px rgba(0,0,0,0.9);
+  }
+  .nav-link { transition: color .25s ease, text-shadow .25s ease; }
+  .nav-link:hover { color: #CCFF00; text-shadow: 0 0 18px rgba(204,255,0,0.55); }
+
+  /* animated hamburger -> X */
+  #menuBtn span { transition: transform .3s ease; }
+  #menuBtn.is-open span:first-child { transform: translateY(3.5px) rotate(45deg); }
+  #menuBtn.is-open span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
+
+  /* full-screen mobile nav overlay, same open/close pattern as the modal */
+  #mobileMenu { transition: opacity .3s ease, transform .3s ease; }
+  #mobileMenu[data-open="false"] { opacity: 0; pointer-events: none; transform: translateY(-8px); }
+  #mobileMenu[data-open="true"] { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+  /* horizontally swipeable filter pills, scrollbar hidden */
+  .filter-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+
+  .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; grid-auto-flow: dense; gap: 0.85rem; }
+  @media (min-width: 768px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 200px; gap: 1.1rem; } }
+  .size-normal { grid-column: span 1; grid-row: span 1; }
+  .size-tall   { grid-column: span 1; grid-row: span 2; }
+  .size-wide   { grid-column: span 2; grid-row: span 1; }
+  .size-big    { grid-column: span 2; grid-row: span 2; }
+  .gallery-card { transition: opacity .3s ease; }
+  .gallery-card.is-hidden { display: none; }
+  .gallery-card:hover { box-shadow: 0 0 0 1px rgba(204,255,0,0.5), 0 0 28px rgba(204,255,0,0.12); }
+  @media (max-width: 480px) {
+    .gallery-grid { grid-template-columns: 1fr; grid-auto-rows: 240px; }
+    .size-normal, .size-tall, .size-wide, .size-big { grid-column: span 1; grid-row: span 1; }
+  }
+
+  .filter-pill { transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .filter-pill:hover { border-color: rgba(204,255,0,0.5); color: #CCFF00; }
+  .filter-pill[data-active="true"] { background: #CCFF00; color: #050505; border-color: #CCFF00; box-shadow: 0 0 24px rgba(204,255,0,0.35); }
+
+  /* tech toggle switch */
+  .tswitch { width: 52px; height: 28px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); position: relative; transition: background-color .2s ease, border-color .2s ease; }
+  .tswitch .knob { position: absolute; top: 2px; left: 2px; height: 22px; width: 22px; border-radius: 999px; background: #82867e; transition: transform .2s ease, background-color .2s ease; }
+  .tswitch[data-on="true"] { background: rgba(204,255,0,0.15); border-color: #CCFF00; }
+  .tswitch[data-on="true"] .knob { transform: translateX(24px); background: #CCFF00; box-shadow: 0 0 12px rgba(204,255,0,0.7); }
+  @media (max-width: 768px) {
+    .tswitch { width: 64px; height: 34px; }
+    .tswitch .knob { height: 26px; width: 26px; }
+    .tswitch[data-on="true"] .knob { transform: translateX(34px); }
+  }
+
+  .field-input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); }
+  .field-input:focus { border-color: #CCFF00; box-shadow: 0 0 0 3px rgba(204,255,0,0.12); }
+
+  /* vertically stacked hero banners */
+  .hero-banner { position: relative; }
+  .hero-frame { position: relative; overflow: hidden; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.1); background: #0d0f0d;
+    aspect-ratio: 16 / 9; min-height: 280px; width: 100%; min-width: 0; max-width: 100%; transition: box-shadow .3s ease, border-color .3s ease; }
+  @media (min-width: 768px) { .hero-frame { border-radius: 1.25rem; min-height: 420px; max-height: 88vh; } }
+  .hero-frame:hover { border-color: rgba(204,255,0,0.35); box-shadow: 0 0 40px rgba(204,255,0,0.08); }
+  .hero-frame video { transition: transform .8s ease; }
+  .hero-frame:hover video { transform: scale(1.015); }
+  /* autoplay media layer (poster underneath, muted video / YouTube iframe fades in on top) */
+  .auto-wrap { position: absolute; inset: 0; overflow: hidden; container-type: size; }
+  .yt-cover { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+  .yt-cover.is-ready { opacity: 1; }
+  .yt-cover iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border: 0; pointer-events: none; transform: translate(-50%, -50%);
+    width: max(100cqw, 177.78cqh); height: max(100cqh, 56.25cqw); }
+  .hero-reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+  .hero-reveal.is-in { opacity: 1; transform: none; }
+  .hero-case-btn { transition: background-color .2s ease, color .2s ease, box-shadow .2s ease; }
+  .hero-case-btn:hover { background: #CCFF00; color: #050505; box-shadow: 0 0 24px rgba(204,255,0,0.4); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+  #modal { transition: opacity .25s ease; }
+  #modal[data-open="false"] { opacity: 0; pointer-events: none; }
+  #modal[data-open="true"] { opacity: 1; pointer-events: auto; }
+  #modalPanel { transition: transform .3s ease, opacity .3s ease; }
+  #modal[data-open="false"] #modalPanel { transform: translateY(14px) scale(.98); opacity: 0; }
+  #modal[data-open="true"] #modalPanel { transform: translateY(0) scale(1); opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+
+<body class="bg-ink text-[#eef0ec] antialiased selection:bg-accent selection:text-ink relative">
+<div class="grid-overlay"></div>
+
+  <!-- ============ NAV ============ -->
+  <header class="fixed top-0 inset-x-0 z-50 nav-elevated">
+    <div class="mx-auto max-w-[1400px] px-5 md:px-10 h-16 md:h-20 flex items-center justify-between">
+      <a href="#top" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
+      <nav class="hidden md:flex items-center gap-10 text-lg font-display font-semibold text-white/90">
+        <a href="#work" class="nav-link">Work</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+      <a href="#contact" class="hidden md:inline-flex items-center rounded-md border border-accent/50 text-accent font-mono text-xs px-5 py-2.5 hover:bg-accent hover:text-ink hover:shadow-[0_0_20px_rgba(204,255,0,0.35)] transition">start_project()</a>
+      <button id="menuBtn" aria-label="Open menu" aria-expanded="false" class="md:hidden relative z-50 h-11 w-11 -mr-2 flex flex-col items-center justify-center gap-1.5">
+        <span class="block h-px w-6 bg-white"></span><span class="block h-px w-6 bg-white"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- full-screen mobile nav overlay: same data-open pattern as the case-study modal -->
+  <div id="mobileMenu" data-open="false" class="fixed inset-0 z-40 md:hidden bg-[#050505] flex flex-col items-center justify-center gap-8 text-3xl font-display font-semibold" aria-hidden="true">
+    <a href="#work" class="nav-link">Work</a>
+    <a href="#about" class="nav-link">About</a>
+    <a href="#contact" class="nav-link text-accent">Start a project</a>
+  </div>
+
+  <!-- ============ HERO (vertically stacked banners, rendered from SITE_DATA.hero.banners[]) ============ -->
+  <section id="top" class="relative z-10 pt-20 md:pt-28 pb-4">
+    <h1 id="heroHeadline" class="sr-only"></h1>
+    <div id="heroStack" class="mx-auto max-w-[1600px] px-2 sm:px-3 md:px-6 space-y-6 md:space-y-10"></div>
+  </section>
+
+  <!-- ============ ALL WORKS ============ -->
+  <section id="work" class="mx-auto max-w-[1400px] px-5 md:px-10 pt-24 md:pt-32 pb-10 relative z-10">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <h2 class="font-display text-3xl md:text-4xl hover-accent w-fit">All works</h2>
+      <div id="filters" class="filter-scroll flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0"></div>
+    </div>
+    <div id="galleryGrid" class="gallery-grid"></div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="about" class="mx-auto max-w-[1400px] px-5 md:px-10 py-28 md:py-36 border-t border-white/8 relative z-10">
+    <div class="grid md:grid-cols-2 gap-14 md:gap-20">
+      <div class="max-w-md">
+        <h2 class="font-display text-3xl md:text-4xl mb-6 hover-accent w-fit">About</h2>
+        <div id="aboutContent" class="text-muted leading-relaxed space-y-4"></div>
+      </div>
+      <div>
+        <ol class="space-y-6">
+          <li class="flex gap-5"><span class="font-mono text-accent text-sm pt-1">01</span><div><h3 class="font-display text-xl hover-accent w-fit">Concept &amp; script</h3><p class="text-muted text-sm mt-1">Defining story, shot list and reference world before anything is generated.</p></div></li>
+          <li class="flex gap-5"><span class="font-mono text-accent text-sm pt-1">02</span><div><h3 class="font-display text-xl hover-accent w-fit">AI generation</h3><p class="text-muted text-sm mt-1">Directing footage through generative models, iterating for consistency.</p></div></li>
+          <li class="flex gap-5"><span class="font-mono text-accent text-sm pt-1">03</span><div><h3 class="font-display text-xl hover-accent w-fit">Edit &amp; grade</h3><p class="text-muted text-sm mt-1">Cutting the story for real, then color and finishing in a proper NLE.</p></div></li>
+          <li class="flex gap-5"><span class="font-mono text-accent text-sm pt-1">04</span><div><h3 class="font-display text-xl hover-accent w-fit">Sound &amp; delivery</h3><p class="text-muted text-sm mt-1">Sound design, mix, and exports tailored to every platform it ships on.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="contact" class="mx-auto max-w-[1400px] px-5 md:px-10 py-28 md:py-36 border-t border-white/8 relative z-10">
+    <div class="grid md:grid-cols-2 gap-14 md:gap-20">
+      <div>
+        <h2 class="font-display text-3xl md:text-4xl mb-4 hover-accent w-fit">Let's build something</h2>
+        <p class="text-muted max-w-sm">Tell me about the project and timeline. I read every message myself.</p>
+        <p id="contactEmail" class="mt-8 font-mono text-sm text-muted">hello@osmantekin.com</p>
+        <div class="mt-2 flex gap-4 text-sm text-muted">
+          <a href="#" class="hover-accent">Instagram</a><a href="#" class="hover-accent">Vimeo</a><a href="#" class="hover-accent">X</a>
+        </div>
+      </div>
+      <form id="contactForm" class="space-y-7" novalidate>
+        <!-- honeypot: hidden from humans, bots fill it -->
+        <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Leave empty<input type="text" name="_gotcha" id="gotcha" tabindex="-1" autocomplete="off" /></label></div>
+        <div><label for="fullName" class="block text-xs font-mono text-muted mb-2">FULL_NAME</label>
+          <input id="fullName" name="fullName" type="text" required class="field-input w-full rounded-md px-4 py-3.5 outline-none" placeholder="Jordan Lee" /></div>
+        <div><label for="email" class="block text-xs font-mono text-muted mb-2">EMAIL</label>
+          <input id="email" name="email" type="email" required class="field-input w-full rounded-md px-4 py-3.5 outline-none" placeholder="jordan@studio.com" /></div>
+        <div><label for="message" class="block text-xs font-mono text-muted mb-2">PROJECT_DETAILS</label>
+          <textarea id="message" name="message" rows="3" required class="field-input w-full rounded-md px-4 py-3.5 outline-none resize-none" placeholder="What are we making?"></textarea></div>
+
+        <div class="flex items-center justify-between rounded-md border border-white/10 px-4 py-4">
+          <span class="text-sm">Would you like to work with me?</span>
+          <div class="flex items-center gap-3">
+            <span id="toggleState" class="font-mono text-xs text-accent">YES</span>
+            <button type="button" id="workToggle" class="tswitch" data-on="true" aria-label="Would you like to work with me toggle"><span class="knob"></span></button>
+          </div>
+        </div>
+        <input type="hidden" name="wantsToWork" id="wantsToWork" value="yes" />
+
+        <button type="submit" id="sendBtn" class="w-full md:w-auto rounded-md bg-accent text-ink font-medium px-8 py-3.5 hover:shadow-[0_0_24px_rgba(204,255,0,0.4)] transition disabled:opacity-50 disabled:cursor-wait">Send message</button>
+        <p id="formStatus" role="status" aria-live="polite" class="text-sm text-accent hidden">✓ Message sent — thanks! I'll reply within a day or two.</p>
+        <p id="formError" role="alert" class="text-sm text-red-400 hidden"></p>
+      </form>
+    </div>
+  </section>
+
+  <footer class="border-t border-white/8 relative z-10">
+    <div class="mx-auto max-w-[1400px] px-5 md:px-10 py-8 flex flex-col md:flex-row justify-between gap-3 text-xs font-mono text-muted">
+      <span>© 2026 OSMAN TEKIN — ALL WORK SHOWN BY PERMISSION</span>
+      <span>BUILT_FOR_AI_NATIVE_PRODUCTION</span>
+    </div>
+  </footer>
+
+  <!-- ============ CASE-STUDY MODAL ============ -->
+  <div id="modal" data-open="false" class="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4 md:p-8" aria-hidden="true">
+    <div id="modalBackdrop" class="absolute inset-0 bg-black/85 backdrop-blur-sm"></div>
+    <div id="modalPanel" class="relative bg-panel border border-white/10 rounded-2xl w-full max-w-5xl max-h-[92vh] md:max-h-[88vh] overflow-y-auto grid md:grid-cols-2">
+      <button id="modalClose" aria-label="Close" class="absolute top-3 right-3 z-10 h-11 w-11 md:h-9 md:w-9 rounded-md glass flex items-center justify-center hover-accent">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <video id="modalVideo" class="w-full h-64 md:h-full object-cover bg-black" controls playsinline></video>
+      <iframe id="modalFrame" class="hidden w-full h-64 md:h-full bg-black border-0" title="Video player" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      <div class="p-6 md:p-10 flex flex-col">
+        <div id="modalMeta" class="flex items-center gap-3 text-xs font-mono text-muted mb-3"></div>
+        <h3 id="modalTitle" class="font-display text-2xl md:text-3xl mb-5"></h3>
+        <p id="modalDesc" class="text-muted leading-relaxed mb-6"></p>
+        <p class="text-xs font-mono text-muted mb-2">AI_TOOLS_USED</p>
+        <div id="modalTools" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+  </div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+/* ==========================================================================
+   DATA LAYER — reads window.SITE_DATA, written by the Admin Panel's
+   "Publish (Download data.js)" button and loaded via <script src="data.js">
+   BEFORE this block. If data.js hasn't been dropped in yet (local preview,
+   first deploy), DEFAULT_SITE_DATA below is used as a safe fallback so the
+   page never breaks.
+
+   hero.banners[] drives the vertically stacked hero banners below — array order IS render
+   order, exactly as set in the admin panel's ↑ / ↓ controls. Each banner
+   carries its own title/subtitle/video/thumbnail/description/tools and is
+   clickable to open the same cinematic case-study modal as a portfolio item.
+   portfolio[].size (size-normal / size-wide / size-tall / size-big) is now
+   read directly from the data — set per item in the admin panel — instead
+   of being derived from position.
+   ========================================================================== */
+const DEFAULT_SITE_DATA = {
+  hero: {
+    headline: "Video, directed for the age of generative film.",
+    subheadline: "Osman Onur Tekin — an editor and producer working between traditional post and AI-generated footage.",
+    banners: [
+      { id: 1, title: "Solstice", subtitle: "A generative-first spot for a fragrance launch.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", thumbnailUrl: "https://picsum.photos/seed/kai-v1/1600/900", description: "A generative-first spot for a fragrance launch, shot entirely from AI plates and finished with practical color and sound.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"] },
+      { id: 2, title: "Glass Hour", subtitle: "A short narrative piece exploring memory.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", thumbnailUrl: "https://picsum.photos/seed/kai-v3/1600/900", description: "A short narrative piece exploring memory, generated frame-by-frame and hand-graded for a filmic tone.", tools: ["Runway Gen-3", "ElevenLabs"] },
+      { id: 3, title: "Aether", subtitle: "A brand film for a sustainable materials studio.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", thumbnailUrl: "https://picsum.photos/seed/kai-v5/1600/900", description: "A brand film for a sustainable materials studio, pairing generated textures with macro live footage.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"] },
+    ],
+  },
+  about: {
+    content: "I'm an editor and producer working at the intersection of traditional post-production and generative video. My process has shifted from cutting footage to directing it — briefing models, curating generations, then finishing everything in a real timeline with color, sound design and pacing a prompt alone can't give you.\n\nClients come to me for commercials and short-form content that needs to look expensive on a fraction of a traditional shoot's budget and timeline — without looking like AI slop.",
+  },
+  seo: { siteTitle: "", metaDescription: "", logoText: "Osman Tekin", email: "", formspreeEndpoint: "" },
+  filters: [
+    { label: "Vertical (9:16)", value: "vertical" },
+    { label: "AI Commercials",  value: "commercial" },
+    { label: "Narrative",       value: "narrative" },
+    { label: "Brand Films",     value: "brand" },
+  ],
+  categoryLabel: { commercial: "AI Commercial", vertical: "Vertical", narrative: "Narrative", brand: "Brand Film" },
+  portfolio: [
+    { id: 1,  title: "Solstice",            category: "commercial", thumbnailUrl: "https://picsum.photos/seed/kai-v1/1200/700",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",   createdAt: "2026-01-10", description: "A generative-first spot for a fragrance launch, shot entirely from AI plates and finished with practical color and sound.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"], size: "size-wide" },
+    { id: 2,  title: "Vertical Story, 01",   category: "vertical",   thumbnailUrl: "https://picsum.photos/seed/kai-v2/700/1100",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",  createdAt: "2025-11-02", description: "A nine-part vertical series built for Instagram, blending generated backdrops with live talent.", tools: ["Kling AI", "Pika", "Premiere Pro"], size: "size-tall" },
+    { id: 3,  title: "Glass Hour",           category: "narrative",  thumbnailUrl: "https://picsum.photos/seed/kai-v3/700/700",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",             createdAt: "2025-10-18", description: "A short narrative piece exploring memory, generated frame-by-frame and hand-graded for a filmic tone.", tools: ["Runway Gen-3", "ElevenLabs"], size: "size-normal" },
+    { id: 4,  title: "Reel Series, Ep. 2",   category: "vertical",   thumbnailUrl: "https://picsum.photos/seed/kai-v4/700/700",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",       createdAt: "2025-09-30", description: "Episodic vertical content for a lifestyle brand's always-on social calendar.", tools: ["Pika", "CapCut"], size: "size-normal" },
+    { id: 5,  title: "Aether",              category: "brand",      thumbnailUrl: "https://picsum.photos/seed/kai-v5/1200/1200", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",     createdAt: "2025-06-14", description: "A brand film for a sustainable materials studio, pairing generated textures with macro live footage.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"], size: "size-big" },
+    { id: 6,  title: "Product Drop Teaser",  category: "commercial", thumbnailUrl: "https://picsum.photos/seed/kai-v6/700/700",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",       createdAt: "2025-05-02", description: "A fifteen-second teaser built to tease a product drop across paid and organic channels.", tools: ["Kling AI", "Premiere Pro"], size: "size-normal" },
+    { id: 7,  title: "Vertical Story, 02",   category: "vertical",   thumbnailUrl: "https://picsum.photos/seed/kai-v7/700/1100",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", createdAt: "2025-03-21", description: "Continuation of the vertical story format, this time centered on a travel narrative.", tools: ["Pika", "ElevenLabs"], size: "size-tall" },
+    { id: 8,  title: "Midnight Run",         category: "narrative",  thumbnailUrl: "https://picsum.photos/seed/kai-v8/1200/700",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", createdAt: "2024-12-11", description: "A neo-noir narrative short built around a single generated character across twelve shots.", tools: ["Runway Gen-3", "DaVinci Resolve"], size: "size-wide" },
+    { id: 9,  title: "Launch Spot: Nova",    category: "commercial", thumbnailUrl: "https://picsum.photos/seed/kai-v9/700/700",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",       createdAt: "2024-09-05", description: "Launch film for a consumer tech product, mixing studio footage with AI-extended environments.", tools: ["Kling AI", "Midjourney"], size: "size-normal" },
+    { id: 10, title: "Studio Reel",          category: "brand",      thumbnailUrl: "https://picsum.photos/seed/kai-v10/700/700",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",             createdAt: "2024-07-19", description: "A reel produced for an internal creative studio, showcasing range across formats.", tools: ["Runway Gen-3", "Pika"], size: "size-normal" },
+  ],
+};
+
+const SITE = window.SITE_DATA || DEFAULT_SITE_DATA;
+const HERO = SITE.hero;
+const ABOUT = SITE.about;
+const PORTFOLIO = SITE.portfolio;
+const CATEGORY_LABEL = SITE.categoryLabel;
+// "All" is a synthetic filter the frontend always adds in front of whatever categories the admin panel defines.
+const FILTERS = [{ label: "All", value: "all" }, ...SITE.filters];
+const SIZE_PATTERN = ["size-wide", "size-tall", "size-normal", "size-normal", "size-big", "size-normal", "size-tall", "size-wide", "size-normal", "size-normal"];
+const sizeFor = i => SIZE_PATTERN[i % SIZE_PATTERN.length];
+
+const SEO = Object.assign({ siteTitle: "", metaDescription: "", logoText: "", email: "", formspreeEndpoint: "" }, SITE.seo || {});
+document.title = SEO.siteTitle || (HERO.headline ? `${HERO.headline} — Osman Onur Tekin` : document.title);
+const metaDesc = document.querySelector('meta[name="description"]');
+const descText = SEO.metaDescription || HERO.subheadline;
+if (metaDesc && descText) metaDesc.setAttribute('content', descText);
+if (SEO.logoText) document.querySelectorAll('[data-logo]').forEach(el => { el.textContent = SEO.logoText; });
+if (SEO.email) { const ce = document.getElementById('contactEmail'); if (ce) ce.textContent = SEO.email; }
+
+/* ---------------- about ---------------- */
+document.getElementById('aboutContent').innerHTML = ABOUT.content.split('\n\n').map(p => `<p>${p}</p>`).join('');
+
+/* ---------------- autoplay media layer ----------------
+   Hero banners + portfolio cards play MUTED, looping, automatically as soon as they are on screen, and pause
+   when scrolled away (or while the case-study modal is open / the tab is hidden). Works for direct .mp4 links
+   AND YouTube links. People with "reduce motion" enabled get the poster + a PLAY button instead.            */
+const REDUCED = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function parseMedia(url) {
+  const u = String(url || "").trim();
+  const m = u.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? { kind: "yt", id: m[1] } : { kind: "file", url: u };
+}
+const ytSrc = (id, o = {}) => "https://www.youtube-nocookie.com/embed/" + id + "?" + new URLSearchParams({
+  autoplay: 1, mute: o.sound ? 0 : 1, loop: 1, playlist: id, controls: o.sound ? 1 : 0, playsinline: 1, rel: 0,
+  modestbranding: 1, iv_load_policy: 3, disablekb: o.sound ? 0 : 1, enablejsapi: 1,
+}).toString();
+const ytCmd = (f, func) => { try { f.contentWindow && f.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: "" }), "*"); } catch (_) {} };
+
+function autoMediaHTML(item, imgClass) {   // poster image + autoplaying layer, wrapped in .auto-wrap
+  const m = parseMedia(item.videoUrl);
+  const poster = `<img src="${escH(item.thumbnailUrl)}" alt="" loading="lazy" class="${imgClass}" />`;
+  const layer = m.kind === "yt"
+    ? `<div class="yt-cover" aria-hidden="true"><iframe data-auto="yt" data-id="${m.id}" title="" tabindex="-1" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`
+    : `<video data-auto="file" data-src="${escH(m.url)}" muted loop playsinline preload="none" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500"></video>`;
+  return poster + layer;
+}
+
+const autoVisible = new Set();
+let autoSuspended = false;
+function playAuto(el) {
+  if (autoSuspended || document.hidden || el.dataset.userPaused === "1") return;
+  if (el.dataset.auto === "yt") {
+    if (!el.getAttribute("src")) {
+      el.addEventListener("load", () => setTimeout(() => el.closest(".yt-cover").classList.add("is-ready"), 900), { once: true });
+      el.src = ytSrc(el.dataset.id);
+    } else ytCmd(el, "playVideo");
+  } else {
+    if (!el.getAttribute("src") && el.dataset.src) el.src = el.dataset.src;
+    const p = el.play(); if (p && p.catch) p.catch(() => {});
+  }
+}
+function pauseAuto(el) {
+  if (el.dataset.auto === "yt") { if (el.getAttribute("src")) ytCmd(el, "pauseVideo"); }
+  else if (!el.paused) el.pause();
+}
+const autoIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => entries.forEach(en => {
+  const el = en.target.querySelector("[data-auto]"); if (!el) return;
+  if (en.isIntersecting && en.intersectionRatio >= 0.35) { autoVisible.add(el); playAuto(el); }
+  else { autoVisible.delete(el); pauseAuto(el); }
+}), { threshold: [0, 0.35, 0.6, 1] }) : null;
+function registerAuto(root) {
+  root.querySelectorAll(".auto-wrap").forEach(wrap => {
+    const el = wrap.querySelector("[data-auto]"); if (!el) return;
+    if (REDUCED) el.dataset.userPaused = "1";
+    if (el.dataset.auto === "file") { el.muted = true; el.defaultMuted = true; }   // muted is what lets browsers allow autoplay
+    if (el.dataset.auto === "file") el.addEventListener("playing", () => el.classList.remove("opacity-0"));
+    if (autoIO) autoIO.observe(wrap); else if (!REDUCED) { autoVisible.add(el); playAuto(el); }
+  });
+}
+function suspendAuto() { autoSuspended = true; autoVisible.forEach(pauseAuto); }
+function resumeAuto() { autoSuspended = false; autoVisible.forEach(playAuto); }
+document.addEventListener("visibilitychange", () => { if (document.hidden) autoVisible.forEach(pauseAuto); else autoVisible.forEach(playAuto); });
+
+/* ---------------- gallery ---------------- */
+const grid = document.getElementById("galleryGrid");
+const playIconSVG = () => `<svg width="16" height="16" viewBox="0 0 24 24" fill="#CCFF00"><path d="M8 5v14l11-7z"/></svg>`;
+
+function renderGallery() {
+  grid.innerHTML = PORTFOLIO.map((item, i) => `
+    <article class="gallery-card ${item.size || sizeFor(i)} group relative overflow-hidden rounded-lg cursor-pointer bg-panel border border-white/8" data-cat="${item.category}" data-id="${item.id}" tabindex="0">
+      <div class="auto-wrap transition duration-700 ease-out group-hover:scale-105" role="img" aria-label="${escH(item.title)}">${autoMediaHTML(item, "absolute inset-0 h-full w-full object-cover")}</div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent"></div>
+      <span class="absolute top-3 left-3 font-mono text-[10px] text-accent/80">N°${String(i + 1).padStart(2, '0')}</span>
+      <div class="absolute top-3 right-3 h-8 w-8 rounded-md glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition">${playIconSVG()}</div>
+      <div class="absolute left-4 right-4 bottom-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition duration-300">
+        <p class="text-[11px] font-mono text-accent">${CATEGORY_LABEL[item.category]}</p>
+        <h3 class="font-display text-sm md:text-base mt-1">${item.title}</h3>
+      </div>
+    </article>
+  `).join("");
+
+  registerAuto(grid);
+  grid.querySelectorAll(".gallery-card").forEach(card => {
+    card.addEventListener("click", () => openModal(PORTFOLIO.find(v => v.id === Number(card.dataset.id))));
+    card.addEventListener("keypress", e => { if (e.key === "Enter") card.click(); });
+  });
+}
+
+function applyFilter(value) {
+  grid.querySelectorAll(".gallery-card").forEach(card => card.classList.toggle("is-hidden", !(value === "all" || card.dataset.cat === value)));
+}
+
+const filterBar = document.getElementById("filters");
+filterBar.innerHTML = FILTERS.map((f, i) => `<button class="filter-pill shrink-0 rounded-full border border-white/10 text-sm px-4 py-2 text-muted" data-filter="${f.value}" data-active="${i === 0}">${f.label}</button>`).join("");
+filterBar.querySelectorAll(".filter-pill").forEach(btn => {
+  btn.addEventListener("click", () => {
+    filterBar.querySelectorAll(".filter-pill").forEach(b => { b.dataset.active = "false"; b.classList.add("text-muted"); });
+    btn.dataset.active = "true"; btn.classList.remove("text-muted");
+    applyFilter(btn.dataset.filter);
+  });
+});
+
+renderGallery();
+applyFilter("all");
+
+/* ---------------- case-study modal (shared by hero banners + portfolio items) ---------------- */
+const modal = document.getElementById("modal");
+const modalVideo = document.getElementById("modalVideo");
+const modalFrame = document.getElementById("modalFrame");
+function openModal(item) {
+  if (!item) return;
+  const mm = parseMedia(item.videoUrl);
+  if (mm.kind === "yt") {
+    modalVideo.pause(); modalVideo.removeAttribute("src"); modalVideo.classList.add("hidden");
+    modalFrame.classList.remove("hidden"); modalFrame.src = ytSrc(mm.id, { sound: true });
+  } else {
+    modalFrame.classList.add("hidden"); modalFrame.removeAttribute("src"); modalVideo.classList.remove("hidden");
+    modalVideo.src = mm.url; modalVideo.poster = item.thumbnailUrl; modalVideo.muted = false;
+    const pp = modalVideo.play(); if (pp && pp.catch) pp.catch(() => {});
+  }
+  document.getElementById('modalTitle').textContent = item.title || '';
+  const metaEl = document.getElementById('modalMeta');
+  metaEl.innerHTML = item.category
+    ? `<span class="text-accent">${CATEGORY_LABEL[item.category] || item.category}</span><span>·</span><span>${new Date(item.createdAt).getFullYear()}</span>`
+    : `<span class="text-accent">Hero Feature</span>${item.subtitle ? `<span>·</span><span>${item.subtitle}</span>` : ''}`;
+  document.getElementById('modalDesc').textContent = item.description || '';
+  document.getElementById('modalTools').innerHTML = (item.tools || []).map(t => `<span class="text-xs font-mono border border-accent/30 rounded-md px-3 py-1 text-muted">${t}</span>`).join("");
+  modal.dataset.open = "true"; modal.setAttribute("aria-hidden", "false");
+  document.documentElement.classList.add("overflow-hidden");
+  suspendAuto();
+}
+function closeModal() {
+  modal.dataset.open = "false"; modal.setAttribute("aria-hidden", "true");
+  document.documentElement.classList.remove("overflow-hidden");
+  modalVideo.pause(); modalVideo.currentTime = 0; modalFrame.removeAttribute("src");
+  resumeAuto();
+}
+document.getElementById("modalClose").addEventListener("click", closeModal);
+document.getElementById("modalBackdrop").addEventListener("click", closeModal);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && modal.dataset.open === "true") closeModal(); });
+
+/* ---------------- hero banners — vertically stacked (HERO.banners[], array order = page order) ----------------
+   Each banner autoplays (muted, looping) the moment it is on screen and pauses when scrolled away. */
+const banners = (HERO.banners && HERO.banners.length) ? HERO.banners : (PORTFOLIO[0] ? [{
+  title: HERO.headline, subtitle: HERO.subheadline, videoUrl: PORTFOLIO[0].videoUrl,
+  thumbnailUrl: PORTFOLIO[0].thumbnailUrl, description: PORTFOLIO[0].description, tools: PORTFOLIO[0].tools,
+}] : []);
+
+const heroStack = document.getElementById("heroStack");
+document.getElementById("heroHeadline").textContent = HERO.headline || "Osman Onur Tekin";   // visually hidden h1 (SEO)
+const pad2 = n => String(n).padStart(2, "0");
+
+heroStack.innerHTML = banners.map((b, i) => `
+  <article class="hero-banner hero-reveal" data-i="${i}">
+    <div class="hero-frame">
+      <div class="hero-stage absolute inset-0 z-0 cursor-pointer" role="button" tabindex="0" aria-label="View case study: ${escH(b.title || 'featured work')}">
+        <div class="auto-wrap">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover")}</div>
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/50 pointer-events-none"></div>
+      <div class="absolute inset-0 pointer-events-none shadow-[inset_0_0_80px_rgba(0,0,0,0.6)]"></div>
+
+      <p class="absolute top-4 left-4 md:top-7 md:left-8 max-w-[45%] truncate font-mono text-[11px] text-accent pointer-events-none z-10">${banners.length > 1 ? `${pad2(i + 1)} / ${pad2(banners.length)} // ` : ''}${escH((b.title || '').toUpperCase())}</p>
+      <div class="absolute top-3 right-3 md:top-6 md:right-6 z-10 flex gap-2">
+        <button type="button" class="hero-pp h-9 px-3 rounded-md glass bg-black/50 font-mono text-[11px] text-white/90 hover-accent" aria-label="Pause or play video">PAUSE</button>
+        <button type="button" class="hero-mute h-9 px-3 rounded-md glass bg-black/50 font-mono text-[11px] text-white/90 hover-accent" aria-label="Toggle sound">SOUND: OFF</button>
+      </div>
+
+      <div class="absolute left-4 md:left-8 right-4 md:right-8 bottom-4 md:bottom-8 z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 pointer-events-none">
+        <div class="min-w-0">
+          <h2 class="font-display text-3xl sm:text-4xl md:text-6xl leading-[1.1] md:leading-[1.05] max-w-2xl">${escH(b.title)}</h2>
+          ${b.subtitle ? `<p class="mt-3 text-sm md:text-base text-muted max-w-md">${escH(b.subtitle)}</p>` : ''}
+        </div>
+        <button type="button" class="hero-case-btn pointer-events-auto shrink-0 w-fit rounded-md border border-accent/60 text-accent font-mono text-xs px-5 py-3">view_case_study() →</button>
+      </div>
+    </div>
+  </article>`).join("");
+
+registerAuto(heroStack);
+const heroEls = [...heroStack.querySelectorAll(".hero-banner")].map((el, i) => ({
+  el, data: banners[i], media: el.querySelector("[data-auto]"),
+  pp: el.querySelector(".hero-pp"), mute: el.querySelector(".hero-mute"), muted: true,
+}));
+function setHeroMuted(h, m) {
+  h.muted = m;
+  if (h.media.dataset.auto === "yt") ytCmd(h.media, m ? "mute" : "unMute"); else h.media.muted = m;
+  h.mute.textContent = m ? "SOUND: OFF" : "SOUND: ON";
+}
+const syncPP = h => { h.pp.textContent = h.media.dataset.userPaused === "1" ? "PLAY" : "PAUSE"; };
+
+heroEls.forEach(h => {
+  syncPP(h);
+  h.pp.addEventListener("click", e => {
+    e.stopPropagation();
+    const wasPaused = h.media.dataset.userPaused === "1";
+    h.media.dataset.userPaused = wasPaused ? "0" : "1";
+    if (wasPaused) playAuto(h.media); else pauseAuto(h.media);
+    syncPP(h);
+  });
+  h.mute.addEventListener("click", e => {
+    e.stopPropagation();
+    setHeroMuted(h, !h.muted);
+    if (!h.muted) heroEls.forEach(o => { if (o !== h && !o.muted) setHeroMuted(o, true); });   // only one banner with sound
+  });
+  const open = () => openModal(h.data);
+  h.el.querySelector(".hero-stage").addEventListener("click", open);
+  h.el.querySelector(".hero-stage").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+  h.el.querySelector(".hero-case-btn").addEventListener("click", e => { e.stopPropagation(); open(); });
+});
+
+// scroll-reveal fade-in
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); } }), { threshold: 0.1 });
+  heroEls.forEach(h => io.observe(h.el));
+} else { heroEls.forEach(h => h.el.classList.add("is-in")); }
+
+/* ---------------- mobile menu (full-screen overlay, animated hamburger) ---------------- */
+const menuBtn = document.getElementById("menuBtn");
+const mobileMenu = document.getElementById("mobileMenu");
+function setMenu(open) {
+  mobileMenu.dataset.open = String(open);
+  mobileMenu.setAttribute("aria-hidden", String(!open));
+  menuBtn.classList.toggle("is-open", open);
+  menuBtn.setAttribute("aria-expanded", String(open));
+  menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  document.documentElement.classList.toggle("overflow-hidden", open);
+}
+menuBtn.addEventListener("click", () => setMenu(mobileMenu.dataset.open !== "true"));
+mobileMenu.querySelectorAll("a").forEach(a => a.addEventListener("click", () => setMenu(false)));
+
+/* ---------------- "work with me" tech toggle ---------------- */
+const workToggle = document.getElementById('workToggle');
+const toggleState = document.getElementById('toggleState');
+const wantsToWork = document.getElementById('wantsToWork');
+workToggle.addEventListener('click', () => {
+  const next = workToggle.dataset.on !== "true";
+  workToggle.dataset.on = String(next);
+  toggleState.textContent = next ? "YES" : "NO";
+  toggleState.classList.toggle('text-accent', next);
+  toggleState.classList.toggle('text-muted', !next);
+  wantsToWork.value = next ? "yes" : "no";
+});
+
+/* ---------------- contact form → direct email (no mailto, no backend) ----------------
+   Routing, decided by data.js → SITE_DATA.seo (set in Admin → SEO & Settings):
+     1. seo.formspreeEndpoint (https://formspree.io/f/xxxx) → Formspree. Recipient = the address verified
+        on that Formspree form (set it to your Gmail in the Formspree dashboard).
+     2. else seo.email → FormSubmit.co AJAX endpoint. Recipient = seo.email directly; the first submission
+        sends a one-time activation email to that address which must be confirmed.
+     3. neither set → visible error, nothing is sent.                                                    */
+const form = document.getElementById("contactForm");
+const formStatus = document.getElementById("formStatus");
+const formError = document.getElementById("formError");
+const sendBtn = document.getElementById("sendBtn");
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+function resolveRoute() {
+  let ep = (SEO.formspreeEndpoint || "").trim();
+  if (/^[A-Za-z0-9]{6,}$/.test(ep)) ep = "https://formspree.io/f/" + ep;
+  if (/^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/.test(ep)) return { provider: "formspree", url: ep };
+  const to = (SEO.email || "").trim();
+  if (EMAIL_RE.test(to)) return { provider: "formsubmit", url: "https://formsubmit.co/ajax/" + encodeURIComponent(to) };
+  return null;
+}
+function showError(msg) { formError.textContent = msg; formError.classList.remove("hidden"); formStatus.classList.add("hidden"); }
+function resetToggle() {
+  workToggle.dataset.on = "true"; toggleState.textContent = "YES";
+  toggleState.classList.add("text-accent"); toggleState.classList.remove("text-muted"); wantsToWork.value = "yes";
+}
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  formError.classList.add("hidden"); formStatus.classList.add("hidden");
+
+  const name = document.getElementById("fullName").value.trim(), email = document.getElementById("email").value.trim(), message = document.getElementById("message").value.trim();
+  if (!name || !message) return showError("Please fill in your name and a short message.");
+  if (!EMAIL_RE.test(email)) return showError("Please enter a valid email address so I can reply.");
+
+  if (document.getElementById("gotcha").value) { formStatus.classList.remove("hidden"); form.reset(); resetToggle(); return; }
+
+  const route = resolveRoute();
+  if (!route) { console.error("Contact form: set seo.email or seo.formspreeEndpoint in Admin → SEO & Settings, then re-publish data.js."); return showError("The contact form isn't configured yet. Please try again later."); }
+
+  const payload = {
+    name, email, message,
+    wants_to_work: wantsToWork.value === "yes" ? "Yes" : "No",
+    _subject: `Portfolio inquiry from ${name}`,
+  };
+  if (route.provider === "formsubmit") { payload._template = "table"; payload._captcha = "false"; }
+
+  const label = sendBtn.textContent;
+  sendBtn.disabled = true; sendBtn.textContent = "Sending…";
+  try {
+    const res = await fetch(route.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    let data = {}; try { data = await res.json(); } catch (_) {}
+    const ok = res.ok && !(data.errors && data.errors.length) && data.success !== "false" && data.success !== false;
+    if (!ok) {
+      const detail = (data.errors && data.errors[0] && data.errors[0].message) || data.message || "";
+      throw new Error(detail || `HTTP ${res.status}`);
+    }
+    formStatus.classList.remove("hidden");
+    form.reset(); resetToggle();
+  } catch (err) {
+    console.error("Contact form error:", err);
+    showError("Sorry — the message couldn't be sent. Please try again in a moment" + (EMAIL_RE.test(SEO.email || "") ? ", or email me at " + SEO.email + "." : "."));
+  } finally {
+    sendBtn.disabled = false; sendBtn.textContent = label;
+  }
+});
+})();
+</script>
+</body>
+</html>
