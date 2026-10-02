@@ -269,6 +269,22 @@
 
 <script src="data.js"></script>
 <script>
+/* Instant publish bridge: if the Admin Panel's "Publish" button has stored a snapshot in localStorage,
+   it overrides window.SITE_DATA from data.js (data.js stays as the fallback). Same-origin only. */
+(function () {
+  var KEY = 'aivp_published_data_v1';
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && d.hero && d.about && Array.isArray(d.portfolio) && Array.isArray(d.filters) && d.categoryLabel) window.SITE_DATA = d;
+    }
+  } catch (e) { console.warn('Could not read published data, using data.js.', e); }
+  // Re-publishing in another tab refreshes this page automatically.
+  window.addEventListener('storage', function (e) { if (e.key === KEY) location.reload(); });
+})();
+</script>
+<script>
 (function () {
 /* ==========================================================================
    DATA LAYER — reads window.SITE_DATA, written by the Admin Panel's
