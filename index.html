@@ -272,7 +272,7 @@
 /* Instant publish bridge: if the Admin Panel's "Publish" button has stored a snapshot in localStorage,
    it overrides window.SITE_DATA from data.js (data.js stays as the fallback). Same-origin only. */
 (function () {
-  var KEY = 'aivp_published_data_v1';
+  var KEY = 'siteData';
   try {
     var raw = localStorage.getItem(KEY);
     if (raw) {
