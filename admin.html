@@ -101,7 +101,7 @@
     </div>
     <nav id="sideNav" class="flex-1 p-3 space-y-1"></nav>
     <div class="p-3 border-t border-white/10 space-y-2">
-      <button id="exportBtn" class="btn btn-primary w-full" type="button">⭳ Publish (Download data.js)</button>
+      <button id="exportBtn" class="btn btn-primary w-full" type="button">⭳ Publish (Instant)</button>
       <button id="resetBtn" class="btn btn-sm w-full" type="button">Reset demo data</button>
     </div>
   </aside>
@@ -556,7 +556,7 @@ function renderSeoView() {
         <button id="s-save" class="btn btn-primary" type="button">Save settings</button>
         <button id="s-test" class="btn" type="button">Send test message</button>
       </div>
-      <p class="hint">After saving, click “Publish (Download data.js)” and re-upload data.js to apply changes on the live site.</p>
+      <p class="hint">After saving, click “Publish (Instant)” — index.html updates immediately in this browser, no files needed.</p>
     </div>`;
 
   const q = sel => view.querySelector(sel);
@@ -614,10 +614,18 @@ const CATEGORY_LABEL = window.SITE_DATA.categoryLabel;
 const PORTFOLIO = window.SITE_DATA.portfolio;
 `;
 }
+// Instant publish: write a snapshot of the current state to localStorage under a separate "published" key.
+// index.html reads this key on load (and live-reloads via the 'storage' event), so no file download is needed.
+const PUBLISHED_KEY = 'aivp_published_data_v1';
 $('#exportBtn').addEventListener('click', () => {
-  const blob = new Blob([toDataJS(STATE)], { type: 'text/javascript' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'data.js'; a.click(); URL.revokeObjectURL(a.href);
-  toast('data.js downloaded.');
+  try {
+    persist();                                                    // keep the admin draft in sync too
+    localStorage.setItem(PUBLISHED_KEY, JSON.stringify(STATE));
+    toast('Published! index.html is updated.');
+  } catch (e) {
+    console.error('Publish failed', e);
+    toast('Publish failed: browser storage is full or unavailable.');
+  }
 });
 $('#resetBtn').addEventListener('click', () => {
   if (!confirm('Reset to the original demo content? Your edits in this browser will be lost.')) return;
