@@ -668,6 +668,7 @@
       // The ONLY categories are 9:16, 16:9 and UGC. Older saves are mapped: "vertical" → 9:16, any other old category → 16:9.
       s.filters = clone(DEFAULT_DATA.filters); s.categoryLabel = clone(DEFAULT_DATA.categoryLabel);
       (s.portfolio || []).forEach(v => { if (!s.categoryLabel[v.category]) v.category = v.category === 'vertical' ? '9:16' : '16:9'; });
+      if (!s.stills || !Array.isArray(s.stills.sections)) s.stills = { title: '', sections: [] };   // Stills (picture gallery)
       return s;
     }
     let STATE = migrate(loadState());
@@ -704,11 +705,12 @@
     const NAV = [
       { id: 'hero', label: 'Hero Banners' },
       { id: 'portfolio', label: 'Portfolio' },
+      { id: 'stills', label: 'Stills (pictures)' },
       { id: 'about', label: 'About & Process' },
       { id: 'seo', label: 'SEO & Settings' },
       { id: 'inbox', label: 'Inbox', soon: true },
     ];
-    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, about: renderAboutView, seo: renderSeoView };
+    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
     let activeView = 'hero';
     function renderNav() {
       $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
@@ -914,6 +916,43 @@
     }
 
     /* ================= MODULE 3 — About & Process steps ================= */
+    /* ================= Stills — picture gallery (links only; saved with the same Publish button) ================= */
+    function renderStillsView() {
+      const view = $('#view');
+      if (!STATE.stills || !Array.isArray(STATE.stills.sections)) STATE.stills = { title: '', sections: [] };
+      const S = STATE.stills;
+      const urls = v => String(v || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      const okCount = v => urls(v).filter(u => /^https?:\/\//i.test(u)).length;
+      const collect = () => {
+        S.title = $('#st-title').value.trim();
+        view.querySelectorAll('[data-sec]').forEach(box => { const i = Number(box.dataset.sec); S.sections[i] = { title: box.querySelector('.st-t').value.trim(), images: urls(box.querySelector('.st-u').value) }; });
+      };
+      const paint = () => {
+        view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">Stills — picture gallery</p><p class="card-sub">A gallery of pictures (not clickable). Paste image links, one per line. It shows on the site under its own menu link and loads together with the rest of the page. Click Save, then Publish.</p></div>
+      <label class="block"><span class="label">GALLERY NAME (menu link + big heading)</span><input id="st-title" class="input" maxlength="60" placeholder="e.g. Frames" value="${esc(S.title)}" /></label>
+    </div>
+    ${S.sections.map((sec, i) => `
+    <div class="card mt-6 space-y-4" data-sec="${i}">
+      <label class="block"><span class="label">GROUP TITLE (optional)</span><input class="input st-t" maxlength="80" placeholder="e.g. Cinematic Realism" value="${esc(sec.title)}" /></label>
+      <label class="block"><span class="label">IMAGE LINKS — ONE PER LINE</span><textarea class="input st-u" rows="6" spellcheck="false" placeholder="https://…/picture1.jpg&#10;https://…/picture2.jpg">${esc((sec.images || []).join('\n'))}</textarea><span class="hint st-c">${okCount((sec.images || []).join('\n'))} valid link(s)</span></label>
+      <div class="savebar"><button class="btn btn-sm st-up" type="button">↑ Up</button><button class="btn btn-sm st-dn" type="button">↓ Down</button><button class="btn btn-sm st-rm" type="button">Delete group</button></div>
+    </div>`).join('')}
+    <div class="savebar mt-6"><button id="st-add" class="btn" type="button">+ Add group</button><button id="st-save" class="btn btn-primary" type="button">Save stills</button></div>`;
+        view.querySelectorAll('[data-sec]').forEach(box => {
+          const i = Number(box.dataset.sec), u = box.querySelector('.st-u'), c = box.querySelector('.st-c');
+          u.addEventListener('input', () => { c.textContent = okCount(u.value) + ' valid link(s)'; });
+          box.querySelector('.st-up').onclick = () => { collect(); if (i > 0) { S.sections.splice(i - 1, 0, S.sections.splice(i, 1)[0]); } paint(); };
+          box.querySelector('.st-dn').onclick = () => { collect(); if (i < S.sections.length - 1) { S.sections.splice(i + 1, 0, S.sections.splice(i, 1)[0]); } paint(); };
+          box.querySelector('.st-rm').onclick = () => { if (!confirm('Delete this group and its links?')) return; collect(); S.sections.splice(i, 1); paint(); };
+        });
+        $('#st-add').onclick = () => { collect(); S.sections.push({ title: '', images: [] }); paint(); };
+        $('#st-save').onclick = () => { collect(); persist(); toast('Stills saved — now press Publish.'); };
+      };
+      if (!S.sections.length) S.sections.push({ title: '', images: [] });
+      paint();
+    }
     function renderAboutView() {
       const view = $('#view');
       view.innerHTML = `
