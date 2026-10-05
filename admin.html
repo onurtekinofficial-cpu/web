@@ -534,6 +534,10 @@
             placeholder="https://vimeo.com/123456789   or   https://…/clip.mp4" required /></label>
         <label class="block"><span class="label">THUMBNAIL IMAGE URL (the cover shown in All Work — empty = automatic cover from the video)</span><input id="v-thumb" class="input" type="url"
             placeholder="https://…/thumbnail.jpg" /></label>
+        <label class="flex items-start gap-3 cursor-pointer" style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+          <input type="checkbox" id="v-hide-all" style="width:18px;height:18px;margin-top:2px;accent-color:#CCFF00;flex:none" />
+          <span><span class="label" style="display:block">HIDE FROM "ALL" TAB</span><span class="hint">When ON, this video is NOT shown under the "All" tab on the website. It still appears under its own category tab (e.g. UGC, 9:16, 16:9).</span></span>
+        </label>
         <label class="block"><span class="label">TOOLS USED</span><input id="v-tools" class="input"
             placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags
             in the cinematic modal.</span></label>
@@ -881,7 +885,7 @@
       $('#v-id').value = item ? item.id : '';
       $('#v-title').value = item?.title || ''; $('#v-category').value = item?.category || STATE.filters[0]?.value || '';
       $('#v-video').value = item?.videoUrl || ''; $('#v-thumb').value = item?.thumbnailUrl || '';
-      $('#v-tools').value = (item?.tools || []).join(', '); $('#v-desc').value = item?.description || '';
+      $('#v-tools').value = (item?.tools || []).join(', '); $('#v-desc').value = item?.description || ''; $('#v-hide-all').checked = !!item?.hideFromAll;
       $('#v-error').classList.add('hidden');
       $('#videoModal').classList.add('open'); $('#videoModal').setAttribute('aria-hidden', 'false');
     }
@@ -894,7 +898,7 @@
       const title = $('#v-title').value.trim(), videoUrl = $('#v-video').value.trim();
       if (!title || !videoUrl) { $('#v-error').textContent = 'Title and Video URL are required.'; $('#v-error').classList.remove('hidden'); return; }
       if (/vimeo\.com/i.test(videoUrl) && !/progressive_redirect|\.(mp4|mov|m4v|webm)(\?|$)/i.test(videoUrl) && !/\d{5,}/.test(videoUrl)) { $('#v-error').textContent = "Couldn't find the Vimeo video number in that link. Use e.g. https://vimeo.com/123456789 (unlisted videos: https://vimeo.com/123456789/abcdef1234)."; $('#v-error').classList.remove('hidden'); return; }
-      const payload = { title, category: $('#v-category').value, videoUrl, thumbnailUrl: $('#v-thumb').value.trim(), description: $('#v-desc').value.trim(), tools: $('#v-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+      const payload = { title, category: $('#v-category').value, videoUrl, thumbnailUrl: $('#v-thumb').value.trim(), hideFromAll: $('#v-hide-all').checked, description: $('#v-desc').value.trim(), tools: $('#v-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
       const idRaw = $('#v-id').value;
       commitWork(() => {
         if (idRaw) { const i = STATE.portfolio.findIndex(v => v.id === Number(idRaw)); STATE.portfolio[i] = { ...STATE.portfolio[i], ...payload }; }
