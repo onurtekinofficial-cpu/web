@@ -234,6 +234,7 @@
       <a href="#top" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
       <nav class="hidden md:flex items-center gap-10 text-lg font-display font-semibold text-white/90">
         <a href="#work" class="nav-link">Work</a>
+        <a href="#stills" class="nav-link" data-stills-link style="display:none">Stills</a>
         <a href="#about" class="nav-link">About</a>
         <a href="#contact" class="nav-link">Contact</a>
       </nav>
@@ -247,6 +248,7 @@
   <!-- full-screen mobile nav overlay: same data-open pattern as the case-study modal -->
   <div id="mobileMenu" data-open="false" class="fixed inset-0 z-40 md:hidden bg-[#050505] flex flex-col items-center justify-center gap-8 text-3xl font-display font-semibold" aria-hidden="true">
     <a href="#work" class="nav-link">Work</a>
+    <a href="#stills" class="nav-link" data-stills-link style="display:none">Stills</a>
     <a href="#about" class="nav-link">About</a>
     <a href="#contact" class="nav-link text-accent">Start a project</a>
   </div>
@@ -264,6 +266,19 @@
       <div id="filters" class="filter-scroll flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0"></div>
     </div>
     <div id="galleryGrid" class="gallery-grid"></div>
+  </section>
+
+  <!-- ============ STILLS (picture gallery — filled from the admin panel, hidden when empty) ============ -->
+  <style>
+    .st-set{display:flex;flex-wrap:wrap;gap:6px}.st-set::after{content:"";flex-grow:1e6}
+    .st-item{position:relative;overflow:hidden;background:#0d0f0d;min-width:0}
+    .st-item img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
+    #stillsBody{opacity:0;transition:opacity .9s ease}#stillsBody.show{opacity:1}
+    @media(max-width:640px){.st-set{gap:4px}}
+  </style>
+  <section id="stills" class="mx-auto max-w-[1400px] px-5 md:px-10 pt-24 md:pt-32 pb-10 relative z-10" style="display:none">
+    <h2 id="stillsTitle" class="font-display text-3xl md:text-4xl mb-10"></h2>
+    <div id="stillsBody"></div>
   </section>
 
   <!-- ============ ABOUT ============ -->
@@ -797,7 +812,36 @@ filterBar.querySelectorAll(".filter-pill").forEach(btn => {
   });
 });
 
-const galleryThumbsReady = renderGallery();
+/* ---------------- stills (picture gallery) — every picture loads in ONE pass, then the whole gallery fades in together ---------------- */
+function renderStills() {
+  const S = SITE.stills, sec = document.getElementById("stills"), body = document.getElementById("stillsBody");
+  const groups = ((S && S.sections) || []).map(g => ({ title: g.title || "", images: (g.images || []).filter(u => /^https?:\/\//i.test(String(u).trim())) })).filter(g => g.images.length);
+  if (!sec || !groups.length) return Promise.resolve();
+  const name = (S.title || "").trim() || "Stills";
+  document.getElementById("stillsTitle").textContent = name;
+  sec.style.display = "";
+  document.querySelectorAll("[data-stills-link]").forEach(a => { a.textContent = name; a.style.display = ""; });
+  return new Promise(resolve => {
+    let total = 0, done = 0, shown = false;
+    const reveal = () => { if (shown) return; shown = true; body.classList.add("show"); resolve(); };
+    const tick = () => { done++; if (done >= total) reveal(); };
+    groups.forEach(g => {
+      if (g.title) { const h = document.createElement("h3"); h.className = "font-display text-xl md:text-2xl mt-10 mb-4 uppercase tracking-wide"; h.textContent = g.title; body.appendChild(h); }
+      const set = document.createElement("div"); set.className = "st-set";
+      g.images.forEach(url => {
+        total++;
+        const item = document.createElement("div"); item.className = "st-item";
+        const img = new Image(); img.decoding = "async"; img.alt = ""; img.draggable = false;
+        img.onload = () => { const ar = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1.5; item.style.flex = ar + " 1 " + (ar * 230) + "px"; tick(); };
+        img.onerror = () => { item.remove(); tick(); };
+        img.src = url.trim(); item.appendChild(img); set.appendChild(item);
+      });
+      body.appendChild(set);
+    });
+    setTimeout(reveal, 25000);                              // safety: never leave the gallery hidden
+  });
+}
+const galleryThumbsReady = Promise.all([renderGallery(), renderStills()]);
 applyFilter("all");
 
 /* ---------------- case-study modal (shared by hero banners + portfolio items) ---------------- */
