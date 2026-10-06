@@ -4,6 +4,8 @@
     { "source": "/about/", "destination": "/index.html" },
     { "source": "/contact", "destination": "/index.html" },
     { "source": "/contact/", "destination": "/index.html" },
+    { "source": "/work-archive", "destination": "/index.html" },
+    { "source": "/work-archive/", "destination": "/index.html" },
     { "source": "/imagery", "destination": "/index.html" },
     { "source": "/imagery/", "destination": "/index.html" }
   ]
