@@ -12,6 +12,9 @@
 //   Editing, adding, deleting or reordering a WorkItem can never change a Banner, and vice versa: the admin panel
 //   enforces it in code, and index.html never reads portfolio[] to build the hero. Array order === render order.
 //
+//   archive[]       — the WORK ARCHIVE page (/work-archive): banner-style videos, a third independent list. Same fields as a Banner.
+//                     Videos load lazily and start only when scrolled to. Managed in the admin panel under "Work Archive".
+//
 // social = { instagram, youtube, linkedin } → footer icons (replace the placeholder URLs; empty = icon hidden). The e-mail icon uses seo.email.
 // Other keys: about, seo, filters, categoryLabel.
 // Back-compat: HERO / ABOUT / FILTERS / CATEGORY_LABEL / PORTFOLIO are also exported as plain consts below.
@@ -86,13 +89,11 @@ window.SITE_DATA = {
     "email": "",
     "formspreeEndpoint": ""
   },
+  "archive": [],
   "social": {
     "instagram": "https://www.instagram.com/",
     "youtube": "https://www.youtube.com/",
     "linkedin": "https://www.linkedin.com/"
-  },
-  "archive": {
-    "banners": []
   },
   "filters": [
     { "label": "9:16", "value": "9:16" },
