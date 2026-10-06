@@ -242,29 +242,30 @@
     </div>
   </div>
 
-  <!-- ============ NAV ============ -->
+  <!-- ============ NAV (Arşiv menüsü ile eşitlendi) ============ -->
   <header id="siteHeader" class="fixed top-0 inset-x-0 z-50 nav-elevated">
     <div class="mx-auto max-w-[1400px] px-5 md:px-10 h-16 md:h-20 flex items-center justify-between">
-      <a href="/" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
-      <nav class="hidden md:flex items-center gap-10 text-lg font-display font-semibold text-white/90">
-        <a href="/#work" class="nav-link">Work</a>
-        <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
-        <a href="/about" class="nav-link">About</a>
-        <a href="/contact" class="nav-link">Contact</a>
+      <a class="logo font-display font-semibold text-lg tracking-tight hover-accent" href="/" id="logo">Osman Tekin</a>
+      <nav class="hidden md:flex gap-10 text-lg font-display font-semibold text-white/90">
+        <a href="/">Home</a>
+        <a href="/#work">Work</a>
+        <a href="/archive">Archive</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
       </nav>
-      <a href="/contact" class="hidden md:inline-flex items-center rounded-md border border-accent/50 text-accent font-mono text-xs px-5 py-2.5 hover:bg-accent hover:text-ink hover:shadow-[0_0_20px_rgba(204,255,0,0.35)] transition">start_project()</a>
       <button id="menuBtn" aria-label="Open menu" aria-expanded="false" class="md:hidden relative z-50 h-11 w-11 -mr-2 flex flex-col items-center justify-center gap-1.5">
         <span class="block h-px w-6 bg-white"></span><span class="block h-px w-6 bg-white"></span>
       </button>
     </div>
   </header>
 
-  <!-- full-screen mobile nav overlay: same data-open pattern as the case-study modal -->
+  <!-- full-screen mobile nav overlay: aynı menü öğelerini barındırır -->
   <div id="mobileMenu" data-open="false" class="fixed inset-0 z-40 md:hidden bg-[#050505] flex flex-col items-center justify-center gap-8 text-3xl font-display font-semibold" aria-hidden="true">
-    <a href="/#work" class="nav-link">Work</a>
-    <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
-    <a href="/about" class="nav-link">About</a>
-    <a href="/contact" class="nav-link text-accent">Start a project</a>
+    <a href="/">Home</a>
+    <a href="/#work">Work</a>
+    <a href="/archive">Archive</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
   </div>
 
   <!-- ============ HERO (full-screen, edge-to-edge banners stacked vertically, rendered from SITE_DATA.hero.banners[]) ============ -->
@@ -928,7 +929,7 @@ heroStack.innerHTML = !banners.length ? `
 
       <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pointer-events-none">
         <div class="min-w-0">
-          ${banners.length > 1 ? `<p class="font-mono text-[11px] tracking-[0.2em] text-white/60 mb-3 md:mb-4">${pad2(i + 1)} — ${pad2(banners.length)}</p>` : ''}
+          ${banners.length > 1 ? `<p class="font-mono text-[11px] tracking-[0.2em] text-white/60 mb-3 md:mb-4">${pad2(i + 1)} —${pad2(banners.length)}</p>` : ''}
           <h2 class="font-display font-medium text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(b.title)}</h2>
           ${b.subtitle ? `<p class="mt-4 md:mt-5 text-sm md:text-base text-white/70 max-w-md">${escH(b.subtitle)}</p>` : ''}
         </div>
