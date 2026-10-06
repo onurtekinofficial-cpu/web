@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Archive — Osman Onur Tekin</title>
+<meta name="description" content="The full archive of AI-native video work by Osman Onur Tekin." />
+<script src="data.js"></script>
+<style>
+  :root { color-scheme: dark; --accent: #CCFF00; --ink: #050505; --panel: #0d0f0d; --muted: #82867e; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--ink); color: #eee; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* sticky header */
+  header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .9rem clamp(1rem, 4vw, 2.5rem); background: rgba(5,5,5,.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,.07); }
+  .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: .02em; }
+  nav { display: flex; gap: clamp(.8rem, 2.5vw, 1.8rem); font-size: .9rem; flex-wrap: wrap; justify-content: flex-end; }
+  nav a { color: var(--muted); transition: color .2s; }
+  nav a:hover, nav a[aria-current="page"] { color: var(--accent); }
+
+  main { padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 3rem; }
+  .eyebrow { font-family: "JetBrains Mono", monospace; font-size: .75rem; color: var(--accent); letter-spacing: .14em; text-transform: uppercase; }
+  h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); margin: .4rem 0 .6rem; }
+  .intro { color: var(--muted); max-width: 60ch; margin: 0 0 1.8rem; line-height: 1.6; }
+
+  .back-top { display: inline-block; margin-bottom: 1.5rem; color: var(--muted); font-size: .9rem; }
+  .back-top:hover { color: var(--accent); }
+
+  /* filters */
+  .filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
+  .filters button { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,.14);
+    padding: .4rem .9rem; border-radius: 999px; font: 500 .85rem Inter, sans-serif; cursor: pointer; transition: all .2s; }
+  .filters button[aria-pressed="true"], .filters button:hover { color: var(--ink); background: var(--accent); border-color: var(--accent); }
+
+  /* grid */
+  .grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .grid[data-mode="portrait"] { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .card { position: relative; border: 0; padding: 0; background: var(--panel); border-radius: 10px; overflow: hidden;
+    aspect-ratio: 16 / 9; cursor: pointer; display: block; width: 100%; text-align: left; color: inherit; }
+  .grid[data-mode="portrait"] .card { aspect-ratio: 9 / 16; }
+  .card img, .card video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85), transparent 55%); }
+  .card .meta { position: absolute; left: .8rem; right: .8rem; bottom: .7rem; z-index: 2; }
+  .card .title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 1rem; }
+  .card .tag { font-family: "JetBrains Mono", monospace; font-size: .7rem; color: var(--accent); }
+  .card .play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2; width: 52px; height: 52px;
+    border-radius: 50%; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.3); display: grid; place-items: center; }
+  .card .play::before { content: ""; border-left: 14px solid #fff; border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 4px; }
+  .card:hover .play { background: var(--accent); border-color: var(--accent); }
+  .card:hover .play::before { border-left-color: #000; }
+  .card.is-hidden { display: none; }
+  .empty { color: var(--muted); display: none; }
+
+  /* bottom nav */
+  .pager { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,.08); flex-wrap: wrap; }
+  .pager a { color: var(--muted); font-size: .95rem; }
+  .pager a:hover { color: var(--accent); }
+
+  /* video modal */
+  #modal { position: fixed; inset: 0; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
+  #modal.open { display: flex; }
+  #modal .box { width: min(1000px, 100%); }
+  #modal .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+  #modal .frame.portrait { aspect-ratio: 9 / 16; max-height: 80vh; width: auto; margin: 0 auto; }
+  #modal iframe, #modal video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  #modal .info { margin-top: .9rem; }
+  #modal .info h2 { font-family: "Space Grotesk", sans-serif; margin: 0 0 .3rem; font-size: 1.3rem; }
+  #modal .info p { color: var(--muted); margin: 0 0 .4rem; line-height: 1.5; font-size: .95rem; }
+  #modal .close { position: absolute; top: .8rem; right: 1rem; background: none; border: 0; color: #fff; font-size: 2rem; cursor: pointer; }
+  #modal .close:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/" id="logo">Osman Tekin</a>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/#work">Work</a>
+    <a href="/archive" aria-current="page">Archive</a>
+    <a href="/#about">About</a>
+    <a href="/#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <a class="back-top" href="/">← Back to home</a>
+  <div class="eyebrow">The full archive</div>
+  <h1>Everything else I've made</h1>
+  <p class="intro">The highlights are on the homepage. This is the rest of the work: commercials, vertical series, UGC and narrative pieces. Click any video to watch it.</p>
+
+  <div class="filters" role="group" aria-label="Filter by format" id="filters"></div>
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty">Nothing in this category yet.</p>
+
+  <div class="pager">
+    <a href="/">← Back to home</a>
+    <a href="/#contact">Next: Contact →</a>
+  </div>
+</main>
+
+<div id="modal" role="dialog" aria-modal="true" aria-label="Video player">
+  <div class="box">
+    <div class="frame" id="frame"></div>
+    <div class="info"><h2 id="mTitle"></h2><p id="mDesc"></p><p class="tag" id="mTools"></p></div>
+  </div>
+  <button class="close" aria-label="Close video">×</button>
+</div>
+
+<script>
+(function () {
+  const D = window.SITE_DATA || {};
+  const items = Array.isArray(D.portfolio) ? D.portfolio : [];
+  const filters = Array.isArray(D.filters) ? D.filters : [];
+  const labels = D.categoryLabel || {};
+  const logoText = (D.seo && D.seo.logoText) || "Osman Tekin";
+  document.getElementById("logo").textContent = logoText;
+
+  const grid = document.getElementById("grid");
+  const filterBar = document.getElementById("filters");
+  const empty = document.getElementById("empty");
+
+  /* ---- video helpers: detect the host, build the thumbnail and the player ---- */
+  function youtubeId(u) {
+    const m = u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+  }
+  function vimeoId(u) {
+    const m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    return m ? m[1] : null;
+  }
+  function isDirect(u) { return /\.(mp4|webm|mov)(\?|#|$)/i.test(u); }
+
+  /* thumbnail: use the one you set, otherwise derive it from the host */
+  function thumbFor(item, img) {
+    if (item.thumbnailUrl) { img.src = item.thumbnailUrl; return; }
+    const yt = youtubeId(item.videoUrl || "");
+    if (yt) { img.src = "https://img.youtube.com/vi/" + yt + "/hqdefault.jpg"; return; }
+    const vm = vimeoId(item.videoUrl || "");
+    if (vm) {
+      fetch("https://vimeo.com/api/oembed.json?url=" + encodeURIComponent("https://vimeo.com/" + vm))
+        .then(r => r.json()).then(d => { if (d.thumbnail_url) img.src = d.thumbnail_url.replace(/_\d+x\d+/, "_640"); })
+        .catch(() => {});
+    }
+  }
+
+  function buildCard(item) {
+    const btn = document.createElement("button");
+    btn.className = "card";
+    btn.type = "button";
+    btn.dataset.category = item.category || "";
+    btn.setAttribute("aria-label", "Play " + (item.title || "video"));
+
+    if (isDirect(item.videoUrl || "") && !item.thumbnailUrl) {
+      const v = document.createElement("video");
+      v.muted = true; v.preload = "metadata"; v.playsInline = true;
+      v.src = item.videoUrl + "#t=0.1";
+      btn.appendChild(v);
+    } else {
+      const img = document.createElement("img");
+      img.alt = ""; img.loading = "lazy";
+      thumbFor(item, img);
+      btn.appendChild(img);
+    }
+
+    const play = document.createElement("span"); play.className = "play"; btn.appendChild(play);
+    const meta = document.createElement("span"); meta.className = "meta";
+    meta.innerHTML = '<span class="tag"></span><span class="title" style="display:block"></span>';
+    meta.querySelector(".tag").textContent = labels[item.category] || item.category || "";
+    meta.querySelector(".title").textContent = item.title || "";
+    btn.appendChild(meta);
+
+    btn.addEventListener("click", () => openModal(item));
+    return btn;
+  }
+
+  /* ---- filters ---- */
+  function setFilter(value) {
+    filterBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
+    grid.dataset.mode = value === "9:16" ? "portrait" : "landscape";
+    let shown = 0;
+    grid.querySelectorAll(".card").forEach(c => {
+      const match = value === "all" || c.dataset.category === value;
+      c.classList.toggle("is-hidden", !match);
+      if (match) shown++;
+    });
+    empty.style.display = shown ? "none" : "block";
+  }
+  [{ label: "All", value: "all" }].concat(filters).forEach(f => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = f.label; b.dataset.value = f.value;
+    b.setAttribute("aria-pressed", String(f.value === "all"));
+    b.addEventListener("click", () => setFilter(f.value));
+    filterBar.appendChild(b);
+  });
+
+  /* ---- grid ---- */
+  items.forEach(item => grid.appendChild(buildCard(item)));
+  setFilter("all");
+
+  /* ---- modal player ---- */
+  const modal = document.getElementById("modal");
+  const frame = document.getElementById("frame");
+  function openModal(item) {
+    frame.innerHTML = "";
+    const url = item.videoUrl || "";
+    const portrait = item.category === "9:16";
+    frame.classList.toggle("portrait", portrait);
+    const yt = youtubeId(url), vm = vimeoId(url);
+    if (yt) {
+      frame.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + yt + '?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+    } else if (vm) {
+      frame.innerHTML = '<iframe src="https://player.vimeo.com/video/' + vm + '?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+    } else {
+      const v = document.createElement("video");
+      v.src = url; v.controls = true; v.autoplay = true; v.playsInline = true;
+      frame.appendChild(v);
+    }
+    document.getElementById("mTitle").textContent = item.title || "";
+    document.getElementById("mDesc").textContent = item.description || "";
+    document.getElementById("mTools").textContent = (item.tools || []).join("  ·  ");
+    modal.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    modal.classList.remove("open");
+    frame.innerHTML = "";                    // stops playback
+    document.body.style.overflow = "";
+  }
+  modal.querySelector(".close").addEventListener("click", closeModal);
+  modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+})();
+</script>
+</body>
+</html>
