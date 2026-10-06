@@ -24,7 +24,7 @@ export const config = {
 const DATA_KEY = 'portfolio:site-data';
 const BACKUP_KEY = 'portfolio:site-data:previous';      // the version before the latest Publish (safety net)
 const MAX_BYTES = 900_000;                              // Upstash free plan accepts ~1 MB per request
-const ALLOWED_KEYS = ['hero', 'about', 'seo', 'social', 'filters', 'categoryLabel', 'portfolio', 'stills'];
+const ALLOWED_KEYS = ['hero', 'about', 'seo', 'social', 'filters', 'categoryLabel', 'portfolio', 'stills', 'archive'];
 const encoder = new TextEncoder();
 
 /* ------------------------------------------------------------------ helpers */
