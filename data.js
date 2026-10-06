@@ -91,6 +91,9 @@ window.SITE_DATA = {
     "youtube": "https://www.youtube.com/",
     "linkedin": "https://www.linkedin.com/"
   },
+  "archive": {
+    "banners": []
+  },
   "filters": [
     { "label": "9:16", "value": "9:16" },
     { "label": "16:9", "value": "16:9" },
