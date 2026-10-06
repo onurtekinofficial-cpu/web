@@ -3,238 +3,742 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Archive — Osman Onur Tekin</title>
-<meta name="description" content="The full archive of AI-native video work by Osman Onur Tekin." />
+<title>Osman Onur Tekin — AI Video Editor &amp; Producer</title>
+<meta name="description" content="Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work." />
+
 <script src="data.js"></script>
+<script>
+/* EARLY START — runs before Tailwind and before the page is built, so the banner videos begin downloading
+   immediately instead of after everything else has loaded:
+   • preconnect to the video host(s)  • start loading the first two direct-video banners in detached <video>
+   elements that the page later adopts (already buffering) instead of creating fresh ones. */
+(function () {
+  try {
+    var D = window.SITE_DATA;
+    try { var raw = localStorage.getItem('siteData'); if (raw) { var pd = JSON.parse(raw), st = (D && D.publishedAt) || 0; if (pd && pd.hero && Array.isArray(pd.portfolio) && (!st || (pd.publishedAt || 0) > st)) D = pd; } } catch (e) {}   // a browser-only publish wins only if it is newer than the live (server) data
+    if (!D || !D.hero) return;
+    var banners = D.hero.banners || [];            // banners are their own list — never borrowed from the All Work grid
+    var seen = {}, pre = window.__preVideos = {};
+    function hint(origin) { if (!origin || seen[origin]) return; seen[origin] = 1; var l = document.createElement('link'); l.rel = 'preconnect'; l.href = origin; document.head.appendChild(l); }
+    (D.portfolio || []).slice(0, 40).forEach(function (w) {   // start downloading EVERY All Work cover now, in parallel, before the page is even built
+      var t = String((w && w.thumbnailUrl) || '').trim(); if (!t) return;
+      try { hint(new URL(t, location.href).origin); } catch (e) {}
+      var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = t; document.head.appendChild(l);
+    });
+    banners.forEach(function (b, i) {
+      var t = String((b && b.thumbnailUrl) || '').trim();
+      if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
+      var u = String((b && b.videoUrl) || '').trim(); if (!u) return;
+      if (/youtu\.?be|youtube\.com/.test(u)) { hint('https://www.youtube-nocookie.com'); return; }
+      if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); return; }
+      try { hint(new URL(u, location.href).origin); } catch (e) {}
+      var key = u + '#t=0.001';
+      if (i < 2 && !pre[key]) {
+        var v = document.createElement('video');
+        v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = key;
+        pre[key] = v;
+      }
+    });
+  } catch (e) {}
+})();
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { ink: '#050505', panel: '#0d0f0d', muted: '#82867e', accent: '#CCFF00' },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root { color-scheme: dark; --accent: #CCFF00; --ink: #050505; --panel: #0d0f0d; --muted: #82867e; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--ink); color: #eee; }
-  a { color: inherit; text-decoration: none; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  body {
+    margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--ink); color: #eee;
+    background-image: radial-gradient(ellipse 60% 40% at 25% -10%, rgba(204,255,0,0.08), transparent 60%);
+  }
+  .font-display { font-family: "Space Grotesk", sans-serif; }
+  .font-mono { font-family: "JetBrains Mono", monospace; }
 
-  /* sticky header */
-  header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
-    gap: 1rem; padding: .9rem clamp(1rem, 4vw, 2.5rem); background: rgba(5,5,5,.92); backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,.07); }
-  .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: .02em; }
-  nav { display: flex; gap: clamp(.8rem, 2.5vw, 1.8rem); font-size: .9rem; flex-wrap: wrap; justify-content: flex-end; }
-  nav a { color: var(--muted); transition: color .2s; }
-  nav a:hover, nav a[aria-current="page"] { color: var(--accent); }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #050505; }
+  ::-webkit-scrollbar-thumb { background: #1c1f1b; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #CCFF00; }
+  *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  main { padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 3rem; }
-  .eyebrow { font-family: "JetBrains Mono", monospace; font-size: .75rem; color: var(--accent); letter-spacing: .14em; text-transform: uppercase; }
-  h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); margin: .4rem 0 .6rem; }
-  .intro { color: var(--muted); max-width: 60ch; margin: 0 0 1.8rem; line-height: 1.6; }
+  /* Mükemmel hizalanmış ve tüm sayfalarda ortak cam efektli üst bar */
+  header {
+    position: fixed; top: 0; inset-x: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem clamp(1.5rem, 5vw, 4rem); max-width: 1400px; margin: 0 auto; width: 100%;
+    background: rgba(5, 5, 5, 0.4); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08); transition: background 0.3s ease;
+  }
+  .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.45rem; letter-spacing: -0.01em; color: #fff; text-decoration: none; }
+  .logo:hover { color: var(--accent); }
+  
+  /* Ortak ve tutumlu menü tasarımı */
+  nav.site-nav { display: flex; gap: 2.5rem; font-size: 1.05rem; font-family: "Space Grotesk", sans-serif; font-weight: 600; align-items: center; }
+  nav.site-nav a { color: rgba(255, 255, 255, 0.85); text-decoration: none; transition: color .25s ease, text-shadow .25s ease; }
+  nav.site-nav a:hover, nav.site-nav a[aria-current="page"] { color: var(--accent); text-shadow: 0 0 16px rgba(204,255,0,0.5); }
 
-  .back-top { display: inline-block; margin-bottom: 1.5rem; color: var(--muted); font-size: .9rem; }
-  .back-top:hover { color: var(--accent); }
+  /* Bütün sayfa kapsayıcıları (About, Contact, Archive ve Work ortak max-width ve padding standardı) */
+  .page-container { max-width: 1400px; margin: 0 auto; padding: 7rem clamp(1.5rem, 5vw, 4rem) 5rem; position: relative; z-index: 10; }
 
-  /* filters */
-  .filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
-  .filters button { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,.14);
-    padding: .4rem .9rem; border-radius: 999px; font: 500 .85rem Inter, sans-serif; cursor: pointer; transition: all .2s; }
-  .filters button[aria-pressed="true"], .filters button:hover { color: var(--ink); background: var(--accent); border-color: var(--accent); }
+  /* horizontally swipeable filter pills, scrollbar hidden */
+  .filter-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+  .filter-scroll::-webkit-scrollbar { display: none; }
 
-  /* grid */
-  .grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-  .grid[data-mode="portrait"] { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
-  .card { position: relative; border: 0; padding: 0; background: var(--panel); border-radius: 10px; overflow: hidden;
-    aspect-ratio: 16 / 9; cursor: pointer; display: block; width: 100%; text-align: left; color: inherit; }
-  .grid[data-mode="portrait"] .card { aspect-ratio: 9 / 16; }
-  .card img, .card video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85), transparent 55%); }
-  .card .meta { position: absolute; left: .8rem; right: .8rem; bottom: .7rem; z-index: 2; }
-  .card .title { font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 1rem; }
-  .card .tag { font-family: "JetBrains Mono", monospace; font-size: .7rem; color: var(--accent); }
-  .card .play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 2; width: 52px; height: 52px;
-    border-radius: 50%; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.3); display: grid; place-items: center; }
-  .card .play::before { content: ""; border-left: 14px solid #fff; border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 4px; }
-  .card:hover .play { background: var(--accent); border-color: var(--accent); }
-  .card:hover .play::before { border-left-color: #000; }
-  .card.is-hidden { display: none; }
-  .empty { color: var(--muted); display: none; }
+  /* ALL WORK — equal-size tiles, side by side. */
+  .gallery-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
+  @media (min-width: 640px)  { .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem; } }
+  @media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; } }
+  .gallery-card { position: relative; overflow: hidden; min-height: 0; aspect-ratio: 16 / 9; border-radius: 10px; background: var(--panel); border: 0; cursor: pointer; display: block; width: 100%; text-align: left; color: inherit; }
+  .thumb-wrap { position: absolute; inset: 0; overflow: hidden; }
+  .thumb-wrap > img, .thumb-wrap > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .gallery-grid[data-mode="portrait"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+  @media (min-width: 640px)  { .gallery-grid[data-mode="portrait"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .gallery-grid[data-mode="portrait"] { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.1rem; } }
+  @media (min-width: 1280px) { .gallery-grid[data-mode="portrait"] { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .gallery-grid[data-mode="portrait"] .gallery-card { aspect-ratio: 9 / 16; }
+  .thumb-wrap.is-portrait::before { content: ""; position: absolute; inset: -24px; background: var(--thumb, #0d0f0d) center / cover no-repeat; filter: blur(22px) brightness(.5); }
+  .gallery-grid[data-mode="landscape"] .thumb-wrap.is-portrait > img,
+  .gallery-grid[data-mode="landscape"] .thumb-wrap.is-portrait > video { object-fit: contain; }
+  .gallery-card { transition: opacity .3s ease; }
+  .gallery-card.is-hidden { display: none; }
+  .gallery-card:hover { box-shadow: 0 0 0 1px rgba(204,255,0,0.5), 0 0 28px rgba(204,255,0,0.12); }
 
-  /* bottom nav */
-  .pager { display: flex; justify-content: space-between; gap: 1rem; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,.08); flex-wrap: wrap; }
-  .pager a { color: var(--muted); font-size: .95rem; }
-  .pager a:hover { color: var(--accent); }
+  .filter-pill { transition: background-color .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease; background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,.14); padding: .4rem .9rem; border-radius: 999px; font: 500 .85rem Inter, sans-serif; cursor: pointer; }
+  .filter-pill:hover { border-color: rgba(204,255,0,0.5); color: #CCFF00; }
+  .filter-pill[data-active="true"] { background: #CCFF00; color: #050505; border-color: #CCFF00; box-shadow: 0 0 24px rgba(204,255,0,0.35); }
 
-  /* video modal */
-  #modal { position: fixed; inset: 0; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
-  #modal.open { display: flex; }
-  #modal .box { width: min(1000px, 100%); }
-  #modal .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
-  #modal .frame.portrait { aspect-ratio: 9 / 16; max-height: 80vh; width: auto; margin: 0 auto; }
-  #modal iframe, #modal video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  #modal .info { margin-top: .9rem; }
-  #modal .info h2 { font-family: "Space Grotesk", sans-serif; margin: 0 0 .3rem; font-size: 1.3rem; }
-  #modal .info p { color: var(--muted); margin: 0 0 .4rem; line-height: 1.5; font-size: .95rem; }
-  #modal .close { position: absolute; top: .8rem; right: 1rem; background: none; border: 0; color: #fff; font-size: 2rem; cursor: pointer; }
-  #modal .close:hover { color: var(--accent); }
+  /* tech toggle switch */
+  .tswitch { width: 52px; height: 28px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); position: relative; transition: background-color .2s ease, border-color .2s ease; }
+  .tswitch .knob { position: absolute; top: 2px; left: 2px; height: 22px; width: 22px; border-radius: 999px; background: #82867e; transition: transform .2s ease, background-color .2s ease; }
+  .tswitch[data-on="true"] { background: rgba(204,255,0,0.15); border-color: #CCFF00; }
+  .tswitch[data-on="true"] .knob { transform: translateX(24px); background: #CCFF00; box-shadow: 0 0 12px rgba(204,255,0,0.7); }
+
+  .field-input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: #eee; border-radius: 8px; font-family: Inter, system-ui, sans-serif; }
+  .field-input:focus { border-color: #CCFF00; box-shadow: 0 0 0 3px rgba(204,255,0,0.12); outline: none; }
+
+  /* Artistik ve Profesyonel Hero Banner Stilleri */
+  .hero-banner { position: relative; height: 100vh; height: 100svh; min-height: 580px; }
+  .hero-static { position: relative; height: 100vh; height: 100svh; min-height: 580px; background: radial-gradient(ellipse 70% 55% at 50% 40%, rgba(204,255,0,0.08), transparent 70%), #050505; }
+  .hero-frame { position: absolute; inset: 0; overflow: hidden; background: #0d0f0d; }
+  .hero-frame video { transition: transform 2s cubic-bezier(.2,.8,.2,1); }
+  .hero-frame:hover video { transform: scale(1.03); }
+  .hero-copy { animation: heroTextIn 1.2s cubic-bezier(.2,.8,.2,1) .2s both; }
+  @keyframes heroTextIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  
+  .hero-ctl { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 999px; color: #fff;
+    background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(10px); transition: all .25s ease; cursor: pointer; }
+  .hero-ctl:hover { color: #CCFF00; border-color: #CCFF00; background: rgba(0,0,0,.6); transform: translateY(-2px); }
+  .hero-ctl svg { width: 20px; height: 20px; }
+  
+  .hero-case-btn { font: 500 13px 'JetBrains Mono', monospace; letter-spacing: .15em; color: #fff; padding: .6rem 0; border-bottom: 1px solid rgba(255,255,255,.5); transition: all .25s ease; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .hero-case-btn:hover { color: #CCFF00; border-color: #CCFF00; padding-left: 4px; }
+  
+  .auto-poster { position: absolute; inset: 0; background: #0d0f0d center / cover no-repeat; }
+  .auto-wrap { position: absolute; inset: 0; overflow: hidden; container-type: size; }
+  .yt-cover { position: absolute; inset: 0; opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+  .yt-cover.is-ready { opacity: 1; }
+  .yt-cover iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border: 0; pointer-events: none; transform: translate(-50%, -50%);
+    width: max(100cqw, calc(100cqh * var(--ar, 1.7778))); height: max(100cqh, calc(100cqw / var(--ar, 1.7778))); }
+  
+  .social-link { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 999px; color: #eef0ec;
+    border: 1px solid rgba(255,255,255,.18); transition: color .25s ease, border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; }
+  .social-link svg { width: 22px; height: 22px; }
+  .social-link:hover { color: #050505; background: #CCFF00; border-color: #CCFF00; transform: translateY(-3px); box-shadow: 0 10px 30px -10px rgba(204,255,0,.6); }
+
+  #modal { transition: opacity .35s ease; position: fixed; inset: 0; background: rgba(0,0,0,.92); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
+  #modal[data-open="false"] { opacity: 0; pointer-events: none; display: none; }
+  #modal[data-open="true"] { opacity: 1; pointer-events: auto; display: flex; }
+  #modalPanel { position: relative; background: var(--panel); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; width: min(1000px, 100%); max-height: 92vh; overflow-y: auto; padding: 2rem; }
+
+  /* Entry Loader */
+  #preloader { position: fixed; inset: 0; z-index: 100; background: #050505; display: flex; align-items: center; justify-content: center; transition: opacity .4s cubic-bezier(.2,.8,.2,1); }
+  #preloader.is-done { opacity: 0; pointer-events: none; }
+  .pl-inner { width: min(70vw, 360px); display: flex; flex-direction: column; align-items: center; gap: 1.3rem; }
+  .pl-count { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: clamp(3.5rem, 14vw, 6.5rem); color: #eef0ec; }
+  .pl-count small { font-size: .3em; color: var(--accent); vertical-align: top; }
+  .pl-bar { width: 100%; height: 1px; background: rgba(255,255,255,0.12); overflow: hidden; }
+  .pl-bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+</style>
+<script>
+(function () {
+  var p = location.pathname.replace(/\/+$/, "").replace(/^\/|\.html$|^\/index\.html$/g, "").toLowerCase();
+  document.documentElement.setAttribute("data-page", p === "about" || p === "contact" || p === "archive" ? p : "home");
+})();
+</script>
+<style>
+  /* Sayfa yönlendirme görünümleri: Hangi sayfadaysak sadece o section görünür, diğerleri gizlenir */
+  html[data-page="about"] :is(#top,#work,#contact,#archive),
+  html[data-page="contact"] :is(#top,#work,#about,#archive),
+  html[data-page="archive"] :is(#top,#work,#about,#contact),
+  html[data-page="home"] :is(#about,#contact,#archive) { display: none !important; }
+  html:not([data-page="home"]) section[id] { border-top: 0 !important; }
 </style>
 </head>
-<body>
 
-<header>
-  <a class="logo" href="/" id="logo">Osman Tekin</a>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/#work">Work</a>
-    <a href="/archive" aria-current="page">Archive</a>
-    <a href="/#about">About</a>
-    <a href="/#contact">Contact</a>
-  </nav>
-</header>
+<body class="bg-ink text-[#eef0ec] antialiased relative">
 
-<main>
-  <a class="back-top" href="/">← Back to home</a>
-  <div class="eyebrow">The full archive</div>
-  <h1>Everything else I've made</h1>
-  <p class="intro">The highlights are on the homepage. This is the rest of the work: commercials, vertical series, UGC and narrative pieces. Click any video to watch it.</p>
-
-  <div class="filters" role="group" aria-label="Filter by format" id="filters"></div>
-  <div class="grid" id="grid"></div>
-  <p class="empty" id="empty">Nothing in this category yet.</p>
-
-  <div class="pager">
-    <a href="/">← Back to home</a>
-    <a href="/#contact">Next: Contact →</a>
+  <div id="preloader" role="status" aria-live="polite" aria-label="Loading">
+    <div class="pl-inner">
+      <span data-logo class="font-mono text-[11px] text-accent tracking-[0.35em] uppercase">Osman Tekin</span>
+      <div class="pl-count" aria-hidden="true"><span id="plCount">0</span><small>%</small></div>
+      <div class="pl-bar" aria-hidden="true"><i id="plBar"></i></div>
+    </div>
   </div>
-</main>
 
-<div id="modal" role="dialog" aria-modal="true" aria-label="Video player">
-  <div class="box">
-    <div class="frame" id="frame"></div>
-    <div class="info"><h2 id="mTitle"></h2><p id="mDesc"></p><p class="tag" id="mTools"></p></div>
+  <!-- ============ NAV (Tüm sayfalarda aynı hizada, aynı stil ve cam efektli üst bar) ============ -->
+  <header id="siteHeader">
+    <a class="logo" href="/" id="logo">Osman Onur Tekin</a>
+    <nav class="site-nav">
+      <a href="/">Home</a>
+      <a href="/#work">Work</a>
+      <a href="/archive">Archive</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </header>
+
+  <!-- ============ HERO BANNERS (Home) ============ -->
+  <section id="top" style="position:relative; z-index:10;">
+    <h1 id="heroHeadline" class="sr-only"></h1>
+    <div id="heroStack" style="width:100%;"></div>
+  </section>
+
+  <!-- ============ ALL WORKS (Home) ============ -->
+  <section id="work" class="page-container">
+    <div style="display:flex; flex-direction:column; gap:1.5rem; margin-bottom:2.5rem;" class="md:flex-row md:items-end md:justify-between">
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); font-weight:700; margin:0;" class="hover-accent">All works</h2>
+      <div id="filters" class="filter-scroll" style="display:flex; gap:0.6rem; flex-wrap:wrap;"></div>
+    </div>
+    <div id="galleryGrid" class="gallery-grid" data-mode="landscape"></div>
+  </section>
+
+  <!-- ============ ARCHIVE (Arşiv Sayfası - Diğerleriyle tamamen aynı hizada ve düzende) ============ -->
+  <section id="archive" class="page-container" style="display:none;">
+    <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom:1.5rem; font-weight:700;" class="hover-accent">Archive</h2>
+    <p style="color:var(--muted); font-size:1.05rem; line-height:1.75; margin:0 0 2.5rem 0; max-width:55ch;">A chronological collection of past projects, explorations, and experimental works.</p>
+    <div id="archiveContent" style="display:flex; flex-direction:column; gap:1.5rem;">
+      <!-- Arşiv içerikleri dinamik olarak buraya yüklenecektir -->
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="about" class="page-container" style="border-top:1px solid rgba(255,255,255,.08);">
+    <div style="display:grid; gap:4rem;" class="md:grid-cols-2">
+      <div>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom:1.5rem; font-weight:700;" class="hover-accent">About</h2>
+        <div id="aboutContent" style="color:var(--muted); line-height:1.75; font-size:1.05rem; display:flex; flex-direction:column; gap:1.2rem;"></div>
+      </div>
+      <div>
+        <ol style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1.75rem;">
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">01</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">Concept &amp; script</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Defining story, shot list and reference world before anything is generated.</p></div></li>
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">02</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">AI generation</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Directing footage through generative models, iterating for consistency.</p></div></li>
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">03</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">Edit &amp; grade</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Cutting the story for real, then color and finishing in a proper NLE.</p></div></li>
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">04</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">Sound &amp; delivery</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Sound design, mix, and exports tailored to every platform it ships on.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="contact" class="page-container" style="border-top:1px solid rgba(255,255,255,.08);">
+    <div style="display:grid; gap:4rem;" class="md:grid-cols-2">
+      <div>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom:1.2rem; font-weight:700;" class="hover-accent">Let's build something</h2>
+        <p style="color:var(--muted); font-size:1.05rem; line-height:1.7; margin:0 0 2rem 0; max-width:38ch;">Tell me about the project and timeline. I read every message myself.</p>
+        <p id="contactEmail" class="font-mono" style="font-size:0.95rem; color:var(--muted); margin:0 0 1.2rem 0;">hello@osmantekin.com</p>
+        <div id="contactLinks" style="display:flex; flex-wrap:wrap; gap:1.5rem; font-size:1rem; color:var(--muted);"></div>
+      </div>
+      <form id="contactForm" style="display:flex; flex-direction:column; gap:1.5rem;" novalidate>
+        <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Leave empty<input type="text" name="_gotcha" id="gotcha" tabindex="-1" autocomplete="off" /></label></div>
+        <div>
+          <label for="fullName" class="font-mono" style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.5rem; letter-spacing:0.1em;">FULL_NAME</label>
+          <input id="fullName" name="fullName" type="text" required class="field-input" style="width:100%; padding:0.9rem 1.1rem;" placeholder="Jordan Lee" />
+        </div>
+        <div>
+          <label for="email" class="font-mono" style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.5rem; letter-spacing:0.1em;">EMAIL</label>
+          <input id="email" name="email" type="email" required class="field-input" style="width:100%; padding:0.9rem 1.1rem;" placeholder="jordan@studio.com" />
+        </div>
+        <div>
+          <label for="message" class="font-mono" style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.5rem; letter-spacing:0.1em;">PROJECT_DETAILS</label>
+          <textarea id="message" name="message" rows="3" required class="field-input" style="width:100%; padding:0.9rem 1.1rem; resize:none;" placeholder="What are we making?"></textarea>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:between; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:1.1rem 1.25rem; background:rgba(255,255,255,0.02);">
+          <span style="font-size:1rem;">Would you like to work with me?</span>
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span id="toggleState" class="font-mono" style="font-size:0.75rem; color:var(--accent);">YES</span>
+            <button type="button" id="workToggle" class="tswitch" data-on="true" aria-label="Toggle"><span class="knob"></span></button>
+          </div>
+        </div>
+        <input type="hidden" name="wantsToWork" id="wantsToWork" value="yes" />
+
+        <button type="submit" id="sendBtn" style="background:var(--accent); color:var(--ink); font-weight:600; padding:1rem 2.2rem; border-radius:8px; border:none; cursor:pointer; font-size:1rem; width:fit-content; transition:box-shadow 0.2s;">Send message</button>
+        <p id="formStatus" role="status" aria-live="polite" style="font-size:0.95rem; color:var(--accent); margin:0; display:none;">✓ Message sent — thanks! I'll reply within a day or two.</p>
+        <p id="formError" role="alert" style="font-size:0.95rem; color:#f87171; margin:0; display:none;"></p>
+      </form>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid rgba(255,255,255,.08); position:relative; z-index:10;">
+    <div data-social-block style="max-width:1400px; margin:0 auto; padding:5rem clamp(1.5rem, 5vw, 3.5rem); display:flex; flex-direction:column; gap:2rem; border-bottom:1px solid rgba(255,255,255,.08);" class="md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="font-mono" style="font-size:0.75rem; letter-spacing:0.25em; color:var(--accent); margin:0 0 0.75rem 0;">FOLLOW / CONNECT</p>
+        <p style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(2rem, 3.5vw, 2.8rem); margin:0; letter-spacing:-0.02em;">Find me elsewhere.</p>
+      </div>
+      <nav id="socialLinks" aria-label="Social media" style="display:flex; align-items:center; gap:1rem;"></nav>
+    </div>
+    <div style="max-width:1400px; margin:0 auto; padding:2rem clamp(1.5rem, 5vw, 3.5rem); display:flex; flex-direction:column; gap:1rem; font-size:0.8rem;" class="md:flex-row md:justify-between font-mono text-muted">
+      <span>© 2026 OSMAN ONUR TEKIN — ALL WORK SHOWN BY PERMISSION</span>
+    </div>
+  </footer>
+
+  <!-- ============ MODAL ============ -->
+  <div id="modal" data-open="false" role="dialog" aria-modal="true" aria-label="Case study">
+    <div id="modalBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(8px);"></div>
+    <div id="modalPanel">
+      <button id="modalClose" aria-label="Close" style="position:absolute; top:1.25rem; right:1.25rem; background:none; border:none; color:#fff; font-size:1.75rem; cursor:pointer; z-index:10;">×</button>
+      <div id="modalStage" style="position:relative; width:100%; aspect-ratio:16/9; background:#000; margin-bottom:1.5rem; border-radius:8px; overflow:hidden;">
+        <video id="modalVideo" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;" controls autoplay playsinline></video>
+        <iframe id="modalFrame" style="display:none; position:absolute; inset:0; width:100%; height:100%; border:0;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div id="modalMeta" style="font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--accent); margin-bottom:0.5rem;"></div>
+      <h3 id="modalTitle" style="font-family:'Space Grotesk',sans-serif; font-size:1.75rem; margin:0 0 0.75rem 0; font-weight:600;"></h3>
+      <p id="modalDesc" style="color:var(--muted); line-height:1.65; font-size:1rem; margin:0 0 1.25rem 0;"></p>
+      <div id="modalTools" style="display:flex; flex-wrap:wrap; gap:0.5rem; font-family:'JetBrains Mono',monospace; font-size:0.8rem;"></div>
+    </div>
   </div>
-  <button class="close" aria-label="Close video">×</button>
-</div>
 
 <script>
 (function () {
-  const D = window.SITE_DATA || {};
-  const items = Array.isArray(D.portfolio) ? D.portfolio : [];
-  const filters = Array.isArray(D.filters) ? D.filters : [];
-  const labels = D.categoryLabel || {};
-  const logoText = (D.seo && D.seo.logoText) || "Osman Tekin";
-  document.getElementById("logo").textContent = logoText;
-
-  const grid = document.getElementById("grid");
-  const filterBar = document.getElementById("filters");
-  const empty = document.getElementById("empty");
-
-  /* ---- video helpers: detect the host, build the thumbnail and the player ---- */
-  function youtubeId(u) {
-    const m = u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([A-Za-z0-9_-]{11})/);
-    return m ? m[1] : null;
-  }
-  function vimeoId(u) {
-    const m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    return m ? m[1] : null;
-  }
-  function isDirect(u) { return /\.(mp4|webm|mov)(\?|#|$)/i.test(u); }
-
-  /* thumbnail: use the one you set, otherwise derive it from the host */
-  function thumbFor(item, img) {
-    if (item.thumbnailUrl) { img.src = item.thumbnailUrl; return; }
-    const yt = youtubeId(item.videoUrl || "");
-    if (yt) { img.src = "https://img.youtube.com/vi/" + yt + "/hqdefault.jpg"; return; }
-    const vm = vimeoId(item.videoUrl || "");
-    if (vm) {
-      fetch("https://vimeo.com/api/oembed.json?url=" + encodeURIComponent("https://vimeo.com/" + vm))
-        .then(r => r.json()).then(d => { if (d.thumbnail_url) img.src = d.thumbnail_url.replace(/_\d+x\d+/, "_640"); })
-        .catch(() => {});
+  var KEY = 'siteData';
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      var st = (window.SITE_DATA && window.SITE_DATA.publishedAt) || 0;
+      if (d && d.hero && d.about && Array.isArray(d.portfolio) && Array.isArray(d.filters) && d.categoryLabel && (!st || (d.publishedAt || 0) > st)) window.SITE_DATA = d;
     }
-  }
+  } catch (e) {}
+  window.addEventListener('storage', function (e) { if (e.key === KEY) location.reload(); });
+})();
+</script>
+<script>
+(function () {
+const DEFAULT_SITE_DATA = {
+  hero: {
+    headline: "Video, directed for the age of generative film.",
+    subheadline: "Osman Onur Tekin — an editor and producer working between traditional post and AI-generated footage.",
+    banners: [
+      { id: 1, title: "Solstice", subtitle: "A generative-first spot for a fragrance launch.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", description: "A generative-first spot for a fragrance launch, shot entirely from AI plates and finished with practical color and sound.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"] },
+      { id: 2, title: "Glass Hour", subtitle: "A short narrative piece exploring memory.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4", description: "A short narrative piece exploring memory, generated frame-by-frame and hand-graded for a filmic tone.", tools: ["Runway Gen-3", "ElevenLabs"] },
+      { id: 3, title: "Aether", subtitle: "A brand film for a sustainable materials studio.", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", description: "A brand film for a sustainable materials studio, pairing generated textures with macro live footage.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"] },
+    ],
+  },
+  about: {
+    content: "I'm an editor and producer working at the intersection of traditional post-production and generative video. My process has shifted from cutting footage to directing it — briefing models, curating generations, then finishing everything in a real timeline with color, sound design and pacing a prompt alone can't give you.\n\nClients come to me for commercials and short-form content that needs to look expensive on a fraction of a traditional shoot's budget and timeline — without looking like AI slop.",
+  },
+  seo: { siteTitle: "", metaDescription: "", logoText: "Osman Onur Tekin", email: "", formspreeEndpoint: "" },
+  filters: [
+    { label: "Vertical (9:16)", value: "vertical" },
+    { label: "AI Commercials",  value: "commercial" },
+    { label: "Narrative",       value: "narrative" },
+    { label: "Brand Films",     value: "brand" },
+  ],
+  categoryLabel: { commercial: "AI Commercial", vertical: "Vertical", narrative: "Narrative", brand: "Brand Film" },
+  portfolio: [
+    { id: 1,  title: "Solstice",            category: "commercial", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",   createdAt: "2026-01-10", description: "A generative-first spot for a fragrance launch, shot entirely from AI plates and finished with practical color and sound.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"] },
+    { id: 2,  title: "Vertical Story, 01",   category: "vertical",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",  createdAt: "2025-11-02", description: "A nine-part vertical series built for Instagram, blending generated backdrops with live talent.", tools: ["Kling AI", "Pika", "Premiere Pro"] },
+    { id: 3,  title: "Glass Hour",           category: "narrative",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",             createdAt: "2025-10-18", description: "A short narrative piece exploring memory, generated frame-by-frame and hand-graded for a filmic tone.", tools: ["Runway Gen-3", "ElevenLabs"] },
+    { id: 4,  title: "Reel Series, Ep. 2",   category: "vertical",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",       createdAt: "2025-09-30", description: "Episodic vertical content for a lifestyle brand's always-on social calendar.", tools: ["Pika", "CapCut"] },
+    { id: 5,  title: "Aether",              category: "brand",      videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",     createdAt: "2025-06-14", description: "A brand film for a sustainable materials studio, pairing generated textures with macro live footage.", tools: ["Runway Gen-3", "Midjourney", "DaVinci Resolve"] },
+    { id: 6,  title: "Product Drop Teaser",  category: "commercial", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",       createdAt: "2025-05-02", description: "A fifteen-second teaser built to tease a product drop across paid and organic channels.", tools: ["Kling AI", "Premiere Pro"] },
+    { id: 7,  title: "Vertical Story, 02",   category: "vertical",   videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", createdAt: "2025-03-21", description: "Continuation of the vertical story format, this time centered on a travel narrative.", tools: ["Pika", "ElevenLabs"] },
+    { id: 8,  title: "Midnight Run",         category: "narrative",  videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", createdAt: "2024-12-11", description: "A neo-noir narrative short built around a single generated character across twelve shots.", tools: ["Runway Gen-3", "DaVinci Resolve"] },
+    { id: 9,  title: "Launch Spot: Nova",    category: "commercial", videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",       createdAt: "2024-09-05", description: "Launch film for a consumer tech product, mixing studio footage with AI-extended environments.", tools: ["Kling AI", "Midjourney"] },
+    { id: 10, title: "Studio Reel",          category: "brand",      videoUrl: "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",             createdAt: "2024-07-19", description: "A reel produced for an internal creative studio, showcasing range across formats.", tools: ["Runway Gen-3", "Pika"] },
+  ],
+};
 
-  function buildCard(item) {
-    const btn = document.createElement("button");
-    btn.className = "card";
-    btn.type = "button";
-    btn.dataset.category = item.category || "";
-    btn.setAttribute("aria-label", "Play " + (item.title || "video"));
+const SITE = window.SITE_DATA || DEFAULT_SITE_DATA;
+const HERO = SITE.hero;
+const ABOUT = SITE.about;
+const CATEGORY_LABEL = { "9:16": "9:16", "16:9": "16:9", ugc: "UGC" };
+const PORTFOLIO = (SITE.portfolio || []).map(v => ({ ...v, category: CATEGORY_LABEL[v.category] ? v.category : (v.category === "vertical" ? "9:16" : "16:9") }));
+const FILTERS = [{ label: "All", value: "all" }, ...Object.keys(CATEGORY_LABEL).map(k => ({ label: CATEGORY_LABEL[k], value: k }))];
 
-    if (isDirect(item.videoUrl || "") && !item.thumbnailUrl) {
-      const v = document.createElement("video");
-      v.muted = true; v.preload = "metadata"; v.playsInline = true;
-      v.src = item.videoUrl + "#t=0.1";
-      btn.appendChild(v);
-    } else {
-      const img = document.createElement("img");
-      img.alt = ""; img.loading = "lazy";
-      thumbFor(item, img);
-      btn.appendChild(img);
-    }
+const SEO = Object.assign({ siteTitle: "", metaDescription: "", logoText: "", email: "", formspreeEndpoint: "" }, SITE.seo || {});
+const SOCIAL = Object.assign({ instagram: "", youtube: "", linkedin: "" }, SITE.social || {});
+document.title = SEO.siteTitle || (HERO.headline ? `${HERO.headline} — Osman Onur Tekin` : document.title);
+if (SEO.logoText) document.querySelectorAll('[data-logo]').forEach(el => { el.textContent = SEO.logoText; });
+if (SEO.email) { const ce = document.getElementById('contactEmail'); if (ce) ce.textContent = SEO.email; }
 
-    const play = document.createElement("span"); play.className = "play"; btn.appendChild(play);
-    const meta = document.createElement("span"); meta.className = "meta";
-    meta.innerHTML = '<span class="tag"></span><span class="title" style="display:block"></span>';
-    meta.querySelector(".tag").textContent = labels[item.category] || item.category || "";
-    meta.querySelector(".title").textContent = item.title || "";
-    btn.appendChild(meta);
+/* footer social links */
+(function renderSocial() {
+  const box = document.getElementById("socialLinks"); if (!box) return;
+  const svg = inner => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  const ICON = {
+    instagram: svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/>'),
+    youtube:   svg('<rect x="2.5" y="5" width="19" height="14" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" stroke="none"/>'),
+    linkedin:  svg('<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10.5V16.5M8 7.6v.01M12 16.5v-6M12 13.2c0-1.7 1-2.7 2.4-2.7 1.4 0 2.1.9 2.1 2.6v3.4"/>'),
+    email:     svg('<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.8 7.2l8.2 6 8.2-6"/>'),
+  };
+  const web = u => {
+    u = String(u || "").trim(); if (!u || /^(javascript|data|vbscript|mailto):/i.test(u)) return "";
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u.replace(/^\/+/, "");
+    try { return new URL(u).href; } catch (_) { return ""; }
+  };
+  const okMail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+  const shownMail = (document.getElementById("contactEmail") || {}).textContent;
+  const mailAddr = okMail(SEO.email) ? SEO.email.trim() : (okMail(shownMail) ? shownMail.trim() : "");
+  const mail = mailAddr ? "mailto:" + mailAddr : "";
+  const FALLBACK = { youtube: "https://www.youtube.com/", instagram: "https://www.instagram.com/", linkedin: "https://www.linkedin.com/" };
+  const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const items = [
+    { key: "youtube",   label: "YouTube",   href: web(SOCIAL.youtube) || FALLBACK.youtube,     ext: true },
+    { key: "instagram", label: "Instagram", href: web(SOCIAL.instagram) || FALLBACK.instagram, ext: true },
+    { key: "linkedin",  label: "LinkedIn",  href: web(SOCIAL.linkedin) || FALLBACK.linkedin,   ext: true },
+    { key: "email",     label: "Email",     href: mail,                  ext: false },
+  ].filter(i => i.href);
+  const cl = document.getElementById("contactLinks");
+  if (cl) cl.innerHTML = items.map(i => `<a class="hover-accent" href="${esc(i.href)}"${i.ext ? ' target="_blank" rel="noopener noreferrer"' : ""}>${i.label}</a>`).join("");
+  if (!items.length) { const blk = box.closest("[data-social-block]"); if (blk) blk.style.display = "none"; return; }
+  box.innerHTML = items.map(i => `<a class="social-link" href="${esc(i.href)}"${i.ext ? ' target="_blank" rel="noopener noreferrer"' : ""} aria-label="${i.label}" title="${i.label}">${ICON[i.key]}</a>`).join("");
+})();
 
-    btn.addEventListener("click", () => openModal(item));
-    return btn;
-  }
+document.getElementById('aboutContent').innerHTML = ABOUT.content.split('\n\n').map(p => `<p>${p}</p>`).join('');
 
-  /* ---- filters ---- */
-  function setFilter(value) {
-    filterBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.value === value)));
-    grid.dataset.mode = value === "9:16" ? "portrait" : "landscape";
-    let shown = 0;
-    grid.querySelectorAll(".card").forEach(c => {
-      const match = value === "all" || c.dataset.category === value;
-      c.classList.toggle("is-hidden", !match);
-      if (match) shown++;
-    });
-    empty.style.display = shown ? "none" : "block";
-  }
-  [{ label: "All", value: "all" }].concat(filters).forEach(f => {
-    const b = document.createElement("button");
-    b.type = "button"; b.textContent = f.label; b.dataset.value = f.value;
-    b.setAttribute("aria-pressed", String(f.value === "all"));
-    b.addEventListener("click", () => setFilter(f.value));
-    filterBar.appendChild(b);
+/* Arşiv içeriğini doldurma */
+(function renderArchive() {
+  const arc = document.getElementById("archiveContent");
+  if (!arc) return;
+  arc.innerHTML = PORTFOLIO.map((item, i) => `
+    <div style="display:flex; flex-direction:column; md:flex-row; justify-content:between; align-items:flex-start; md:align-items:center; padding:1.25rem 0; border-bottom:1px solid rgba(255,255,255,0.06); gap:1rem;">
+      <div>
+        <span class="font-mono" style="font-size:0.8rem; color:var(--accent);">${item.createdAt ? item.createdAt.substring(0,4) : '2026'} — ${CATEGORY_LABEL[item.category] || item.category}</span>
+        <h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.2rem; margin:0.3rem 0 0 0; font-weight:600; color:#fff;">${escH(item.title)}</h3>
+      </div>
+      <a href="${escH(item.videoUrl)}" target="_blank" rel="noopener noreferrer" class="font-mono" style="font-size:0.85rem; color:var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:6px;">Watch / View →</a>
+    </div>
+  `).join("");
+})();
+
+const REDUCED = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+const SINGLE_ACTIVE = true;
+let SOUND_ON = false;
+const ICON = {
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>',
+  play:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  on:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9.5v5h3.6L12.5 19V5L7.6 9.5H4z" fill="currentColor"/><path d="M16 9.2a4 4 0 010 5.6M18.6 6.6a7.6 7.6 0 010 10.8"/></svg>',
+  off:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9.5v5h3.6L12.5 19V5L7.6 9.5H4z" fill="currentColor"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>',
+};
+function updateSoundUI() {
+  document.querySelectorAll(".snd-btn").forEach(b => {
+    b.innerHTML = SOUND_ON ? ICON.on : ICON.off;
+    b.setAttribute("aria-pressed", String(SOUND_ON));
   });
+}
+function applySound(el) {
+  const on = SOUND_ON && el.dataset.userPaused !== "1";
+  if (el.dataset.auto === "file") el.muted = !on;
+  else if (el.dataset.auto === "yt") ytCmd(el, on ? "unMute" : "mute");
+}
+function setSound(on) {
+  SOUND_ON = !!on; updateSoundUI();
+  autoVisible.forEach(applySound);
+}
+const VISIBLE_RATIO = 0.35;
+function parseMedia(url) {
+  const u = String(url || "").trim();
+  const m = u.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (m) return { kind: "yt", id: m[1], short: /youtube\.com\/shorts\//i.test(u) };
+  if (/vimeo\.com\//i.test(u) && !/progressive_redirect|\.(mp4|mov|m4v|webm)(\?|$)/i.test(u)) {
+    const path = u.split(/[?#]/)[0];
+    const v = path.match(/\/video\/(\d{5,})(?:\/([0-9a-f]{8,}))?/i) || path.match(/\/(\d{5,})(?:\/([0-9a-f]{8,}))?(?:\/|$|["'\s])/i);
+    const hq = u.match(/[?&;]h=([A-Za-z0-9]+)/);
+    if (v) return { kind: "vimeo", id: v[1], hash: v[2] || (hq && hq[1]) || "" };
+  }
+  return { kind: "file", url: u };
+}
+const ytSrc = (id, o = {}) => "https://www.youtube-nocookie.com/embed/" + id + "?" + new URLSearchParams({
+  autoplay: 1, mute: o.sound ? 0 : 1, loop: 1, playlist: id, controls: o.sound ? 1 : 0, playsinline: 1, rel: 0,
+  modestbranding: 1, iv_load_policy: 3, disablekb: o.sound ? 0 : 1, enablejsapi: 1,
+}).toString();
+const vimeoSrc = (id, hash, o = {}) => "https://player.vimeo.com/video/" + id + "?" + new URLSearchParams(Object.assign(
+  o.sound ? { autoplay: 1, title: 0, byline: 0, portrait: 0 } : { autoplay: 1, muted: 1, loop: 1, controls: 0, title: 0, byline: 0, portrait: 0, autopause: 0 },
+  { playsinline: 1, dnt: 1, api: 1 }, hash ? { h: hash } : {})).toString();
+const ytCmd = (f, func) => { try { f.contentWindow && f.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: "" }), "*"); } catch (_) {} };
 
-  /* ---- grid ---- */
-  items.forEach(item => grid.appendChild(buildCard(item)));
-  setFilter("all");
+const cssUrl = u => "url(\"" + encodeURI(String(u)).replace(/[()'"]/g, c => "%" + c.charCodeAt(0).toString(16)) + "\")";
+const AR_MAP = { "16:9": 16 / 9, "9:16": 9 / 16, "1:1": 1, "4:5": 4 / 5 };
+function autoMediaHTML(item, mediaClass) {
+  const m = parseMedia(item.videoUrl);
+  const thumb = String(item.thumbnailUrl || "").trim();
+  const explicitAR = AR_MAP[item.aspect] || 0;
+  const guessAR = explicitAR || (m.short || item.category === "vertical" ? 9 / 16 : 16 / 9);
+  const posterDiv = thumb ? `<div class="auto-poster" aria-hidden="true" style="background-image:${escH(cssUrl(thumb))}"></div>` : "";
+  if (m.kind === "yt") return posterDiv + `<div class="yt-cover" aria-hidden="true"><iframe data-auto="yt" data-id="${m.id}" style="--ar:${guessAR}" title="" allow="autoplay; encrypted-media"></iframe></div>`;
+  if (m.kind === "vimeo") return posterDiv + `<div class="yt-cover" aria-hidden="true"><iframe data-auto="vimeo" data-id="${m.id}" data-hash="${escH(m.hash)}" style="--ar:${guessAR}" title="" allow="autoplay; encrypted-media"></iframe></div>`;
+  return `<video data-auto="file" src="${escH(m.url)}#t=0.001" muted loop playsinline preload="auto"${thumb ? ` poster="${escH(thumb)}"` : ""} class="${mediaClass}"></video>`;
+}
 
-  /* ---- modal player ---- */
-  const modal = document.getElementById("modal");
-  const frame = document.getElementById("frame");
-  function openModal(item) {
-    frame.innerHTML = "";
-    const url = item.videoUrl || "";
-    const portrait = item.category === "9:16";
-    frame.classList.toggle("portrait", portrait);
-    const yt = youtubeId(url), vm = vimeoId(url);
-    if (yt) {
-      frame.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + yt + '?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
-    } else if (vm) {
-      frame.innerHTML = '<iframe src="https://player.vimeo.com/video/' + vm + '?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
-    } else {
-      const v = document.createElement("video");
-      v.src = url; v.controls = true; v.autoplay = true; v.playsInline = true;
-      frame.appendChild(v);
+const autoVisible = new Set();
+let autoSuspended = false;
+
+const embedReveal = el => { const c = el.closest(".yt-cover"); if (c) c.classList.add("is-ready"); };
+function loadEmbed(el) {
+  if (el.getAttribute("src")) return;
+  const kind = el.dataset.auto;
+  el.addEventListener("load", () => {
+    setTimeout(() => embedReveal(el), 800);
+  }, { once: true });
+  el.src = kind === "yt" ? ytSrc(el.dataset.id) : vimeoSrc(el.dataset.id, el.dataset.hash);
+}
+
+function playAuto(el) {
+  if (autoSuspended || document.hidden || el.dataset.userPaused === "1") return;
+  const kind = el.dataset.auto;
+  if (kind === "yt" || kind === "vimeo") {
+    if (!el.getAttribute("src")) loadEmbed(el);
+    if (kind === "yt") ytCmd(el, "playVideo");
+  } else if (el.paused) {
+    el.muted = !SOUND_ON;
+    el.play().catch(() => { el.muted = true; el.play().catch(() => {}); });
+  }
+}
+function pauseAuto(el) {
+  const kind = el.dataset.auto;
+  if (kind === "yt") ytCmd(el, "pauseVideo");
+  else if (el.dataset.auto === "file") { if (!el.paused) el.pause(); el.muted = true; }
+}
+
+function electActive() {
+  if (autoSuspended || document.hidden) return;
+  let best = null, bestDist = Infinity;
+  const mid = window.innerHeight / 2;
+  autoVisible.forEach(el => {
+    if (el.dataset.userPaused === "1") return;
+    const r = el.closest(".auto-wrap").getBoundingClientRect();
+    const d = Math.abs((r.top + r.bottom) / 2 - mid);
+    if (d < bestDist) { bestDist = d; best = el; }
+  });
+  autoVisible.forEach(el => { if (el === best) playAuto(el); else pauseAuto(el); });
+}
+
+const autoIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    const el = en.target.querySelector("[data-auto]"); if (!el) return;
+    if (en.isIntersecting && en.intersectionRatio >= VISIBLE_RATIO) autoVisible.add(el);
+    else { autoVisible.delete(el); pauseAuto(el); }
+  });
+  electActive();
+}, { threshold: [0, 0.35, 1] }) : null;
+
+const warmIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => entries.forEach(en => {
+  if (!en.isIntersecting) return;
+  const el = en.target.querySelector("[data-auto]");
+  if (el && el.dataset.auto !== "file" && !autoSuspended && !REDUCED) loadEmbed(el);
+}), { rootMargin: "400px 0px", threshold: 0 }) : null;
+
+function registerAuto(root) {
+  root.querySelectorAll(".auto-wrap").forEach(wrap => {
+    const el = wrap.querySelector("[data-auto]"); if (!el) return;
+    if (REDUCED) el.dataset.userPaused = "1";
+    if (warmIO) warmIO.observe(wrap);
+    if (autoIO) autoIO.observe(wrap); else if (!REDUCED) { autoVisible.add(el); electActive(); }
+  });
+}
+window.addEventListener("scroll", () => electActive(), { passive: true });
+
+/* Gallery */
+const grid = document.getElementById("galleryGrid");
+const playIconSVG = () => `<svg width="18" height="18" viewBox="0 0 24 24" fill="#CCFF00"><path d="M8 5v14l11-7z"/></svg>`;
+
+const THUMB_CLS = "absolute inset-0 h-full w-full object-cover";
+function thumbImg(url, alt) { return `<img class="${THUMB_CLS}" src="${escH(url)}" alt="${escH(alt || "")}" loading="eager" />`; }
+function thumbMarkup(item) {
+  const t = String(item.thumbnailUrl || "").trim(), m = parseMedia(item.videoUrl);
+  if (t) return thumbImg(t, item.title);
+  if (m.kind === "yt") return thumbImg("https://i.ytimg.com/vi/" + m.id + "/hqdefault.jpg", item.title);
+  if (m.kind === "file") return `<video class="${THUMB_CLS}" src="${escH(m.url)}#t=0.5" muted playsinline preload="metadata" aria-hidden="true"></video>`;
+  return "";
+}
+
+function renderGallery() {
+  grid.innerHTML = PORTFOLIO.map((item, i) => `
+    <article class="gallery-card group relative overflow-hidden rounded-lg cursor-pointer bg-panel" data-cat="${item.category}" data-id="${item.id}" tabindex="0" role="button" aria-label="Play ${escH(item.title)}">
+      <div class="thumb-wrap absolute inset-0 overflow-hidden bg-[#0d0f0d] transition duration-700 ease-out group-hover:scale-105">${thumbMarkup(item)}</div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent pointer-events-none"></div>
+      <span class="absolute top-3 left-3 font-mono text-[11px] text-accent/80 font-semibold">N°${String(i + 1).padStart(2, '0')}</span>
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span class="h-14 w-14 rounded-full glass flex items-center justify-center opacity-85 group-hover:opacity-100 group-hover:scale-110 transition duration-300 shadow-xl">${playIconSVG()}</span>
+      </div>
+      <div class="absolute left-4 right-4 bottom-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition duration-300 pointer-events-none">
+        <p class="text-xs font-mono text-accent" style="margin:0 0 0.3rem 0; font-weight:600;">${CATEGORY_LABEL[item.category] || item.category}</p>
+        <h3 class="font-display text-base md:text-lg mt-1" style="margin:0; font-weight:600;">${item.title}</h3>
+      </div>
+    </article>
+  `).join("");
+
+  grid.querySelectorAll(".gallery-card").forEach(card => {
+    card.addEventListener("click", () => openModal(PORTFOLIO.find(v => v.id === Number(card.dataset.id))));
+  });
+  return Promise.resolve();
+}
+
+function applyFilter(value) {
+  grid.dataset.mode = value === "9:16" ? "portrait" : "landscape";
+  grid.querySelectorAll(".gallery-card").forEach(card => card.classList.toggle("is-hidden", !(value === "all" || card.dataset.cat === value)));
+}
+
+const filterBar = document.getElementById("filters");
+filterBar.innerHTML = FILTERS.map((f, i) => `<button class="filter-pill" data-filter="${f.value}" data-active="${i === 0}">${f.label}</button>`).join("");
+filterBar.querySelectorAll(".filter-pill").forEach(btn => {
+  btn.addEventListener("click", () => {
+    filterBar.querySelectorAll(".filter-pill").forEach(b => b.dataset.active = "false");
+    btn.dataset.active = "true";
+    applyFilter(btn.dataset.filter);
+  });
+});
+
+renderGallery();
+applyFilter("all");
+
+/* Modal */
+const modal = document.getElementById("modal");
+const modalVideo = document.getElementById("modalVideo");
+const modalFrame = document.getElementById("modalFrame");
+function openModal(item) {
+  if (!item) return;
+  const mm = parseMedia(item.videoUrl);
+  if (mm.kind === "yt" || mm.kind === "vimeo") {
+    modalVideo.pause(); modalVideo.removeAttribute("src"); modalVideo.style.display = "none";
+    modalFrame.style.display = "block";
+    modalFrame.src = mm.kind === "yt" ? ytSrc(mm.id, { sound: true }) : vimeoSrc(mm.id, mm.hash, { sound: true });
+  } else {
+    modalFrame.style.display = "none"; modalFrame.removeAttribute("src"); modalVideo.style.display = "block";
+    modalVideo.src = mm.url; modalVideo.muted = false; modalVideo.play().catch(() => { modalVideo.muted = true; modalVideo.play().catch(() => {}); });
+  }
+  document.getElementById('modalTitle').textContent = item.title || '';
+  document.getElementById('modalMeta').textContent = CATEGORY_LABEL[item.category] || item.category || '';
+  document.getElementById('modalDesc').textContent = item.description || '';
+  document.getElementById('modalTools').innerHTML = (item.tools || []).map(t => `<span style="border:1px solid rgba(204,255,0,0.3); border-radius:4px; padding:0.25rem 0.6rem; color:var(--muted);">${t}</span>`).join("");
+  modal.dataset.open = "true";
+  autoSuspended = true;
+}
+function closeModal() {
+  modal.dataset.open = "false";
+  modalVideo.pause(); modalVideo.removeAttribute("src"); modalFrame.removeAttribute("src");
+  autoSuspended = false;
+}
+document.getElementById("modalClose").addEventListener("click", closeModal);
+document.getElementById("modalBackdrop").addEventListener("click", closeModal);
+
+/* Hero Banners */
+const banners = Array.isArray(HERO.banners) ? HERO.banners : [];
+const heroStack = document.getElementById("heroStack");
+document.getElementById("heroHeadline").textContent = HERO.headline || "";
+const pad2 = n => String(n).padStart(2, "0");
+
+heroStack.innerHTML = !banners.length ? `
+  <article class="hero-static" style="display:flex; align-items:center; padding:0 clamp(1.5rem, 5vw, 4rem);">
+    <div class="hero-copy" style="max-width: 900px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:clamp(3rem, 8vw, 7rem); line-height:0.95; margin:0 0 1.5rem 0; letter-spacing:-0.03em;">${escH(HERO.headline || "")}</h2>
+      ${HERO.subheadline ? `<p style="color:rgba(255,255,255,0.75); font-size:1.15rem; margin:0; max-width:45ch; line-height:1.65;">${escH(HERO.subheadline)}</p>` : ""}
+    </div>
+  </article>` : banners.map((b, i) => `
+  <article class="hero-banner" data-i="${i}">
+    <div class="hero-frame">
+      <div class="hero-stage" style="position:absolute; inset:0; cursor:pointer;" role="button" tabindex="0">
+        <div class="auto-wrap">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover")}</div>
+      </div>
+      <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(5,5,5,0.85) 0%, rgba(5,5,5,0.3) 50%, rgba(5,5,5,0.5) 100%); pointer-events:none;"></div>
+      
+      <div class="hero-copy" style="position:absolute; left:clamp(1.5rem, 5vw, 4rem); right:clamp(1.5rem, 5vw, 4rem); bottom:4rem; display:flex; flex-direction:column; gap:2rem; pointer-events:none;" class="md:flex-row md:items-end md:justify-between">
+        <div style="pointer-events:none; max-width: 950px;">
+          ${banners.length > 1 ? `<div style="display:flex; align-items:center; gap:12px; margin-bottom:1rem;"><span style="height:1px; width:30px; background:var(--accent);"></span><p class="font-mono" style="font-size:0.8rem; letter-spacing:0.25em; color:var(--accent); margin:0; font-weight:600;">FEATURED PROJECT ${pad2(i + 1)} —${pad2(banners.length)}</p></div>` : ''}
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:clamp(3rem, 8vw, 7rem); line-height:0.92; margin:0 0 1.2rem 0; letter-spacing:-0.03em; text-shadow: 0 10px 40px rgba(0,0,0,0.5);">${escH(b.title)}</h2>
+          ${b.subtitle ? `<p style="color:rgba(255,255,255,0.8); font-size:1.15rem; margin:0; max-width:48ch; line-height:1.65; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">${escH(b.subtitle)}</p>` : ''}
+        </div>
+        <div style="pointer-events:auto; display:flex; align-items:center; gap:1.75rem;">
+          <button type="button" class="hero-mute hero-ctl snd-btn" aria-label="Toggle sound" title="Toggle Sound"></button>
+          <button type="button" class="hero-case-btn">VIEW CASE STUDY <span>→</span></button>
+        </div>
+      </div>
+    </div>
+  </article>`).join("");
+
+registerAuto(heroStack);
+const heroEls = [...heroStack.querySelectorAll(".hero-banner")].map((el, i) => ({
+  el, data: banners[i], media: el.querySelector("[data-auto]"),
+  mute: el.querySelector(".hero-mute")
+}));
+
+heroEls.forEach(h => {
+  if (h.mute) h.mute.addEventListener("click", e => { e.stopPropagation(); setSound(!SOUND_ON); });
+  const open = () => openModal(h.data);
+  h.el.querySelector(".hero-stage").addEventListener("click", open);
+  const btn = h.el.querySelector(".hero-case-btn");
+  if (btn) btn.addEventListener("click", e => { e.stopPropagation(); open(); });
+});
+updateSoundUI();
+
+/* Entry Loader Removal */
+(function runEntryLoader() {
+  const pre = document.getElementById("preloader"); if (!pre) return;
+  const root = document.documentElement;
+  root.classList.add("is-loading");
+  const countEl = document.getElementById("plCount"), barEl = document.getElementById("plBar");
+  let shown = 0;
+  const timer = setInterval(() => {
+    shown += 20;
+    countEl.textContent = String(Math.min(shown, 100));
+    barEl.style.width = shown + "%";
+    if (shown >= 100) {
+      clearInterval(timer);
+      root.classList.remove("is-loading");
+      pre.classList.add("is-done");
+      setTimeout(() => pre.remove(), 500);
     }
-    document.getElementById("mTitle").textContent = item.title || "";
-    document.getElementById("mDesc").textContent = item.description || "";
-    document.getElementById("mTools").textContent = (item.tools || []).join("  ·  ");
-    modal.classList.add("open");
-    document.body.style.overflow = "hidden";
-  }
-  function closeModal() {
-    modal.classList.remove("open");
-    frame.innerHTML = "";                    // stops playback
-    document.body.style.overflow = "";
-  }
-  modal.querySelector(".close").addEventListener("click", closeModal);
-  modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+  }, 80);
+})();
+
+/* Contact form */
+const form = document.getElementById("contactForm");
+if (form) {
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const message = document.getElementById("message").value.trim();
+    if (!name || !email || !message) {
+      document.getElementById("formError").textContent = "Lütfen tüm alanları doldurun.";
+      document.getElementById("formError").style.display = "block";
+      return;
+    }
+    document.getElementById("formStatus").style.display = "block";
+    form.reset();
+  });
+}
 })();
 </script>
 </body>
