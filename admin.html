@@ -586,6 +586,43 @@
     </div>
   </div>
 
+
+  <!-- Add / Edit WORK ARCHIVE video modal -->
+  <div id="archiveModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-backdrop" data-close-archive></div>
+    <div class="modal-panel">
+      <div class="flex items-center justify-between mb-5">
+        <p id="archiveModalTitle" class="card-title">Add archive video</p><button class="btn btn-sm btn-icon" type="button"
+          aria-label="Close" data-close-archive>✕</button>
+      </div>
+      <form id="archiveForm" class="space-y-4">
+        <input type="hidden" id="a-id" />
+        <label class="block"><span class="label">TITLE</span><input id="a-title" class="input" maxlength="120" required
+            placeholder="Solstice" /></label>
+        <label class="block"><span class="label">SUBTITLE / TAGLINE</span><input id="a-subtitle" class="input"
+            maxlength="160" placeholder="A generative-first spot for a fragrance launch." /></label>
+        <label class="block"><span class="label">VIDEO URL (MP4)</span><input id="a-video" class="input" type="url"
+            placeholder="https://vimeo.com/123456789   or   https://…/clip.mp4" required /></label>
+        <label class="block"><span class="label">THUMBNAIL IMAGE URL (optional — shown instantly while the video loads)</span><input id="a-thumb" class="input" type="url"
+            placeholder="https://…/thumbnail.jpg" /></label>
+        <label class="block"><span class="label">VIDEO FORMAT (so vertical videos fit correctly)</span>
+          <select id="a-aspect" class="input">
+            <option value="">Auto-detect</option><option value="16:9">Horizontal — 16:9</option><option value="9:16">Vertical — 9:16</option>
+            <option value="1:1">Square — 1:1</option><option value="4:5">Portrait — 4:5</option>
+          </select></label>
+        <label class="block"><span class="label">TOOLS USED</span><input id="a-tools" class="input"
+            placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags
+            in the cinematic case-study pop-up.</span></label>
+        <label class="block"><span class="label">DETAILED DESCRIPTION / CASE STUDY</span><textarea id="a-desc"
+            class="input" rows="4"
+            placeholder="Shown when a visitor clicks this video — opens the same cinematic modal as portfolio items."></textarea></label>
+        <p id="a-error" class="text-sm text-red-400 hidden"></p>
+        <div class="savebar"><button type="button" class="btn" data-close-archive>Cancel</button><button type="submit"
+            class="btn btn-primary">Save video</button></div>
+      </form>
+    </div>
+  </div>
+
   <script>
     /* ==========================================================================
        DATA — shape matches window.SITE_DATA written by "Publish (Download data.js)":
@@ -617,9 +654,9 @@
           { title: "Sound & delivery", text: "Sound design, mix, and exports tailored to every platform it ships on." },
         ],
       },
-      archive: { banners: [] },
       seo: { siteTitle: "Osman Onur Tekin — AI Video Editor & Producer", metaDescription: "Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work.", logoText: "Osman Tekin", email: "", formspreeEndpoint: "" },
       social: { instagram: "", youtube: "", linkedin: "" },
+      archive: [],                                                   // Work Archive page (banner-style videos)
       filters: [{ label: "9:16", value: "9:16" }, { label: "16:9", value: "16:9" }, { label: "UGC", value: "ugc" }],
       categoryLabel: { "9:16": "9:16", "16:9": "16:9", ugc: "UGC" },
       portfolio: [
@@ -641,7 +678,11 @@
     function migrate(s) {                                   // fills in fields added by later steps for existing localStorage saves
       s.about = { ...clone(DEFAULT_DATA.about), ...s.about };
       s.seo = { ...clone(DEFAULT_DATA.seo), ...(s.seo || {}) };
-      s.social = { ...clone(DEFAULT_DATA.social), ...(s.social || {}) };          // footer links (Instagram / YouTube / LinkedIn); e-mail comes from seo.email
+      s.social = { ...clone(DEFAULT_DATA.social), ...(s.social || {}) };
+      if (!Array.isArray(s.archive)) s.archive = [];                               // Work Archive: its own list, never derived from banners / work
+      let nextAid = s.archive.reduce((m, a) => Math.max(m, a.id || 0), 0) + 1;
+      s.archive = s.archive.map(a => ({ ...a, id: a.id || nextAid++, title: a.title || '', subtitle: a.subtitle || '', videoUrl: a.videoUrl || '',
+        thumbnailUrl: a.thumbnailUrl || '', aspect: a.aspect || '', description: a.description || '', tools: Array.isArray(a.tools) ? [...a.tools] : [] }));          // footer links (Instagram / YouTube / LinkedIn); e-mail comes from seo.email
       if (!Array.isArray(s.about.workflow) || !s.about.workflow.length) s.about.workflow = clone(DEFAULT_DATA.about.workflow);
 
       // hero: upgrade every banner to the full schema (id / subtitle / description / tools),
@@ -670,15 +711,6 @@
       s.filters = clone(DEFAULT_DATA.filters); s.categoryLabel = clone(DEFAULT_DATA.categoryLabel);
       (s.portfolio || []).forEach(v => { if (!s.categoryLabel[v.category]) v.category = v.category === 'vertical' ? '9:16' : '16:9'; });
       if (!s.stills || !Array.isArray(s.stills.sections)) s.stills = { title: '', sections: [] };   // Stills (picture gallery)
-      // Archive banners — independent list, never touches hero or portfolio
-      if (!s.archive || !Array.isArray(s.archive.banners)) s.archive = clone(DEFAULT_DATA.archive);
-      let nextAid = s.archive.banners.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
-      s.archive.banners = s.archive.banners.map(b => ({
-        ...b,
-        id: b.id || nextAid++, title: b.title || '', subtitle: b.subtitle || '', videoUrl: b.videoUrl || '',
-        description: b.description || '', tools: Array.isArray(b.tools) ? [...b.tools] : [],
-        thumbnailUrl: b.thumbnailUrl || '', aspect: b.aspect || '',
-      }));
       return s;
     }
     let STATE = migrate(loadState());
@@ -686,29 +718,29 @@
 
     /* ---------- ISOLATION GUARD ----------
        STATE.hero.banners (hero) and STATE.portfolio (All Work) are independent data models with their own id counters.
-       Every create / edit / delete / reorder goes through commitBanners() or commitWork(). Each one snapshots the OTHER list
+       Every create / edit / delete / reorder goes through commitBanners(), commitWork() or commitArchive(). Each one snapshots the OTHER list
        first and, if anything it did changed that other list, restores it and reports — so no code path (present or future)
        can make an All Work change touch a banner or the other way round. */
     const SLICES = {
-      banners:        { get: () => STATE.hero.banners,    set: v => { STATE.hero.banners = v; } },
-      work:           { get: () => STATE.portfolio,       set: v => { STATE.portfolio = v; } },
-      archiveBanners: { get: () => STATE.archive.banners, set: v => { STATE.archive.banners = v; } },
+      banners: { get: () => STATE.hero.banners, set: v => { STATE.hero.banners = v; } },
+      work:    { get: () => STATE.portfolio,    set: v => { STATE.portfolio = v; } },
+      archive: { get: () => STATE.archive,      set: v => { STATE.archive = v; } },     // Work Archive page — its own list too
     };
     function commit(owner, mutate) {
-      const otherKeys = Object.keys(SLICES).filter(k => k !== owner);
-      const befores = otherKeys.map(k => ({ k, v: JSON.stringify(SLICES[k].get()) }));
+      const others = Object.keys(SLICES).filter(k => k !== owner);
+      const before = Object.fromEntries(others.map(k => [k, JSON.stringify(SLICES[k].get())]));
       mutate();
-      befores.forEach(({ k, v }) => {
-        if (JSON.stringify(SLICES[k].get()) !== v) {
-          SLICES[k].set(JSON.parse(v));
+      others.forEach(k => {
+        if (JSON.stringify(SLICES[k].get()) !== before[k]) {
+          SLICES[k].set(JSON.parse(before[k]));
           console.error('[isolation] "' + owner + '" change tried to modify "' + k + '" — reverted.');
         }
       });
       persist();
     }
-    const commitBanners        = fn => commit('banners', fn);
-    const commitWork           = fn => commit('work', fn);
-    const commitArchiveBanners = fn => commit('archiveBanners', fn);
+    const commitBanners = fn => commit('banners', fn);
+    const commitWork = fn => commit('work', fn);
+    const commitArchive = fn => commit('archive', fn);
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const $ = (sel, root = document) => root.querySelector(sel);
     function moveInArray(arr, index, dir) { const j = index + dir; if (j < 0 || j >= arr.length) return false;[arr[index], arr[j]] = [arr[j], arr[index]]; return true; }
@@ -718,14 +750,14 @@
     /* ---------------- sidebar nav ---------------- */
     const NAV = [
       { id: 'hero', label: 'Hero Banners' },
-      { id: 'archive', label: 'Archive Banners' },
       { id: 'portfolio', label: 'Portfolio' },
+      { id: 'archive', label: 'Work Archive' },
       { id: 'stills', label: 'Stills (pictures)' },
       { id: 'about', label: 'About & Process' },
       { id: 'seo', label: 'SEO & Settings' },
       { id: 'inbox', label: 'Inbox', soon: true },
     ];
-    const VIEWS = { hero: renderHeroView, archive: renderArchiveView, portfolio: renderPortfolioView, stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
+    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, archive: renderArchiveView, stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
     let activeView = 'hero';
     function renderNav() {
       $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
@@ -813,13 +845,9 @@
     </div>`).join('') : '<p class="text-sm text-muted">No banners yet.</p>';
     }
 
-    let activeBannerOwner = 'hero';   // 'hero' or 'archive' — set before opening the shared banner modal
-    function openBannerForm(id, owner = 'hero') {
-      activeBannerOwner = owner;
-      const list = owner === 'archive' ? STATE.archive.banners : STATE.hero.banners;
-      const item = id ? list.find(b => b.id === id) : null;
-      const sectionLabel = owner === 'archive' ? 'archive banner' : 'hero banner';
-      $('#bannerModalTitle').textContent = item ? ('Edit ' + sectionLabel) : ('Add ' + sectionLabel);
+    function openBannerForm(id) {
+      const item = id ? STATE.hero.banners.find(b => b.id === id) : null;
+      $('#bannerModalTitle').textContent = item ? 'Edit hero banner' : 'Add hero banner';
       $('#b-id').value = item ? item.id : '';
       $('#b-title').value = item?.title || ''; $('#b-subtitle').value = item?.subtitle || '';
       $('#b-video').value = item?.videoUrl || ''; $('#b-thumb').value = item?.thumbnailUrl || ''; $('#b-aspect').value = item?.aspect || '';
@@ -838,94 +866,93 @@
       if (/vimeo\.com/i.test(videoUrl) && !/progressive_redirect|\.(mp4|mov|m4v|webm)(\?|$)/i.test(videoUrl) && !/\d{5,}/.test(videoUrl)) { $('#b-error').textContent = "Couldn't find the Vimeo video number in that link. Use e.g. https://vimeo.com/123456789 (unlisted videos: https://vimeo.com/123456789/abcdef1234)."; $('#b-error').classList.remove('hidden'); return; }
       const payload = { title, subtitle: $('#b-subtitle').value.trim(), videoUrl, thumbnailUrl: $('#b-thumb').value.trim(), aspect: $('#b-aspect').value, description: $('#b-desc').value.trim(), tools: $('#b-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
       const idRaw = $('#b-id').value;
-      const isArchive = activeBannerOwner === 'archive';
-      const doCommit = isArchive ? commitArchiveBanners : commitBanners;
-      const getBannerList = () => isArchive ? STATE.archive.banners : STATE.hero.banners;
-      doCommit(() => {
-        const list = getBannerList();
-        if (idRaw) { const i = list.findIndex(b => b.id === Number(idRaw)); list[i] = { ...list[i], ...payload }; }
-        else { const nextId = list.reduce((m, b) => Math.max(m, b.id), 0) + 1; list.push({ id: nextId, ...payload }); }
+      commitBanners(() => {
+        if (idRaw) { const i = STATE.hero.banners.findIndex(b => b.id === Number(idRaw)); STATE.hero.banners[i] = { ...STATE.hero.banners[i], ...payload }; }
+        else { const nextId = STATE.hero.banners.reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE.hero.banners.push({ id: nextId, ...payload }); }
       });
-      closeBannerForm();
-      if (isArchive) paintArchiveBanners(); else paintBanners();
+      closeBannerForm(); paintBanners();
       toast(idRaw ? 'Banner updated.' : 'Banner added.');
     });
-    function removeBanner(id, owner = 'hero') {
-      if (!confirm('Delete this banner? This cannot be undone.')) return;
-      if (owner === 'archive') {
-        commitArchiveBanners(() => { STATE.archive.banners = STATE.archive.banners.filter(b => b.id !== id); });
-        paintArchiveBanners();
-      } else {
-        commitBanners(() => { STATE.hero.banners = STATE.hero.banners.filter(b => b.id !== id); });
-        paintBanners();
-      }
-      toast('Banner deleted.');
+    function removeBanner(id) {
+      if (!confirm('Delete this hero banner? This cannot be undone.')) return;
+      commitBanners(() => { STATE.hero.banners = STATE.hero.banners.filter(b => b.id !== id); });
+      paintBanners(); toast('Banner deleted.');
     }
 
-    /* ================= MODULE 1b — Archive Banners (same shape as Hero, separate list) ================= */
+    /* ================= MODULE — Work Archive (own list: STATE.archive, banner-style videos on /work-archive) ================= */
     function renderArchiveView() {
       const view = $('#view');
       view.innerHTML = `
     <div class="card space-y-4">
-      <div><p class="card-title">Archive banners</p><p class="card-sub">Full-width banner videos for the Archive section on the homepage — each autoplays and links to a case-study pop-up. Reorder with ↑ / ↓. These are completely independent from the Hero Banners.</p></div>
-      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="archiveBannerCount"></p><button id="addArchiveBannerBtn" class="btn btn-primary btn-sm" type="button">+ Add archive banner</button></div>
-      <div id="archiveBannerList" class="space-y-2"></div>
-    </div>
-
-    <div class="card mt-6">
-      <p class="card-title mb-1">Live preview</p><p class="card-sub">Banners appear top-to-bottom in exactly this order in the Archive section.</p>
-      <div id="pv-archive-stack" class="space-y-3 max-h-[520px] overflow-y-auto pr-1"></div>
+      <div><p class="card-title">Work Archive</p><p class="card-sub">The “Work Archive” page of the site (menu: Work Archive, just before About). Full-screen banner-style videos, top to bottom in exactly this order. They load lazily: each video starts playing only when a visitor scrolls to it, and stops again when it scrolls away. Reorder with ↑ / ↓. This list is completely separate from the hero banners and from All Work — changing one never touches the others.</p></div>
+      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="archiveCount"></p><button id="addArchiveBtn" class="btn btn-primary btn-sm" type="button">+ Add archive video</button></div>
+      <div id="archiveList" class="space-y-2"></div>
     </div>`;
-
-      $('#addArchiveBannerBtn').addEventListener('click', () => openBannerForm(null, 'archive'));
-      paintArchiveBanners();
+      $('#addArchiveBtn').addEventListener('click', () => openArchiveForm(null));
+      paintArchive();
     }
-
-    function paintArchiveBanners() {
-      const banners = STATE.archive.banners;
-      if (!$('#archiveBannerCount')) return;   // view not active
-      $('#archiveBannerCount').textContent = `${banners.length} banner${banners.length === 1 ? '' : 's'}`;
-      $('#archiveBannerList').innerHTML = banners.length ? banners.map((b, i) => `
+    function paintArchive() {
+      const list = STATE.archive;
+      $('#archiveCount').textContent = `${list.length} video${list.length === 1 ? '' : 's'}`;
+      $('#archiveList').innerHTML = list.length ? list.map((b, i) => `
     <div class="vrow" data-id="${b.id}">
       <span class="pill-order">${i + 1}</span>
       ${b.thumbnailUrl ? `<img src="${esc(b.thumbnailUrl)}" alt="" style="width:56px;height:34px;object-fit:cover;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.1)" />` : ''}
       <div class="min-w-0 flex-1">
-        <p class="text-sm truncate">${esc(b.title) || '(untitled banner)'}</p>
+        <p class="text-sm truncate">${esc(b.title) || '(untitled)'}</p>
         <p class="text-xs text-muted truncate mt-0.5">${esc(b.subtitle) || '—'}</p>
       </div>
       <div class="reorder-grp">
         <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
-        <button type="button" class="btn btn-icon" data-down ${i === banners.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+        <button type="button" class="btn btn-icon" data-down ${i === list.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
       </div>
       <button class="btn btn-sm" type="button" data-edit="${b.id}">Edit</button>
       <button class="btn btn-sm btn-danger" type="button" data-del="${b.id}">Delete</button>
-    </div>`).join('') : '<p class="text-sm text-muted">No archive banners yet — click "Add archive banner" to create your first one.</p>';
-
-      $('#archiveBannerList').querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBannerForm(Number(btn.dataset.edit), 'archive')));
-      $('#archiveBannerList').querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeBanner(Number(btn.dataset.del), 'archive')));
-      $('#archiveBannerList').querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderArchiveBanner(Number(e.target.closest('[data-id]').dataset.id), -1)));
-      $('#archiveBannerList').querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderArchiveBanner(Number(e.target.closest('[data-id]').dataset.id), 1)));
-      paintArchivePreview();
+    </div>`).join('') : '<p class="text-sm text-muted">No archive videos yet — click "Add archive video" to add your first one. Until then the Work Archive page shows a “check back soon” message.</p>';
+      const L = $('#archiveList');
+      L.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openArchiveForm(Number(btn.dataset.edit))));
+      L.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeArchive(Number(btn.dataset.del))));
+      L.querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderArchive(Number(e.target.closest('[data-id]').dataset.id), -1)));
+      L.querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderArchive(Number(e.target.closest('[data-id]').dataset.id), 1)));
     }
-
-    function reorderArchiveBanner(id, dir) {
-      const i = STATE.archive.banners.findIndex(b => b.id === id);
+    function reorderArchive(id, dir) {
+      const i = STATE.archive.findIndex(b => b.id === id);
       if (i < 0) return;
-      let moved = false; commitArchiveBanners(() => { moved = moveInArray(STATE.archive.banners, i, dir); });
-      if (moved) paintArchiveBanners();
+      let moved = false; commitArchive(() => { moved = moveInArray(STATE.archive, i, dir); });
+      if (moved) paintArchive();
     }
-
-    function paintArchivePreview() {
-      const pvStack = $('#pv-archive-stack'); if (!pvStack) return;
-      const banners = STATE.archive.banners;
-      pvStack.innerHTML = banners.length ? banners.map((b, i) => `
-    <div class="pv-hero"${b.thumbnailUrl ? ` style="background-image:url('${esc(b.thumbnailUrl)}');background-size:cover;background-position:center"` : ''}>
-      <div class="txt">
-        <p class="font-mono text-[10px] text-accent mb-1">ARCHIVE ${String(i + 1).padStart(2, '0')} / ${String(banners.length).padStart(2, '0')}${i === 0 ? ' // TOP OF ARCHIVE' : ''}</p>
-        <p class="font-display text-base sm:text-lg leading-tight">${esc(b.title) || 'Untitled'}</p>
-        <p class="text-xs text-muted mt-0.5">${esc(b.subtitle)}</p>
-      </div>
-    </div>`).join('') : '<p class="text-sm text-muted">No archive banners yet.</p>';
+    function openArchiveForm(id) {
+      const item = id ? STATE.archive.find(b => b.id === id) : null;
+      $('#archiveModalTitle').textContent = item ? 'Edit archive video' : 'Add archive video';
+      $('#a-id').value = item ? item.id : '';
+      $('#a-title').value = item?.title || ''; $('#a-subtitle').value = item?.subtitle || '';
+      $('#a-video').value = item?.videoUrl || ''; $('#a-thumb').value = item?.thumbnailUrl || ''; $('#a-aspect').value = item?.aspect || '';
+      $('#a-tools').value = (item?.tools || []).join(', '); $('#a-desc').value = item?.description || '';
+      $('#a-error').classList.add('hidden');
+      $('#archiveModal').classList.add('open'); $('#archiveModal').setAttribute('aria-hidden', 'false');
+    }
+    function closeArchiveForm() { $('#archiveModal').classList.remove('open'); $('#archiveModal').setAttribute('aria-hidden', 'true'); }
+    document.querySelectorAll('[data-close-archive]').forEach(el => el.addEventListener('click', closeArchiveForm));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#archiveModal').classList.contains('open')) closeArchiveForm(); });
+    $('#archiveForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const err = m => { $('#a-error').textContent = m; $('#a-error').classList.remove('hidden'); };
+      const title = $('#a-title').value.trim(), videoUrl = $('#a-video').value.trim();
+      if (!title || !videoUrl) return err('Title and Video URL are required.');
+      if (/vimeo\.com/i.test(videoUrl) && !/progressive_redirect|\.(mp4|mov|m4v|webm)(\?|$)/i.test(videoUrl) && !/\d{5,}/.test(videoUrl)) return err("Couldn't find the Vimeo video number in that link. Use e.g. https://vimeo.com/123456789 (unlisted videos: https://vimeo.com/123456789/abcdef1234).");
+      const payload = { title, subtitle: $('#a-subtitle').value.trim(), videoUrl, thumbnailUrl: $('#a-thumb').value.trim(), aspect: $('#a-aspect').value, description: $('#a-desc').value.trim(), tools: $('#a-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+      const idRaw = $('#a-id').value;
+      commitArchive(() => {
+        if (idRaw) { const i = STATE.archive.findIndex(b => b.id === Number(idRaw)); STATE.archive[i] = { ...STATE.archive[i], ...payload }; }
+        else { const nextId = STATE.archive.reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE.archive.push({ id: nextId, ...payload }); }
+      });
+      closeArchiveForm(); paintArchive();
+      toast(idRaw ? 'Archive video updated.' : 'Archive video added.');
+    });
+    function removeArchive(id) {
+      if (!confirm('Delete this archive video? This cannot be undone.')) return;
+      commitArchive(() => { STATE.archive = STATE.archive.filter(b => b.id !== id); });
+      paintArchive(); toast('Archive video deleted.');
     }
 
     /* ================= MODULE 2 — Portfolio CRUD (reorderable) ================= */
