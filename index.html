@@ -216,6 +216,20 @@
     *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   }
 </style>
+<script>
+/* Routing: /about, /contact and /imagery are their own pages (vercel.json serves this same file for them); "/" is the homepage. */
+(function () {
+  var p = location.pathname.replace(/\/+$/, "").replace(/^\/|\.html$/g, "").toLowerCase();
+  document.documentElement.setAttribute("data-page", p === "about" || p === "contact" || p === "imagery" ? p : "home");
+})();
+</script>
+<style>
+  html[data-page="about"] :is(#top,#work,#contact,#stills),
+  html[data-page="contact"] :is(#top,#work,#about,#stills),
+  html[data-page="imagery"] :is(#top,#work,#about,#contact),
+  html[data-page="home"] :is(#about,#contact,#stills) { display: none !important; }
+  html:not([data-page="home"]) section[id] { border-top: 0 !important; padding-top: 8rem; min-height: 70vh; }
+</style>
 </head>
 
 <body class="bg-ink text-[#eef0ec] antialiased selection:bg-accent selection:text-ink relative">
@@ -231,14 +245,14 @@
   <!-- ============ NAV ============ -->
   <header id="siteHeader" class="fixed top-0 inset-x-0 z-50 nav-elevated">
     <div class="mx-auto max-w-[1400px] px-5 md:px-10 h-16 md:h-20 flex items-center justify-between">
-      <a href="#top" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
+      <a href="/" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
       <nav class="hidden md:flex items-center gap-10 text-lg font-display font-semibold text-white/90">
-        <a href="#work" class="nav-link">Work</a>
-        <a href="#stills" class="nav-link" data-stills-link style="display:none">Stills</a>
-        <a href="#about" class="nav-link">About</a>
-        <a href="#contact" class="nav-link">Contact</a>
+        <a href="/#work" class="nav-link">Work</a>
+        <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
+        <a href="/about" class="nav-link">About</a>
+        <a href="/contact" class="nav-link">Contact</a>
       </nav>
-      <a href="#contact" class="hidden md:inline-flex items-center rounded-md border border-accent/50 text-accent font-mono text-xs px-5 py-2.5 hover:bg-accent hover:text-ink hover:shadow-[0_0_20px_rgba(204,255,0,0.35)] transition">start_project()</a>
+      <a href="/contact" class="hidden md:inline-flex items-center rounded-md border border-accent/50 text-accent font-mono text-xs px-5 py-2.5 hover:bg-accent hover:text-ink hover:shadow-[0_0_20px_rgba(204,255,0,0.35)] transition">start_project()</a>
       <button id="menuBtn" aria-label="Open menu" aria-expanded="false" class="md:hidden relative z-50 h-11 w-11 -mr-2 flex flex-col items-center justify-center gap-1.5">
         <span class="block h-px w-6 bg-white"></span><span class="block h-px w-6 bg-white"></span>
       </button>
@@ -247,10 +261,10 @@
 
   <!-- full-screen mobile nav overlay: same data-open pattern as the case-study modal -->
   <div id="mobileMenu" data-open="false" class="fixed inset-0 z-40 md:hidden bg-[#050505] flex flex-col items-center justify-center gap-8 text-3xl font-display font-semibold" aria-hidden="true">
-    <a href="#work" class="nav-link">Work</a>
-    <a href="#stills" class="nav-link" data-stills-link style="display:none">Stills</a>
-    <a href="#about" class="nav-link">About</a>
-    <a href="#contact" class="nav-link text-accent">Start a project</a>
+    <a href="/#work" class="nav-link">Work</a>
+    <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
+    <a href="/about" class="nav-link">About</a>
+    <a href="/contact" class="nav-link text-accent">Start a project</a>
   </div>
 
   <!-- ============ HERO (full-screen, edge-to-edge banners stacked vertically, rendered from SITE_DATA.hero.banners[]) ============ -->
@@ -817,7 +831,7 @@ function renderStills() {
   const S = SITE.stills, sec = document.getElementById("stills"), body = document.getElementById("stillsBody");
   const groups = ((S && S.sections) || []).map(g => ({ title: g.title || "", images: (g.images || []).filter(u => /^https?:\/\//i.test(String(u).trim())) })).filter(g => g.images.length);
   if (!sec || !groups.length) return Promise.resolve();
-  const name = (S.title || "").trim() || "Stills";
+  const name = (S.title || "").trim() || "Imagery";
   document.getElementById("stillsTitle").textContent = name;
   sec.style.display = "";
   document.querySelectorAll("[data-stills-link]").forEach(a => { a.textContent = name; a.style.display = ""; });
@@ -1067,6 +1081,11 @@ function setMenu(open) {
 }
 menuBtn.addEventListener("click", () => setMenu(mobileMenu.dataset.open !== "true"));
 mobileMenu.querySelectorAll("a").forEach(a => a.addEventListener("click", () => setMenu(false)));
+/* homepage only: the logo scrolls to the top; arriving from another page via "/#work" glides down to All Works once the page has loaded */
+if (document.documentElement.dataset.page === "home") {
+  document.querySelectorAll('a[data-logo][href="/"]').forEach(a => a.addEventListener("click", e => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); }));
+  if (location.hash === "#work") galleryThumbsReady.then(() => setTimeout(() => { const w = document.getElementById("work"); if (w) w.scrollIntoView({ behavior: "smooth", block: "start" }); }, 900));
+}
 
 /* ---------------- "work with me" tech toggle ---------------- */
 const workToggle = document.getElementById('workToggle');
