@@ -617,6 +617,7 @@
           { title: "Sound & delivery", text: "Sound design, mix, and exports tailored to every platform it ships on." },
         ],
       },
+      archive: { banners: [] },
       seo: { siteTitle: "Osman Onur Tekin — AI Video Editor & Producer", metaDescription: "Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work.", logoText: "Osman Tekin", email: "", formspreeEndpoint: "" },
       social: { instagram: "", youtube: "", linkedin: "" },
       filters: [{ label: "9:16", value: "9:16" }, { label: "16:9", value: "16:9" }, { label: "UGC", value: "ugc" }],
@@ -669,6 +670,15 @@
       s.filters = clone(DEFAULT_DATA.filters); s.categoryLabel = clone(DEFAULT_DATA.categoryLabel);
       (s.portfolio || []).forEach(v => { if (!s.categoryLabel[v.category]) v.category = v.category === 'vertical' ? '9:16' : '16:9'; });
       if (!s.stills || !Array.isArray(s.stills.sections)) s.stills = { title: '', sections: [] };   // Stills (picture gallery)
+      // Archive banners — independent list, never touches hero or portfolio
+      if (!s.archive || !Array.isArray(s.archive.banners)) s.archive = clone(DEFAULT_DATA.archive);
+      let nextAid = s.archive.banners.reduce((m, b) => Math.max(m, b.id || 0), 0) + 1;
+      s.archive.banners = s.archive.banners.map(b => ({
+        ...b,
+        id: b.id || nextAid++, title: b.title || '', subtitle: b.subtitle || '', videoUrl: b.videoUrl || '',
+        description: b.description || '', tools: Array.isArray(b.tools) ? [...b.tools] : [],
+        thumbnailUrl: b.thumbnailUrl || '', aspect: b.aspect || '',
+      }));
       return s;
     }
     let STATE = migrate(loadState());
@@ -680,21 +690,25 @@
        first and, if anything it did changed that other list, restores it and reports — so no code path (present or future)
        can make an All Work change touch a banner or the other way round. */
     const SLICES = {
-      banners: { get: () => STATE.hero.banners, set: v => { STATE.hero.banners = v; } },
-      work:    { get: () => STATE.portfolio,    set: v => { STATE.portfolio = v; } },
+      banners:        { get: () => STATE.hero.banners,    set: v => { STATE.hero.banners = v; } },
+      work:           { get: () => STATE.portfolio,       set: v => { STATE.portfolio = v; } },
+      archiveBanners: { get: () => STATE.archive.banners, set: v => { STATE.archive.banners = v; } },
     };
     function commit(owner, mutate) {
-      const other = owner === 'banners' ? 'work' : 'banners';
-      const before = JSON.stringify(SLICES[other].get());
+      const otherKeys = Object.keys(SLICES).filter(k => k !== owner);
+      const befores = otherKeys.map(k => ({ k, v: JSON.stringify(SLICES[k].get()) }));
       mutate();
-      if (JSON.stringify(SLICES[other].get()) !== before) {
-        SLICES[other].set(JSON.parse(before));
-        console.error('[isolation] "' + owner + '" change tried to modify "' + other + '" — reverted.');
-      }
+      befores.forEach(({ k, v }) => {
+        if (JSON.stringify(SLICES[k].get()) !== v) {
+          SLICES[k].set(JSON.parse(v));
+          console.error('[isolation] "' + owner + '" change tried to modify "' + k + '" — reverted.');
+        }
+      });
       persist();
     }
-    const commitBanners = fn => commit('banners', fn);
-    const commitWork = fn => commit('work', fn);
+    const commitBanners        = fn => commit('banners', fn);
+    const commitWork           = fn => commit('work', fn);
+    const commitArchiveBanners = fn => commit('archiveBanners', fn);
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const $ = (sel, root = document) => root.querySelector(sel);
     function moveInArray(arr, index, dir) { const j = index + dir; if (j < 0 || j >= arr.length) return false;[arr[index], arr[j]] = [arr[j], arr[index]]; return true; }
@@ -704,13 +718,14 @@
     /* ---------------- sidebar nav ---------------- */
     const NAV = [
       { id: 'hero', label: 'Hero Banners' },
+      { id: 'archive', label: 'Archive Banners' },
       { id: 'portfolio', label: 'Portfolio' },
       { id: 'stills', label: 'Stills (pictures)' },
       { id: 'about', label: 'About & Process' },
       { id: 'seo', label: 'SEO & Settings' },
       { id: 'inbox', label: 'Inbox', soon: true },
     ];
-    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
+    const VIEWS = { hero: renderHeroView, archive: renderArchiveView, portfolio: renderPortfolioView, stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
     let activeView = 'hero';
     function renderNav() {
       $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
@@ -798,9 +813,13 @@
     </div>`).join('') : '<p class="text-sm text-muted">No banners yet.</p>';
     }
 
-    function openBannerForm(id) {
-      const item = id ? STATE.hero.banners.find(b => b.id === id) : null;
-      $('#bannerModalTitle').textContent = item ? 'Edit hero banner' : 'Add hero banner';
+    let activeBannerOwner = 'hero';   // 'hero' or 'archive' — set before opening the shared banner modal
+    function openBannerForm(id, owner = 'hero') {
+      activeBannerOwner = owner;
+      const list = owner === 'archive' ? STATE.archive.banners : STATE.hero.banners;
+      const item = id ? list.find(b => b.id === id) : null;
+      const sectionLabel = owner === 'archive' ? 'archive banner' : 'hero banner';
+      $('#bannerModalTitle').textContent = item ? ('Edit ' + sectionLabel) : ('Add ' + sectionLabel);
       $('#b-id').value = item ? item.id : '';
       $('#b-title').value = item?.title || ''; $('#b-subtitle').value = item?.subtitle || '';
       $('#b-video').value = item?.videoUrl || ''; $('#b-thumb').value = item?.thumbnailUrl || ''; $('#b-aspect').value = item?.aspect || '';
@@ -819,17 +838,94 @@
       if (/vimeo\.com/i.test(videoUrl) && !/progressive_redirect|\.(mp4|mov|m4v|webm)(\?|$)/i.test(videoUrl) && !/\d{5,}/.test(videoUrl)) { $('#b-error').textContent = "Couldn't find the Vimeo video number in that link. Use e.g. https://vimeo.com/123456789 (unlisted videos: https://vimeo.com/123456789/abcdef1234)."; $('#b-error').classList.remove('hidden'); return; }
       const payload = { title, subtitle: $('#b-subtitle').value.trim(), videoUrl, thumbnailUrl: $('#b-thumb').value.trim(), aspect: $('#b-aspect').value, description: $('#b-desc').value.trim(), tools: $('#b-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
       const idRaw = $('#b-id').value;
-      commitBanners(() => {
-        if (idRaw) { const i = STATE.hero.banners.findIndex(b => b.id === Number(idRaw)); STATE.hero.banners[i] = { ...STATE.hero.banners[i], ...payload }; }
-        else { const nextId = STATE.hero.banners.reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE.hero.banners.push({ id: nextId, ...payload }); }
+      const isArchive = activeBannerOwner === 'archive';
+      const doCommit = isArchive ? commitArchiveBanners : commitBanners;
+      const getBannerList = () => isArchive ? STATE.archive.banners : STATE.hero.banners;
+      doCommit(() => {
+        const list = getBannerList();
+        if (idRaw) { const i = list.findIndex(b => b.id === Number(idRaw)); list[i] = { ...list[i], ...payload }; }
+        else { const nextId = list.reduce((m, b) => Math.max(m, b.id), 0) + 1; list.push({ id: nextId, ...payload }); }
       });
-      closeBannerForm(); paintBanners();
+      closeBannerForm();
+      if (isArchive) paintArchiveBanners(); else paintBanners();
       toast(idRaw ? 'Banner updated.' : 'Banner added.');
     });
-    function removeBanner(id) {
-      if (!confirm('Delete this hero banner? This cannot be undone.')) return;
-      commitBanners(() => { STATE.hero.banners = STATE.hero.banners.filter(b => b.id !== id); });
-      paintBanners(); toast('Banner deleted.');
+    function removeBanner(id, owner = 'hero') {
+      if (!confirm('Delete this banner? This cannot be undone.')) return;
+      if (owner === 'archive') {
+        commitArchiveBanners(() => { STATE.archive.banners = STATE.archive.banners.filter(b => b.id !== id); });
+        paintArchiveBanners();
+      } else {
+        commitBanners(() => { STATE.hero.banners = STATE.hero.banners.filter(b => b.id !== id); });
+        paintBanners();
+      }
+      toast('Banner deleted.');
+    }
+
+    /* ================= MODULE 1b — Archive Banners (same shape as Hero, separate list) ================= */
+    function renderArchiveView() {
+      const view = $('#view');
+      view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">Archive banners</p><p class="card-sub">Full-width banner videos for the Archive section on the homepage — each autoplays and links to a case-study pop-up. Reorder with ↑ / ↓. These are completely independent from the Hero Banners.</p></div>
+      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="archiveBannerCount"></p><button id="addArchiveBannerBtn" class="btn btn-primary btn-sm" type="button">+ Add archive banner</button></div>
+      <div id="archiveBannerList" class="space-y-2"></div>
+    </div>
+
+    <div class="card mt-6">
+      <p class="card-title mb-1">Live preview</p><p class="card-sub">Banners appear top-to-bottom in exactly this order in the Archive section.</p>
+      <div id="pv-archive-stack" class="space-y-3 max-h-[520px] overflow-y-auto pr-1"></div>
+    </div>`;
+
+      $('#addArchiveBannerBtn').addEventListener('click', () => openBannerForm(null, 'archive'));
+      paintArchiveBanners();
+    }
+
+    function paintArchiveBanners() {
+      const banners = STATE.archive.banners;
+      if (!$('#archiveBannerCount')) return;   // view not active
+      $('#archiveBannerCount').textContent = `${banners.length} banner${banners.length === 1 ? '' : 's'}`;
+      $('#archiveBannerList').innerHTML = banners.length ? banners.map((b, i) => `
+    <div class="vrow" data-id="${b.id}">
+      <span class="pill-order">${i + 1}</span>
+      ${b.thumbnailUrl ? `<img src="${esc(b.thumbnailUrl)}" alt="" style="width:56px;height:34px;object-fit:cover;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.1)" />` : ''}
+      <div class="min-w-0 flex-1">
+        <p class="text-sm truncate">${esc(b.title) || '(untitled banner)'}</p>
+        <p class="text-xs text-muted truncate mt-0.5">${esc(b.subtitle) || '—'}</p>
+      </div>
+      <div class="reorder-grp">
+        <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-icon" data-down ${i === banners.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>
+      <button class="btn btn-sm" type="button" data-edit="${b.id}">Edit</button>
+      <button class="btn btn-sm btn-danger" type="button" data-del="${b.id}">Delete</button>
+    </div>`).join('') : '<p class="text-sm text-muted">No archive banners yet — click "Add archive banner" to create your first one.</p>';
+
+      $('#archiveBannerList').querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBannerForm(Number(btn.dataset.edit), 'archive')));
+      $('#archiveBannerList').querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeBanner(Number(btn.dataset.del), 'archive')));
+      $('#archiveBannerList').querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderArchiveBanner(Number(e.target.closest('[data-id]').dataset.id), -1)));
+      $('#archiveBannerList').querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderArchiveBanner(Number(e.target.closest('[data-id]').dataset.id), 1)));
+      paintArchivePreview();
+    }
+
+    function reorderArchiveBanner(id, dir) {
+      const i = STATE.archive.banners.findIndex(b => b.id === id);
+      if (i < 0) return;
+      let moved = false; commitArchiveBanners(() => { moved = moveInArray(STATE.archive.banners, i, dir); });
+      if (moved) paintArchiveBanners();
+    }
+
+    function paintArchivePreview() {
+      const pvStack = $('#pv-archive-stack'); if (!pvStack) return;
+      const banners = STATE.archive.banners;
+      pvStack.innerHTML = banners.length ? banners.map((b, i) => `
+    <div class="pv-hero"${b.thumbnailUrl ? ` style="background-image:url('${esc(b.thumbnailUrl)}');background-size:cover;background-position:center"` : ''}>
+      <div class="txt">
+        <p class="font-mono text-[10px] text-accent mb-1">ARCHIVE ${String(i + 1).padStart(2, '0')} / ${String(banners.length).padStart(2, '0')}${i === 0 ? ' // TOP OF ARCHIVE' : ''}</p>
+        <p class="font-display text-base sm:text-lg leading-tight">${esc(b.title) || 'Untitled'}</p>
+        <p class="text-xs text-muted mt-0.5">${esc(b.subtitle)}</p>
+      </div>
+    </div>`).join('') : '<p class="text-sm text-muted">No archive banners yet.</p>';
     }
 
     /* ================= MODULE 2 — Portfolio CRUD (reorderable) ================= */
