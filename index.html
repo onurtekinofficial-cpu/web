@@ -78,21 +78,19 @@
   ::-webkit-scrollbar-thumb:hover { background: #CCFF00; }
   *:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* Archive tarzı birebir aynı sabit/sticky üst menü tasarımı */
-  header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
-    gap: 1rem; padding: .9rem clamp(1rem, 4vw, 2.5rem); background: rgba(5,5,5,.92); backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255,255,255,.07); }
-  .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; letter-spacing: .02em; font-size: 1.15rem; color: #fff; text-decoration: none; }
+  /* Saydam, modern ve artistik cam efekti (Glassmorphism) üst bar */
+  header {
+    position: fixed; top: 0; inset-x: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 3rem; background: rgba(5, 5, 5, 0.35); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08); transition: background 0.3s ease;
+  }
+  .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.45rem; letter-spacing: -0.01em; color: #fff; text-decoration: none; }
   .logo:hover { color: var(--accent); }
-  nav { display: flex; gap: clamp(.8rem, 2.5vw, 1.8rem); font-size: .9rem; flex-wrap: wrap; justify-content: flex-end; }
-  nav a { color: var(--muted); text-decoration: none; transition: color .2s; font-family: Inter, system-ui, sans-serif; font-weight: 500; }
-  nav a:hover, nav a[aria-current="page"] { color: var(--accent); }
-
-  /* Sayfa içi ortak grid, ana başlık ve metin standardizasyonu */
-  main-content, .page-container { padding: 2.5rem clamp(1rem, 4vw, 2.5rem) 3rem; max-w: 1400px; margin: 0 auto; }
-  .eyebrow { font-family: "JetBrains Mono", monospace; font-size: .75rem; color: var(--accent); letter-spacing: .14em; text-transform: uppercase; }
-  h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(2rem, 5vw, 3.2rem); margin: .4rem 0 .6rem; color: #fff; }
-  .intro { color: var(--muted); max-width: 60ch; margin: 0 0 1.8rem; line-height: 1.6; font-size: .95rem; }
+  
+  /* Daha büyük ve daha ortada/dengeli duran menü tasarımı */
+  nav { display: flex; gap: 2.5rem; font-size: 1.05rem; font-family: "Space Grotesk", sans-serif; font-weight: 600; align-items: center; }
+  nav a { color: rgba(255, 255, 255, 0.85); text-decoration: none; transition: color .25s ease, text-shadow .25s ease; }
+  nav a:hover, nav a[aria-current="page"] { color: var(--accent); text-shadow: 0 0 16px rgba(204,255,0,0.5); }
 
   /* horizontally swipeable filter pills, scrollbar hidden */
   .filter-scroll { -ms-overflow-style: none; scrollbar-width: none; }
@@ -130,23 +128,26 @@
   .field-input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: #eee; border-radius: 8px; font-family: Inter, system-ui, sans-serif; }
   .field-input:focus { border-color: #CCFF00; box-shadow: 0 0 0 3px rgba(204,255,0,0.12); outline: none; }
 
-  /* vertically stacked hero banners */
-  .hero-banner { position: relative; height: 100vh; height: 100svh; min-height: 520px; }
-  .hero-static { position: relative; height: 100vh; height: 100svh; min-height: 520px; background: radial-gradient(ellipse 70% 55% at 50% 40%, rgba(204,255,0,0.07), transparent 70%), #050505; }
+  /* Artistik ve Profesyonel Hero Banner Stilleri */
+  .hero-banner { position: relative; height: 100vh; height: 100svh; min-height: 580px; }
+  .hero-static { position: relative; height: 100vh; height: 100svh; min-height: 580px; background: radial-gradient(ellipse 70% 55% at 50% 40%, rgba(204,255,0,0.08), transparent 70%), #050505; }
   .hero-frame { position: absolute; inset: 0; overflow: hidden; background: #0d0f0d; }
-  .hero-frame video { transition: transform 1.8s cubic-bezier(.2,.8,.2,1); }
-  .hero-frame:hover video { transform: scale(1.02); }
-  .hero-copy { animation: heroTextIn 1s cubic-bezier(.2,.8,.2,1) .2s both; }
-  @keyframes heroTextIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-  .hero-ctl { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 999px; color: #fff;
-    background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.38); backdrop-filter: blur(8px); transition: color .25s ease, border-color .25s ease, background .25s ease; cursor: pointer; }
-  .hero-ctl:hover { color: #CCFF00; border-color: #CCFF00; background: rgba(0,0,0,.5); }
-  .hero-ctl svg { width: 18px; height: 18px; }
-  .hero-case-btn { font: 500 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: #fff; padding: .5rem 0; border-bottom: 1px solid rgba(255,255,255,.45); transition: color .25s ease, border-color .25s ease; background: none; cursor: pointer; }
-  .hero-case-btn:hover { color: #CCFF00; border-color: #CCFF00; }
+  .hero-frame video { transition: transform 2s cubic-bezier(.2,.8,.2,1); }
+  .hero-frame:hover video { transform: scale(1.03); }
+  .hero-copy { animation: heroTextIn 1.2s cubic-bezier(.2,.8,.2,1) .2s both; }
+  @keyframes heroTextIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  
+  .hero-ctl { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 999px; color: #fff;
+    background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(10px); transition: all .25s ease; cursor: pointer; }
+  .hero-ctl:hover { color: #CCFF00; border-color: #CCFF00; background: rgba(0,0,0,.6); transform: translateY(-2px); }
+  .hero-ctl svg { width: 20px; height: 20px; }
+  
+  .hero-case-btn { font: 500 13px 'JetBrains Mono', monospace; letter-spacing: .15em; color: #fff; padding: .6rem 0; border-bottom: 1px solid rgba(255,255,255,.5); transition: all .25s ease; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .hero-case-btn:hover { color: #CCFF00; border-color: #CCFF00; padding-left: 4px; }
+  
   .auto-poster { position: absolute; inset: 0; background: #0d0f0d center / cover no-repeat; }
   .auto-wrap { position: absolute; inset: 0; overflow: hidden; container-type: size; }
-  .yt-cover { position: absolute; inset: 0; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+  .yt-cover { position: absolute; inset: 0; opacity: 0; transition: opacity .3s ease; pointer-events: none; }
   .yt-cover.is-ready { opacity: 1; }
   .yt-cover iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border: 0; pointer-events: none; transform: translate(-50%, -50%);
     width: max(100cqw, calc(100cqh * var(--ar, 1.7778))); height: max(100cqh, calc(100cqw / var(--ar, 1.7778))); }
@@ -185,7 +186,7 @@
   html[data-page="contact"] :is(#top,#work,#about,#stills),
   html[data-page="imagery"] :is(#top,#work,#about,#contact),
   html[data-page="home"] :is(#about,#contact,#stills) { display: none !important; }
-  html:not([data-page="home"]) section[id] { border-top: 0 !important; padding-top: 5rem; min-height: 70vh; }
+  html:not([data-page="home"]) section[id] { border-top: 0 !important; padding-top: 6rem; min-height: 70vh; }
 </style>
 </head>
 
@@ -199,9 +200,9 @@
     </div>
   </div>
 
-  <!-- ============ NAV (Arşiv menüsü ile birebir aynı standartta) ============ -->
+  <!-- ============ NAV (Saydam, Büyük Logolu ve Daha Ortalanmış Menü) ============ -->
   <header id="siteHeader">
-    <a class="logo" href="/" id="logo">Osman Tekin</a>
+    <a class="logo" href="/" id="logo">Osman Onur Tekin</a>
     <nav>
       <a href="/">Home</a>
       <a href="/#work">Work</a>
@@ -218,10 +219,10 @@
   </section>
 
   <!-- ============ ALL WORKS ============ -->
-  <section id="work" style="max-width:1400px; margin:0 auto; padding:4rem clamp(1rem, 4vw, 2.5rem); position:relative; z-index:10;">
-    <div style="display:flex; flex-direction:column; gap:1.5rem; margin-bottom:2rem;" class="md:flex-row md:items-end md:justify-between">
-      <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2rem, 4vw, 3rem); font-weight:700; margin:0;" class="hover-accent">All works</h2>
-      <div id="filters" class="filter-scroll" style="display:flex; gap:0.5rem; flex-wrap:wrap;"></div>
+  <section id="work" style="max-width:1400px; margin:0 auto; padding:5rem clamp(1.5rem, 5vw, 3.5rem); position:relative; z-index:10;">
+    <div style="display:flex; flex-direction:column; gap:1.5rem; margin-bottom:2.5rem;" class="md:flex-row md:items-end md:justify-between">
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); font-weight:700; margin:0;" class="hover-accent">All works</h2>
+      <div id="filters" class="filter-scroll" style="display:flex; gap:0.6rem; flex-wrap:wrap;"></div>
     </div>
     <div id="galleryGrid" class="gallery-grid" data-mode="landscape"></div>
   </section>
@@ -233,55 +234,55 @@
     .st-item img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
     #stillsBody{opacity:0;transition:opacity .9s ease}#stillsBody.show{opacity:1}
   </style>
-  <section id="stills" style="max-width:1400px; margin:0 auto; padding:4rem clamp(1rem, 4vw, 2.5rem); position:relative; z-index:10; display:none;">
-    <h2 id="stillsTitle" style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2rem, 4vw, 3rem); margin-bottom:2rem;"></h2>
+  <section id="stills" style="max-width:1400px; margin:0 auto; padding:5rem clamp(1.5rem, 5vw, 3.5rem); position:relative; z-index:10; display:none;">
+    <h2 id="stillsTitle" style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom:2.5rem;"></h2>
     <div id="stillsBody"></div>
   </section>
 
   <!-- ============ ABOUT ============ -->
-  <section id="about" style="max-width:1400px; margin:0 auto; padding:5rem clamp(1rem, 4vw, 2.5rem); border-top:1px solid rgba(255,255,255,.08); position:relative; z-index:10;">
-    <div style="display:grid; gap:3.5rem;" class="md:grid-cols-2">
+  <section id="about" style="max-width:1400px; margin:0 auto; padding:6rem clamp(1.5rem, 5vw, 3.5rem); border-top:1px solid rgba(255,255,255,.08); position:relative; z-index:10;">
+    <div style="display:grid; gap:4rem;" class="md:grid-cols-2">
       <div>
-        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2rem, 4vw, 3rem); margin-bottom:1.5rem;" class="hover-accent">About</h2>
-        <div id="aboutContent" style="color:var(--muted); line-height:1.7; font-size:1rem; display:flex; flex-direction:column; gap:1rem;"></div>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom:1.5rem;" class="hover-accent">About</h2>
+        <div id="aboutContent" style="color:var(--muted); line-height:1.75; font-size:1.05rem; display:flex; flex-direction:column; gap:1.2rem;"></div>
       </div>
       <div>
-        <ol style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1.5rem;">
-          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.9rem; padding-top:0.1rem;">01</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.2rem; margin:0 0 0.25rem 0;">Concept &amp; script</h3><p style="color:var(--muted); font-size:0.9rem; margin:0; line-height:1.5;">Defining story, shot list and reference world before anything is generated.</p></div></li>
-          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.9rem; padding-top:0.1rem;">02</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.2rem; margin:0 0 0.25rem 0;">AI generation</h3><p style="color:var(--muted); font-size:0.9rem; margin:0; line-height:1.5;">Directing footage through generative models, iterating for consistency.</p></div></li>
-          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.9rem; padding-top:0.1rem;">03</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.2rem; margin:0 0 0.25rem 0;">Edit &amp; grade</h3><p style="color:var(--muted); font-size:0.9rem; margin:0; line-height:1.5;">Cutting the story for real, then color and finishing in a proper NLE.</p></div></li>
-          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.9rem; padding-top:0.1rem;">04</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.2rem; margin:0 0 0.25rem 0;">Sound &amp; delivery</h3><p style="color:var(--muted); font-size:0.9rem; margin:0; line-height:1.5;">Sound design, mix, and exports tailored to every platform it ships on.</p></div></li>
+        <ol style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:1.75rem;">
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">01</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">Concept &amp; script</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Defining story, shot list and reference world before anything is generated.</p></div></li>
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">02</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">AI generation</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Directing footage through generative models, iterating for consistency.</p></div></li>
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">03</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">Edit &amp; grade</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Cutting the story for real, then color and finishing in a proper NLE.</p></div></li>
+          <li style="display:flex; gap:1.25rem;"><span class="font-mono" style="color:var(--accent); font-size:0.95rem; padding-top:0.1rem;">04</span><div><h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:0 0 0.3rem 0; font-weight:600;">Sound &amp; delivery</h3><p style="color:var(--muted); font-size:0.95rem; margin:0; line-height:1.6;">Sound design, mix, and exports tailored to every platform it ships on.</p></div></li>
         </ol>
       </div>
     </div>
   </section>
 
   <!-- ============ CONTACT ============ -->
-  <section id="contact" style="max-width:1400px; margin:0 auto; padding:5rem clamp(1rem, 4vw, 2.5rem); border-top:1px solid rgba(255,255,255,.08); position:relative; z-index:10;">
-    <div style="display:grid; gap:3.5rem;" class="md:grid-cols-2">
+  <section id="contact" style="max-width:1400px; margin:0 auto; padding:6rem clamp(1.5rem, 5vw, 3.5rem); border-top:1px solid rgba(255,255,255,.08); position:relative; z-index:10;">
+    <div style="display:grid; gap:4rem;" class="md:grid-cols-2">
       <div>
-        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2rem, 4vw, 3rem); margin-bottom:1rem;" class="hover-accent">Let's build something</h2>
-        <p style="color:var(--muted); font-size:1rem; line-height:1.6; margin:0 0 2rem 0; max-width:38ch;">Tell me about the project and timeline. I read every message myself.</p>
-        <p id="contactEmail" class="font-mono" style="font-size:0.9rem; color:var(--muted); margin:0 0 1rem 0;">hello@osmantekin.com</p>
-        <div id="contactLinks" style="display:flex; flex-wrap:wrap; gap:1.25rem; font-size:0.95rem; color:var(--muted);"></div>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-size:clamp(2.2rem, 4.5vw, 3.2rem); margin-bottom:1.2rem;" class="hover-accent">Let's build something</h2>
+        <p style="color:var(--muted); font-size:1.05rem; line-height:1.7; margin:0 0 2rem 0; max-width:38ch;">Tell me about the project and timeline. I read every message myself.</p>
+        <p id="contactEmail" class="font-mono" style="font-size:0.95rem; color:var(--muted); margin:0 0 1.2rem 0;">hello@osmantekin.com</p>
+        <div id="contactLinks" style="display:flex; flex-wrap:wrap; gap:1.5rem; font-size:1rem; color:var(--muted);"></div>
       </div>
       <form id="contactForm" style="display:flex; flex-direction:column; gap:1.5rem;" novalidate>
         <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"><label>Leave empty<input type="text" name="_gotcha" id="gotcha" tabindex="-1" autocomplete="off" /></label></div>
         <div>
           <label for="fullName" class="font-mono" style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.5rem; letter-spacing:0.1em;">FULL_NAME</label>
-          <input id="fullName" name="fullName" type="text" required class="field-input" style="width:100%; padding:0.85rem 1rem;" placeholder="Jordan Lee" />
+          <input id="fullName" name="fullName" type="text" required class="field-input" style="width:100%; padding:0.9rem 1.1rem;" placeholder="Jordan Lee" />
         </div>
         <div>
           <label for="email" class="font-mono" style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.5rem; letter-spacing:0.1em;">EMAIL</label>
-          <input id="email" name="email" type="email" required class="field-input" style="width:100%; padding:0.85rem 1rem;" placeholder="jordan@studio.com" />
+          <input id="email" name="email" type="email" required class="field-input" style="width:100%; padding:0.9rem 1.1rem;" placeholder="jordan@studio.com" />
         </div>
         <div>
           <label for="message" class="font-mono" style="display:block; font-size:0.75rem; color:var(--muted); margin-bottom:0.5rem; letter-spacing:0.1em;">PROJECT_DETAILS</label>
-          <textarea id="message" name="message" rows="3" required class="field-input" style="width:100%; padding:0.85rem 1rem; resize:none;" placeholder="What are we making?"></textarea>
+          <textarea id="message" name="message" rows="3" required class="field-input" style="width:100%; padding:0.9rem 1.1rem; resize:none;" placeholder="What are we making?"></textarea>
         </div>
 
-        <div style="display:flex; align-items:center; justify-content:between; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:1rem 1.25rem; background:rgba(255,255,255,0.02);">
-          <span style="font-size:0.95rem;">Would you like to work with me?</span>
+        <div style="display:flex; align-items:center; justify-content:between; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:1.1rem 1.25rem; background:rgba(255,255,255,0.02);">
+          <span style="font-size:1rem;">Would you like to work with me?</span>
           <div style="display:flex; align-items:center; gap:0.75rem;">
             <span id="toggleState" class="font-mono" style="font-size:0.75rem; color:var(--accent);">YES</span>
             <button type="button" id="workToggle" class="tswitch" data-on="true" aria-label="Toggle"><span class="knob"></span></button>
@@ -289,39 +290,39 @@
         </div>
         <input type="hidden" name="wantsToWork" id="wantsToWork" value="yes" />
 
-        <button type="submit" id="sendBtn" style="background:var(--accent); color:var(--ink); font-weight:500; padding:0.9rem 2rem; border-radius:8px; border:none; cursor:pointer; font-size:0.95rem; width:fit-content; transition:box-shadow 0.2s;">Send message</button>
-        <p id="formStatus" role="status" aria-live="polite" style="font-size:0.9rem; color:var(--accent); margin:0; display:none;">✓ Message sent — thanks! I'll reply within a day or two.</p>
-        <p id="formError" role="alert" style="font-size:0.9rem; color:#f87171; margin:0; display:none;"></p>
+        <button type="submit" id="sendBtn" style="background:var(--accent); color:var(--ink); font-weight:600; padding:1rem 2.2rem; border-radius:8px; border:none; cursor:pointer; font-size:1rem; width:fit-content; transition:box-shadow 0.2s;">Send message</button>
+        <p id="formStatus" role="status" aria-live="polite" style="font-size:0.95rem; color:var(--accent); margin:0; display:none;">✓ Message sent — thanks! I'll reply within a day or two.</p>
+        <p id="formError" role="alert" style="font-size:0.95rem; color:#f87171; margin:0; display:none;"></p>
       </form>
     </div>
   </section>
 
   <footer style="border-top:1px solid rgba(255,255,255,.08); position:relative; z-index:10;">
-    <div data-social-block style="max-width:1400px; margin:0 auto; padding:4rem clamp(1rem, 4vw, 2.5rem); display:flex; flex-direction:column; gap:2rem; border-bottom:1px solid rgba(255,255,255,.08);" class="md:flex-row md:items-center md:justify-between">
+    <div data-social-block style="max-width:1400px; margin:0 auto; padding:5rem clamp(1.5rem, 5vw, 3.5rem); display:flex; flex-direction:column; gap:2rem; border-bottom:1px solid rgba(255,255,255,.08);" class="md:flex-row md:items-center md:justify-between">
       <div>
-        <p class="font-mono" style="font-size:0.7rem; letter-spacing:0.25em; color:var(--accent); margin:0 0 0.75rem 0;">FOLLOW / CONNECT</p>
-        <p style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(1.8rem, 3vw, 2.5rem); margin:0; letter-spacing:-0.02em;">Find me elsewhere.</p>
+        <p class="font-mono" style="font-size:0.75rem; letter-spacing:0.25em; color:var(--accent); margin:0 0 0.75rem 0;">FOLLOW / CONNECT</p>
+        <p style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(2rem, 3.5vw, 2.8rem); margin:0; letter-spacing:-0.02em;">Find me elsewhere.</p>
       </div>
       <nav id="socialLinks" aria-label="Social media" style="display:flex; align-items:center; gap:1rem;"></nav>
     </div>
-    <div style="max-width:1400px; margin:0 auto; padding:2rem clamp(1rem, 4vw, 2.5rem); display:flex; flex-direction:column; gap:1rem; font-size:0.75rem;" class="md:flex-row md:justify-between font-mono text-muted">
-      <span>© 2026 OSMAN TEKIN — ALL WORK SHOWN BY PERMISSION</span>
+    <div style="max-width:1400px; margin:0 auto; padding:2rem clamp(1.5rem, 5vw, 3.5rem); display:flex; flex-direction:column; gap:1rem; font-size:0.8rem;" class="md:flex-row md:justify-between font-mono text-muted">
+      <span>© 2026 OSMAN ONUR TEKIN — ALL WORK SHOWN BY PERMISSION</span>
     </div>
   </footer>
 
   <!-- ============ MODAL ============ -->
   <div id="modal" data-open="false" role="dialog" aria-modal="true" aria-label="Case study">
-    <div id="modalBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);"></div>
+    <div id="modalBackdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(8px);"></div>
     <div id="modalPanel">
       <button id="modalClose" aria-label="Close" style="position:absolute; top:1.25rem; right:1.25rem; background:none; border:none; color:#fff; font-size:1.75rem; cursor:pointer; z-index:10;">×</button>
       <div id="modalStage" style="position:relative; width:100%; aspect-ratio:16/9; background:#000; margin-bottom:1.5rem; border-radius:8px; overflow:hidden;">
         <video id="modalVideo" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain;" controls autoplay playsinline></video>
         <iframe id="modalFrame" style="display:none; position:absolute; inset:0; width:100%; height:100%; border:0;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
       </div>
-      <div id="modalMeta" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--accent); margin-bottom:0.5rem;"></div>
-      <h3 id="modalTitle" style="font-family:'Space Grotesk',sans-serif; font-size:1.5rem; margin:0 0 0.75rem 0;"></h3>
-      <p id="modalDesc" style="color:var(--muted); line-height:1.6; font-size:0.95rem; margin:0 0 1.25rem 0;"></p>
-      <div id="modalTools" style="display:flex; flex-wrap:wrap; gap:0.5rem; font-family:'JetBrains Mono',monospace; font-size:0.75rem;"></div>
+      <div id="modalMeta" style="font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--accent); margin-bottom:0.5rem;"></div>
+      <h3 id="modalTitle" style="font-family:'Space Grotesk',sans-serif; font-size:1.75rem; margin:0 0 0.75rem 0; font-weight:600;"></h3>
+      <p id="modalDesc" style="color:var(--muted); line-height:1.65; font-size:1rem; margin:0 0 1.25rem 0;"></p>
+      <div id="modalTools" style="display:flex; flex-wrap:wrap; gap:0.5rem; font-family:'JetBrains Mono',monospace; font-size:0.8rem;"></div>
     </div>
   </div>
 
@@ -354,7 +355,7 @@ const DEFAULT_SITE_DATA = {
   about: {
     content: "I'm an editor and producer working at the intersection of traditional post-production and generative video. My process has shifted from cutting footage to directing it — briefing models, curating generations, then finishing everything in a real timeline with color, sound design and pacing a prompt alone can't give you.\n\nClients come to me for commercials and short-form content that needs to look expensive on a fraction of a traditional shoot's budget and timeline — without looking like AI slop.",
   },
-  seo: { siteTitle: "", metaDescription: "", logoText: "Osman Tekin", email: "", formspreeEndpoint: "" },
+  seo: { siteTitle: "", metaDescription: "", logoText: "Osman Onur Tekin", email: "", formspreeEndpoint: "" },
   filters: [
     { label: "Vertical (9:16)", value: "vertical" },
     { label: "AI Commercials",  value: "commercial" },
@@ -555,7 +556,7 @@ window.addEventListener("scroll", () => electActive(), { passive: true });
 
 /* Gallery */
 const grid = document.getElementById("galleryGrid");
-const playIconSVG = () => `<svg width="16" height="16" viewBox="0 0 24 24" fill="#CCFF00"><path d="M8 5v14l11-7z"/></svg>`;
+const playIconSVG = () => `<svg width="18" height="18" viewBox="0 0 24 24" fill="#CCFF00"><path d="M8 5v14l11-7z"/></svg>`;
 
 const thumbStat = { done: 0, total: 0 };
 function markOrientation(wrap, el) {
@@ -579,13 +580,13 @@ function renderGallery() {
     <article class="gallery-card group relative overflow-hidden rounded-lg cursor-pointer bg-panel" data-cat="${item.category}" data-id="${item.id}" tabindex="0" role="button" aria-label="Play ${escH(item.title)}">
       <div class="thumb-wrap absolute inset-0 overflow-hidden bg-[#0d0f0d] transition duration-700 ease-out group-hover:scale-105">${thumbMarkup(item)}</div>
       <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-transparent pointer-events-none"></div>
-      <span class="absolute top-3 left-3 font-mono text-[10px] text-accent/80">N°${String(i + 1).padStart(2, '0')}</span>
+      <span class="absolute top-3 left-3 font-mono text-[11px] text-accent/80 font-semibold">N°${String(i + 1).padStart(2, '0')}</span>
       <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span class="h-12 w-12 rounded-full glass flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-110 transition duration-300">${playIconSVG()}</span>
+        <span class="h-14 w-14 rounded-full glass flex items-center justify-center opacity-85 group-hover:opacity-100 group-hover:scale-110 transition duration-300 shadow-xl">${playIconSVG()}</span>
       </div>
       <div class="absolute left-4 right-4 bottom-4 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition duration-300 pointer-events-none">
-        <p class="text-[11px] font-mono text-accent" style="margin:0 0 0.2rem 0;">${CATEGORY_LABEL[item.category] || item.category}</p>
-        <h3 class="font-display text-sm md:text-base mt-1" style="margin:0; font-weight:600;">${item.title}</h3>
+        <p class="text-xs font-mono text-accent" style="margin:0 0 0.3rem 0; font-weight:600;">${CATEGORY_LABEL[item.category] || item.category}</p>
+        <h3 class="font-display text-base md:text-lg mt-1" style="margin:0; font-weight:600;">${item.title}</h3>
       </div>
     </article>
   `).join("");
@@ -643,7 +644,7 @@ function openModal(item) {
   document.getElementById('modalTitle').textContent = item.title || '';
   document.getElementById('modalMeta').textContent = CATEGORY_LABEL[item.category] || item.category || '';
   document.getElementById('modalDesc').textContent = item.description || '';
-  document.getElementById('modalTools').innerHTML = (item.tools || []).map(t => `<span style="border:1px solid rgba(204,255,0,0.3); border-radius:4px; padding:0.2rem 0.5rem; color:var(--muted);">${t}</span>`).join("");
+  document.getElementById('modalTools').innerHTML = (item.tools || []).map(t => `<span style="border:1px solid rgba(204,255,0,0.3); border-radius:4px; padding:0.25rem 0.6rem; color:var(--muted);">${t}</span>`).join("");
   modal.dataset.open = "true";
   autoSuspended = true;
 }
@@ -655,17 +656,17 @@ function closeModal() {
 document.getElementById("modalClose").addEventListener("click", closeModal);
 document.getElementById("modalBackdrop").addEventListener("click", closeModal);
 
-/* Hero Banners */
+/* Artistik ve Profesyonel Hero Banners */
 const banners = Array.isArray(HERO.banners) ? HERO.banners : [];
 const heroStack = document.getElementById("heroStack");
 document.getElementById("heroHeadline").textContent = HERO.headline || "";
 const pad2 = n => String(n).padStart(2, "0");
 
 heroStack.innerHTML = !banners.length ? `
-  <article class="hero-static" style="display:flex; align-items:center; padding:0 clamp(1rem, 4vw, 2.5rem);">
-    <div class="hero-copy">
-      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(2.5rem,7vw,6rem); line-height:0.95; margin:0 0 1.5rem 0; max-width:16ch;">${escH(HERO.headline || "")}</h2>
-      ${HERO.subheadline ? `<p style="color:var(--muted); font-size:1rem; margin:0; max-width:40ch; line-height:1.6;">${escH(HERO.subheadline)}</p>` : ""}
+  <article class="hero-static" style="display:flex; align-items:center; padding:0 clamp(1.5rem, 5vw, 3.5rem);">
+    <div class="hero-copy" style="max-width: 900px;">
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:clamp(3rem, 8vw, 7rem); line-height:0.95; margin:0 0 1.5rem 0; letter-spacing:-0.03em;">${escH(HERO.headline || "")}</h2>
+      ${HERO.subheadline ? `<p style="color:rgba(255,255,255,0.75); font-size:1.15rem; margin:0; max-width:45ch; line-height:1.65;">${escH(HERO.subheadline)}</p>` : ""}
     </div>
   </article>` : banners.map((b, i) => `
   <article class="hero-banner" data-i="${i}">
@@ -673,16 +674,18 @@ heroStack.innerHTML = !banners.length ? `
       <div class="hero-stage" style="position:absolute; inset:0; cursor:pointer;" role="button" tabindex="0">
         <div class="auto-wrap">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover")}</div>
       </div>
-      <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); pointer-events:none;"></div>
-      <div class="hero-copy" style="position:absolute; left:clamp(1rem, 4vw, 2.5rem); right:clamp(1rem, 4vw, 2.5rem); bottom:3rem; display:flex; flex-direction:column; gap:1.5rem; pointer-events:none;" class="md:flex-row md:items-end md:justify-between">
-        <div style="pointer-events:none;">
-          ${banners.length > 1 ? `<p class="font-mono" style="font-size:0.75rem; letter-spacing:0.2em; color:rgba(255,255,255,0.6); margin:0 0 1rem 0;">${pad2(i + 1)} —${pad2(banners.length)}</p>` : ''}
-          <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:clamp(2.5rem,7vw,6rem); line-height:0.95; margin:0 0 1rem 0; max-width:16ch;">${escH(b.title)}</h2>
-          ${b.subtitle ? `<p style="color:rgba(255,255,255,0.7); font-size:1rem; margin:0; max-width:40ch; line-height:1.6;">${escH(b.subtitle)}</p>` : ''}
+      <!-- Daha artistik ve sinematik karanlık katmanlar -->
+      <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(5,5,5,0.85) 0%, rgba(5,5,5,0.3) 50%, rgba(5,5,5,0.5) 100%); pointer-events:none;"></div>
+      
+      <div class="hero-copy" style="position:absolute; left:clamp(1.5rem, 5vw, 3.5rem); right:clamp(1.5rem, 5vw, 3.5rem); bottom:4rem; display:flex; flex-direction:column; gap:2rem; pointer-events:none;" class="md:flex-row md:items-end md:justify-between">
+        <div style="pointer-events:none; max-width: 950px;">
+          ${banners.length > 1 ? `<div style="display:flex; align-items:center; gap:12px; margin-bottom:1rem;"><span style="height:1px; width:30px; background:var(--accent);"></span><p class="font-mono" style="font-size:0.8rem; letter-spacing:0.25em; color:var(--accent); margin:0; font-weight:600;">FEATURED PROJECT ${pad2(i + 1)} —${pad2(banners.length)}</p></div>` : ''}
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:clamp(3rem, 8vw, 7rem); line-height:0.92; margin:0 0 1.2rem 0; letter-spacing:-0.03em; text-shadow: 0 10px 40px rgba(0,0,0,0.5);">${escH(b.title)}</h2>
+          ${b.subtitle ? `<p style="color:rgba(255,255,255,0.8); font-size:1.15rem; margin:0; max-width:48ch; line-height:1.65; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">${escH(b.subtitle)}</p>` : ''}
         </div>
-        <div style="pointer-events:auto; display:flex; align-items:center; gap:1.5rem;">
-          <button type="button" class="hero-mute hero-ctl snd-btn" aria-label="Toggle sound"></button>
-          <button type="button" class="hero-case-btn">VIEW CASE STUDY →</button>
+        <div style="pointer-events:auto; display:flex; align-items:center; gap:1.75rem;">
+          <button type="button" class="hero-mute hero-ctl snd-btn" aria-label="Toggle sound" title="Toggle Sound"></button>
+          <button type="button" class="hero-case-btn">VIEW CASE STUDY <span>→</span></button>
         </div>
       </div>
     </div>
