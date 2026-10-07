@@ -238,21 +238,23 @@
   }
 </style>
 <script>
-/* Routing: /about, /contact, /imagery, /commercial and /short-movies are their own pages (vercel.json serves this same file for them); "/" is the homepage. */
+/* Routing: /about, /contact, /imagery, /commercial, /short-movies and /short-form-video are their own pages (vercel.json serves this same file for them); "/" is the homepage. */
 (function () {
   var p = location.pathname.replace(/\/+$/, "").replace(/^\/|\.html$/g, "").toLowerCase();
-  document.documentElement.setAttribute("data-page", ["about", "contact", "imagery", "commercial", "short-movies"].indexOf(p) > -1 ? p : "home");
+  document.documentElement.setAttribute("data-page", ["about", "contact", "imagery", "commercial", "short-movies", "short-form-video"].indexOf(p) > -1 ? p : "home");
 })();
 </script>
 <style>
-  html[data-page="about"] :is(#top,#contact,#stills,#commercial,#short-movies),
-  html[data-page="contact"] :is(#top,#about,#stills,#commercial,#short-movies),
-  html[data-page="imagery"] :is(#top,#about,#contact,#commercial,#short-movies),
-  html[data-page="commercial"] :is(#top,#about,#contact,#stills,#short-movies),
-  html[data-page="short-movies"] :is(#top,#about,#contact,#stills,#commercial),
-  html[data-page="home"] :is(#about,#contact,#stills,#commercial,#short-movies) { display: none !important; }
+  html[data-page="about"] :is(#top,#contact,#stills,#commercial,#short-movies,#short-form-video),
+  html[data-page="contact"] :is(#top,#about,#stills,#commercial,#short-movies,#short-form-video),
+  html[data-page="imagery"] :is(#top,#about,#contact,#commercial,#short-movies,#short-form-video),
+  html[data-page="commercial"] :is(#top,#about,#contact,#stills,#short-movies,#short-form-video),
+  html[data-page="short-movies"] :is(#top,#about,#contact,#stills,#commercial,#short-form-video),
+  html[data-page="short-form-video"] :is(#top,#about,#contact,#stills,#commercial,#short-movies),
+  html[data-page="home"] :is(#about,#contact,#stills,#commercial,#short-movies,#short-form-video) { display: none !important; }
   html:not([data-page="home"]) section[id] { border-top: 0 !important; padding-top: 8rem; min-height: 70vh; }
-  html[data-page="commercial"] #commercial, html[data-page="short-movies"] #short-movies { padding-top: 0; min-height: 0; }   /* full-screen banners, edge to edge */
+  html[data-page="commercial"] #commercial, html[data-page="short-movies"] #short-movies,
+  html[data-page="short-form-video"] #short-form-video { padding-top: 0; min-height: 0; }   /* full-screen banners, edge to edge */
 </style>
 </head>
 
@@ -275,6 +277,7 @@
         <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
         <a href="/commercial" class="nav-link">Commercial</a>
         <a href="/short-movies" class="nav-link">Short Movies</a>
+        <a href="/short-form-video" class="nav-link">Short-form Video</a>
         <a href="/about" class="nav-link">About</a>
         <a href="/contact" class="nav-link">Contact</a>
       </nav>
@@ -295,6 +298,7 @@
     <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
     <a href="/commercial" class="nav-link">Commercial</a>
     <a href="/short-movies" class="nav-link">Short Movies</a>
+    <a href="/short-form-video" class="nav-link">Short-form Video</a>
     <a href="/about" class="nav-link">About</a>
     <a href="/contact" class="nav-link">Start a project</a>
   </div>
@@ -328,7 +332,7 @@
     <div id="stillsBody"></div>
   </section>
 
-  <!-- ============ COMMERCIAL and SHORT MOVIES — each is its own page INSIDE this file, like About / Contact (/commercial, /short-movies). Banner-style videos from the admin panel ============ -->
+  <!-- ============ COMMERCIAL, SHORT MOVIES and SHORT-FORM VIDEO — each is its own page INSIDE this file, like About / Contact (/commercial, /short-movies, /short-form-video). Banner-style videos from the admin panel ============ -->
   <section id="commercial" class="relative z-10">
     <h2 class="sr-only">Commercial</h2>
     <div id="commercialStack" class="w-full"></div>
@@ -336,6 +340,10 @@
   <section id="short-movies" class="relative z-10">
     <h2 class="sr-only">Short Movies</h2>
     <div id="shortMoviesStack" class="w-full"></div>
+  </section>
+  <section id="short-form-video" class="relative z-10">
+    <h2 class="sr-only">Short-form Video</h2>
+    <div id="shortFormVideoStack" class="w-full"></div>
   </section>
 
   <!-- ============ ABOUT ============ -->
@@ -508,6 +516,7 @@ const asList = v => Array.isArray(v) ? v : [];
 // ("archive" was the first name of Commercial; it is still read so anything already published is not lost.)
 const COMMERCIAL = asList(SITE.commercial).length ? SITE.commercial : asList(SITE.archive);
 const SHORT_MOVIES = asList(SITE.shortMovies);
+const SHORT_FORM_VIDEO = asList(SITE.shortFormVideo);
 const SOCIAL = Object.assign({ instagram: "", youtube: "", linkedin: "" }, SITE.social || {});   // footer links — edited in the admin panel (Settings)
 document.title = SEO.siteTitle || (HERO.headline ? `${HERO.headline} — Osman Onur Tekin` : document.title);
 const metaDesc = document.querySelector('meta[name="description"]');
@@ -1038,7 +1047,7 @@ function wireBanners(stack, list) {                          // pause / sound / 
 }
 const heroEls = wireBanners(heroStack, banners);
 
-/* ---------------- COMMERCIAL and SHORT MOVIES (their own pages: /commercial, /short-movies) ----------------
+/* ---------------- COMMERCIAL, SHORT MOVIES and SHORT-FORM VIDEO (their own pages: /commercial, /short-movies, /short-form-video) ----------------
    Same banner look as the hero, each managed in the admin panel as its own list (independent of the hero banners, of each
    other and of the old All Work list). A page is only built when it is the page being viewed, so the homepage never loads
    these videos. Videos are LAZY: only metadata is fetched until they come within ~400px of the screen; each one starts
@@ -1061,6 +1070,7 @@ function buildCollection(page, stackId, label, list) {
 }
 const commercialEls = buildCollection("commercial", "commercialStack", "Commercial", COMMERCIAL);
 const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
+const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO);
 
 // Warm EVERY hero video right now (not on scroll): src is already set at render time, this also builds the
 // decode pipeline so each banner is ready to paint/play the instant it is reached. No fade, no opacity-0 state.
@@ -1073,7 +1083,7 @@ heroEls.forEach(h => warmUp(h.media));
    that is on screen has really PRESENTED A FRAME (requestVideoFrameCallback) or, for Vimeo/YouTube, its player has
    started. That video keeps playing underneath, so when the loader fades the video is already running.
    Tune MIN / MAX: shortest time the loader shows, and the hard cap so a slow file can never trap the visitor. */
-const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls];
+const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls, ...shortFormVideoEls];
 (function runEntryLoader() {
   const pre = document.getElementById("preloader"); if (!pre) return;
   const root = document.documentElement;
@@ -1147,7 +1157,7 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls];
 
 /* header: transparent over the full-screen hero, solid once you scroll past it */
 (function headerSolid() {
-  const hdr = document.getElementById("siteHeader"), top = document.getElementById(({ commercial: "commercial", "short-movies": "short-movies" })[document.documentElement.dataset.page] || "top"); if (!hdr || !top) return;
+  const hdr = document.getElementById("siteHeader"), top = document.getElementById(({ commercial: "commercial", "short-movies": "short-movies", "short-form-video": "short-form-video" })[document.documentElement.dataset.page] || "top"); if (!hdr || !top) return;
   const upd = () => hdr.classList.toggle("is-solid", window.scrollY > top.offsetHeight - hdr.offsetHeight - 8);
   window.addEventListener("scroll", upd, { passive: true }); window.addEventListener("resize", upd); upd();
 })();
