@@ -8,6 +8,8 @@
     { "source": "/commercial/", "destination": "/index.html" },
     { "source": "/short-movies", "destination": "/index.html" },
     { "source": "/short-movies/", "destination": "/index.html" },
+    { "source": "/short-form-video", "destination": "/index.html" },
+    { "source": "/short-form-video/", "destination": "/index.html" },
     { "source": "/imagery", "destination": "/index.html" },
     { "source": "/imagery/", "destination": "/index.html" }
   ]
