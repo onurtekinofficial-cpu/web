@@ -658,6 +658,7 @@
       social: { instagram: "", youtube: "", linkedin: "" },
       commercial: [],                                                // Commercial page (banner-style videos)
       shortMovies: [],                                               // Short Movies page (banner-style videos)
+      shortFormVideo: [],                                            // Short-form Video page (banner-style videos)
       filters: [{ label: "9:16", value: "9:16" }, { label: "16:9", value: "16:9" }, { label: "UGC", value: "ugc" }],
       categoryLabel: { "9:16": "9:16", "16:9": "16:9", ugc: "UGC" },
       portfolio: [
@@ -683,8 +684,9 @@
       // "archive" (Work Archive) was the first name of Commercial: carry it over once, so nothing already added is lost.
       if (!Array.isArray(s.commercial)) s.commercial = Array.isArray(s.archive) ? s.archive : [];
       delete s.archive;
-      if (!Array.isArray(s.shortMovies)) s.shortMovies = [];                       // Commercial and Short Movies: own lists, never derived from banners / work
-      for (const key of ['commercial', 'shortMovies']) {
+      if (!Array.isArray(s.shortMovies)) s.shortMovies = [];                       // Commercial, Short Movies and Short-form Video: own lists, never derived from banners / work
+      if (!Array.isArray(s.shortFormVideo)) s.shortFormVideo = [];
+      for (const key of ['commercial', 'shortMovies', 'shortFormVideo']) {
         let nextId = s[key].reduce((m, a) => Math.max(m, a.id || 0), 0) + 1;
         s[key] = s[key].map(a => ({ ...a, id: a.id || nextId++, title: a.title || '', subtitle: a.subtitle || '', videoUrl: a.videoUrl || '',
           thumbnailUrl: a.thumbnailUrl || '', aspect: a.aspect || '', description: a.description || '', tools: Array.isArray(a.tools) ? [...a.tools] : [] }));
@@ -732,6 +734,7 @@
       work:    { get: () => STATE.portfolio,    set: v => { STATE.portfolio = v; } },
       commercial:  { get: () => STATE.commercial,  set: v => { STATE.commercial = v; } },     // Commercial page — its own list
       shortMovies: { get: () => STATE.shortMovies, set: v => { STATE.shortMovies = v; } },    // Short Movies page — its own list
+      shortFormVideo: { get: () => STATE.shortFormVideo, set: v => { STATE.shortFormVideo = v; } }, // Short-form Video page — its own list
     };
     function commit(owner, mutate) {
       const others = Object.keys(SLICES).filter(k => k !== owner);
@@ -760,12 +763,13 @@
       { id: 'portfolio', label: 'Portfolio' },
       { id: 'commercial', label: 'Commercial' },
       { id: 'shortMovies', label: 'Short Movies' },
+      { id: 'shortFormVideo', label: 'Short-form Video' },
       { id: 'stills', label: 'Stills (pictures)' },
       { id: 'about', label: 'About & Process' },
       { id: 'seo', label: 'SEO & Settings' },
       { id: 'inbox', label: 'Inbox', soon: true },
     ];
-    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, commercial: () => renderCollectionView('commercial'), shortMovies: () => renderCollectionView('shortMovies'), stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
+    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, commercial: () => renderCollectionView('commercial'), shortMovies: () => renderCollectionView('shortMovies'), shortFormVideo: () => renderCollectionView('shortFormVideo'), stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
     let activeView = 'hero';
     function renderNav() {
       $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
@@ -887,10 +891,11 @@
       paintBanners(); toast('Banner deleted.');
     }
 
-    /* ================= MODULES — Commercial & Short Movies (each its own list; banner-style videos on /commercial and /short-movies) ================= */
+    /* ================= MODULES — Commercial, Short Movies & Short-form Video (each its own list; banner-style videos on /commercial, /short-movies and /short-form-video) ================= */
     const COLLECTIONS = {
       commercial:  { label: 'Commercial',   path: '/commercial',   menu: 'Commercial' },
       shortMovies: { label: 'Short Movies', path: '/short-movies', menu: 'Short Movies' },
+      shortFormVideo: { label: 'Short-form Video', path: '/short-form-video', menu: 'Short-form Video' },
     };
     let activeCollection = 'commercial';
     function renderCollectionView(key) {
@@ -1062,7 +1067,7 @@
       if (!STATE.stills || !Array.isArray(STATE.stills.sections)) STATE.stills = { title: '', sections: [] };
       const S = STATE.stills;
       const urls = v => String(v || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-      const okCount = v => urls(v).filter(u => /^(big\s+|huge\s+)?https?:\/\//i.test(u)).length;
+      const okCount = v => urls(v).filter(u => /^https?:\/\//i.test(u)).length;
       const collect = () => {
         S.title = $('#st-title').value.trim();
         view.querySelectorAll('[data-sec]').forEach(box => { const i = Number(box.dataset.sec); S.sections[i] = { title: box.querySelector('.st-t').value.trim(), images: urls(box.querySelector('.st-u').value) }; });
@@ -1076,7 +1081,7 @@
     ${S.sections.map((sec, i) => `
     <div class="card mt-6 space-y-4" data-sec="${i}">
       <label class="block"><span class="label">GROUP TITLE (optional)</span><input class="input st-t" maxlength="80" placeholder="e.g. Cinematic Realism" value="${esc(sec.title)}" /></label>
-      <label class="block"><span class="label">IMAGE LINKS — ONE PER LINE</span><textarea class="input st-u" rows="6" spellcheck="false" placeholder="https://…/picture1.jpg&#10;BIG https://…/picture2.jpg&#10;HUGE https://…/picture3.jpg&#10;https://…/picture4.jpg">${esc((sec.images || []).join('\n'))}</textarea><span class="hint">Three sizes. Plain link = small tile (several fit in a row). <b>BIG</b> + space before a link = a larger tile (pairs up two-in-a-row). <b>HUGE</b> + space before a link = one giant tile stretching the full width, alone, nothing beside it. Mix them — mostly small, BIG on standout shots, HUGE very occasionally.</span><span class="hint st-c">${okCount((sec.images || []).join('\n'))} valid link(s)</span></label>
+      <label class="block"><span class="label">IMAGE LINKS — ONE PER LINE</span><textarea class="input st-u" rows="6" spellcheck="false" placeholder="https://…/picture1.jpg&#10;https://…/picture2.jpg">${esc((sec.images || []).join('\n'))}</textarea><span class="hint st-c">${okCount((sec.images || []).join('\n'))} valid link(s)</span></label>
       <div class="savebar"><button class="btn btn-sm st-up" type="button">↑ Up</button><button class="btn btn-sm st-dn" type="button">↓ Down</button><button class="btn btn-sm st-rm" type="button">Delete group</button></div>
     </div>`).join('')}
     <div class="savebar mt-6"><button id="st-add" class="btn" type="button">+ Add group</button><button id="st-save" class="btn btn-primary" type="button">Save stills</button></div>`;
