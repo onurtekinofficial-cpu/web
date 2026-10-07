@@ -106,10 +106,28 @@
   #toTop svg { width: 22px; height: 22px; }
   @media (min-width: 768px) { #toTop { right: 1.75rem; } }
 
-  /* animated hamburger -> X */
-  #menuBtn span { transition: transform .3s ease; }
-  #menuBtn.is-open span:first-child { transform: translateY(3.5px) rotate(45deg); }
-  #menuBtn.is-open span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
+  /* three-line hamburger -> a small grin: the top two lines pull apart into eyes,
+     the bottom line curls into a smiling mouth. Closes back to three lines on click. */
+  #menuBtn { color: #fff; transition: color .35s ease; }
+  #menuBtn.is-open { color: #CCFF00; }
+  #menuBtn span {
+    transform-origin: center;
+    transition: transform .4s cubic-bezier(.65,0,.35,1), width .35s ease, height .35s ease,
+      border-radius .35s ease, background-color .3s ease .05s, border-color .3s ease .05s;
+  }
+  #menuBtn.is-open span:nth-child(1) {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    transform: translate(-6px, -5px);
+  }
+  #menuBtn.is-open span:nth-child(2) {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    transform: translate(6px, -5px);
+  }
+  #menuBtn.is-open span:nth-child(3) {
+    width: 18px; height: 9px; background: transparent; border-radius: 0 0 18px 18px;
+    border: 1.5px solid transparent; border-top-color: transparent; border-bottom-color: currentColor;
+    transform: translateY(6px);
+  }
 
   /* full-screen mobile nav overlay, same open/close pattern as the modal */
   #mobileMenu { transition: opacity .3s ease, transform .3s ease; }
@@ -263,8 +281,8 @@
         <a href="/contact" class="nav-link">Contact</a>
       </nav>
       <a href="/contact" class="hidden md:inline-flex items-center rounded-md border border-accent/50 text-accent font-mono text-xs px-5 py-2.5 hover:bg-accent hover:text-ink hover:shadow-[0_0_20px_rgba(204,255,0,0.35)] transition">start_project()</a>
-      <button id="menuBtn" aria-label="Open menu" aria-expanded="false" class="md:hidden relative z-50 h-11 w-11 -mr-2 flex flex-col items-center justify-center gap-1.5">
-        <span class="block h-px w-6 bg-white"></span><span class="block h-px w-6 bg-white"></span>
+      <button id="menuBtn" aria-label="Open menu" aria-expanded="false" class="md:hidden relative z-50 h-11 w-11 -mr-2 flex flex-col items-center justify-center gap-1">
+        <span class="block h-[1.5px] w-6 bg-white"></span><span class="block h-[1.5px] w-6 bg-white"></span><span class="block h-[1.5px] w-6 bg-white"></span>
       </button>
     </div>
   </header>
