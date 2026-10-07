@@ -95,6 +95,16 @@
   }
   .nav-link { transition: color .25s ease, text-shadow .25s ease; }
   .nav-link:hover { color: #CCFF00; text-shadow: 0 0 18px rgba(204,255,0,0.55); }
+  .nav-link[aria-current="page"] { color: #CCFF00; }                      /* the page you are on */
+  /* back-to-top: appears once you have scrolled down; sits above the banner controls (bottom-right) so they never overlap */
+  #toTop { position: fixed; right: 1.25rem; bottom: 6.5rem; z-index: 35; width: 48px; height: 48px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+    color: #fff; background: rgba(5,5,5,.72); border: 1px solid rgba(204,255,0,.55); backdrop-filter: blur(8px); cursor: pointer;
+    opacity: 0; visibility: hidden; transform: translateY(12px);
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s, color .25s ease, background .25s ease, box-shadow .25s ease; }
+  #toTop.is-visible { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  #toTop:hover, #toTop:focus-visible { color: #050505; background: #CCFF00; box-shadow: 0 10px 30px -8px rgba(204,255,0,.65); outline: none; }
+  #toTop svg { width: 22px; height: 22px; }
+  @media (min-width: 768px) { #toTop { right: 1.75rem; } }
 
   /* animated hamburger -> X */
   #menuBtn span { transition: transform .3s ease; }
@@ -245,6 +255,7 @@
     <div class="mx-auto max-w-[1400px] px-5 md:px-10 h-16 md:h-20 flex items-center justify-between">
       <a href="/" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
       <nav class="hidden md:flex items-center gap-10 text-lg font-display font-semibold text-white/90">
+        <a href="/" class="nav-link" data-home>Home</a>
         <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
         <a href="/commercial" class="nav-link">Commercial</a>
         <a href="/short-movies" class="nav-link">Short Movies</a>
@@ -259,7 +270,12 @@
   </header>
 
   <!-- full-screen mobile nav overlay: same data-open pattern as the case-study modal -->
+  <button id="toTop" type="button" aria-label="Back to top" title="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/></svg>
+  </button>
+
   <div id="mobileMenu" data-open="false" class="fixed inset-0 z-40 md:hidden bg-[#050505] flex flex-col items-center justify-center gap-8 text-3xl font-display font-semibold" aria-hidden="true">
+    <a href="/" class="nav-link" data-home>Home</a>
     <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
     <a href="/commercial" class="nav-link">Commercial</a>
     <a href="/short-movies" class="nav-link">Short Movies</a>
@@ -1109,6 +1125,24 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls];
   window.addEventListener("scroll", upd, { passive: true }); window.addEventListener("resize", upd); upd();
 })();
 
+/* menu: highlight the page you are on */
+(function markCurrentPage() {
+  const page = document.documentElement.dataset.page, target = page === "home" ? "/" : "/" + page;
+  document.querySelectorAll("header nav a, #mobileMenu a").forEach(a => { if (a.getAttribute("href") === target) a.setAttribute("aria-current", "page"); });
+})();
+
+/* back-to-top button: shows after you scroll down, glides back to the top of the page on click (all pages) */
+(function backToTop() {
+  const btn = document.getElementById("toTop"); if (!btn) return;
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let tick = false;
+  const update = () => { tick = false; btn.classList.toggle("is-visible", window.scrollY > Math.max(480, innerHeight * 0.6)); };
+  window.addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(update); } }, { passive: true });
+  window.addEventListener("resize", update);
+  btn.addEventListener("click", () => { scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
+  update();
+})();
+
 /* ---------------- mobile menu (full-screen overlay, animated hamburger) ---------------- */
 const menuBtn = document.getElementById("menuBtn");
 const mobileMenu = document.getElementById("mobileMenu");
@@ -1124,7 +1158,7 @@ menuBtn.addEventListener("click", () => setMenu(mobileMenu.dataset.open !== "tru
 mobileMenu.querySelectorAll("a").forEach(a => a.addEventListener("click", () => setMenu(false)));
 /* homepage only: the logo scrolls to the top; arriving from another page via "/#work" glides down to All Works once the page has loaded */
 if (document.documentElement.dataset.page === "home") {
-  document.querySelectorAll('a[data-logo][href="/"]').forEach(a => a.addEventListener("click", e => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); }));
+  document.querySelectorAll('a[data-logo][href="/"], a[data-home]').forEach(a => a.addEventListener("click", e => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); }));   // already on the homepage: Home / logo glide to the top
   if (location.hash === "#work") galleryThumbsReady.then(() => setTimeout(() => { const w = document.getElementById("work"); if (w) w.scrollIntoView({ behavior: "smooth", block: "start" }); }, 900));
 }
 
