@@ -20,11 +20,6 @@
     var banners = D.hero.banners || [];            // banners are their own list — never borrowed from the All Work grid
     var seen = {}, pre = window.__preVideos = {};
     function hint(origin) { if (!origin || seen[origin]) return; seen[origin] = 1; var l = document.createElement('link'); l.rel = 'preconnect'; l.href = origin; document.head.appendChild(l); }
-    (D.portfolio || []).slice(0, 40).forEach(function (w) {   // start downloading EVERY All Work cover now, in parallel, before the page is even built
-      var t = String((w && w.thumbnailUrl) || '').trim(); if (!t) return;
-      try { hint(new URL(t, location.href).origin); } catch (e) {}
-      var l = document.createElement('link'); l.rel = 'preload'; l.as = 'image'; l.href = t; document.head.appendChild(l);
-    });
     banners.forEach(function (b, i) {
       var t = String((b && b.thumbnailUrl) || '').trim();
       if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
@@ -217,20 +212,21 @@
   }
 </style>
 <script>
-/* Routing: /about, /contact, /imagery and /work-archive are their own pages (vercel.json serves this same file for them); "/" is the homepage. */
+/* Routing: /about, /contact, /imagery, /commercial and /short-movies are their own pages (vercel.json serves this same file for them); "/" is the homepage. */
 (function () {
   var p = location.pathname.replace(/\/+$/, "").replace(/^\/|\.html$/g, "").toLowerCase();
-  document.documentElement.setAttribute("data-page", p === "about" || p === "contact" || p === "imagery" || p === "work-archive" ? p : "home");
+  document.documentElement.setAttribute("data-page", ["about", "contact", "imagery", "commercial", "short-movies"].indexOf(p) > -1 ? p : "home");
 })();
 </script>
 <style>
-  html[data-page="about"] :is(#top,#work,#contact,#stills,#archive),
-  html[data-page="contact"] :is(#top,#work,#about,#stills,#archive),
-  html[data-page="imagery"] :is(#top,#work,#about,#contact,#archive),
-  html[data-page="work-archive"] :is(#top,#work,#about,#contact,#stills),
-  html[data-page="home"] :is(#about,#contact,#stills,#archive) { display: none !important; }
+  html[data-page="about"] :is(#top,#contact,#stills,#commercial,#short-movies),
+  html[data-page="contact"] :is(#top,#about,#stills,#commercial,#short-movies),
+  html[data-page="imagery"] :is(#top,#about,#contact,#commercial,#short-movies),
+  html[data-page="commercial"] :is(#top,#about,#contact,#stills,#short-movies),
+  html[data-page="short-movies"] :is(#top,#about,#contact,#stills,#commercial),
+  html[data-page="home"] :is(#about,#contact,#stills,#commercial,#short-movies) { display: none !important; }
   html:not([data-page="home"]) section[id] { border-top: 0 !important; padding-top: 8rem; min-height: 70vh; }
-  html[data-page="work-archive"] #archive { padding-top: 0; min-height: 0; }   /* the archive is full-screen banners, edge to edge */
+  html[data-page="commercial"] #commercial, html[data-page="short-movies"] #short-movies { padding-top: 0; min-height: 0; }   /* full-screen banners, edge to edge */
 </style>
 </head>
 
@@ -249,9 +245,9 @@
     <div class="mx-auto max-w-[1400px] px-5 md:px-10 h-16 md:h-20 flex items-center justify-between">
       <a href="/" data-logo class="font-display font-semibold text-lg tracking-tight hover-accent">Osman Tekin</a>
       <nav class="hidden md:flex items-center gap-10 text-lg font-display font-semibold text-white/90">
-        <a href="/#work" class="nav-link">Work</a>
         <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
-        <a href="/work-archive" class="nav-link">Work Archive</a>
+        <a href="/commercial" class="nav-link">Commercial</a>
+        <a href="/short-movies" class="nav-link">Short Movies</a>
         <a href="/about" class="nav-link">About</a>
         <a href="/contact" class="nav-link">Contact</a>
       </nav>
@@ -264,9 +260,9 @@
 
   <!-- full-screen mobile nav overlay: same data-open pattern as the case-study modal -->
   <div id="mobileMenu" data-open="false" class="fixed inset-0 z-40 md:hidden bg-[#050505] flex flex-col items-center justify-center gap-8 text-3xl font-display font-semibold" aria-hidden="true">
-    <a href="/#work" class="nav-link">Work</a>
     <a href="/imagery" class="nav-link" data-stills-link style="display:none">Imagery</a>
-    <a href="/work-archive" class="nav-link">Work Archive</a>
+    <a href="/commercial" class="nav-link">Commercial</a>
+    <a href="/short-movies" class="nav-link">Short Movies</a>
     <a href="/about" class="nav-link">About</a>
     <a href="/contact" class="nav-link text-accent">Start a project</a>
   </div>
@@ -277,14 +273,7 @@
     <div id="heroStack" class="w-full"></div>
   </section>
 
-  <!-- ============ ALL WORKS ============ -->
-  <section id="work" class="mx-auto max-w-[1400px] px-5 md:px-10 pt-24 md:pt-32 pb-10 relative z-10">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-      <h2 class="font-display text-3xl md:text-4xl hover-accent w-fit">All works</h2>
-      <div id="filters" class="filter-scroll flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0"></div>
-    </div>
-    <div id="galleryGrid" class="gallery-grid"></div>
-  </section>
+  <!-- The "All works" grid was removed from the homepage. Its videos are still kept in the admin panel (Portfolio) for later. -->
 
   <!-- ============ STILLS (picture gallery — filled from the admin panel, hidden when empty) ============ -->
   <style>
@@ -299,10 +288,14 @@
     <div id="stillsBody"></div>
   </section>
 
-  <!-- ============ WORK ARCHIVE — its own page INSIDE this file, like About / Contact (/work-archive). Banner-style videos from the admin panel's "Work Archive" list ============ -->
-  <section id="archive" class="relative z-10">
-    <h2 class="sr-only">Work Archive</h2>
-    <div id="archiveStack" class="w-full"></div>
+  <!-- ============ COMMERCIAL and SHORT MOVIES — each is its own page INSIDE this file, like About / Contact (/commercial, /short-movies). Banner-style videos from the admin panel ============ -->
+  <section id="commercial" class="relative z-10">
+    <h2 class="sr-only">Commercial</h2>
+    <div id="commercialStack" class="w-full"></div>
+  </section>
+  <section id="short-movies" class="relative z-10">
+    <h2 class="sr-only">Short Movies</h2>
+    <div id="shortMoviesStack" class="w-full"></div>
   </section>
 
   <!-- ============ ABOUT ============ -->
@@ -470,7 +463,11 @@ const PORTFOLIO = (SITE.portfolio || []).map(v => ({ ...v, category: CATEGORY_LA
 const FILTERS = [{ label: "All", value: "all" }, ...Object.keys(CATEGORY_LABEL).map(k => ({ label: CATEGORY_LABEL[k], value: k }))];
 
 const SEO = Object.assign({ siteTitle: "", metaDescription: "", logoText: "", email: "", formspreeEndpoint: "" }, SITE.seo || {});
-const ARCHIVE = Array.isArray(SITE.archive) ? SITE.archive : [];       // WORK ARCHIVE: its own list — never mixed with hero banners or All Work
+const asList = v => Array.isArray(v) ? v : [];
+// COMMERCIAL and SHORT MOVIES are their own lists — never mixed with the hero banners or with each other.
+// ("archive" was the first name of Commercial; it is still read so anything already published is not lost.)
+const COMMERCIAL = asList(SITE.commercial).length ? SITE.commercial : asList(SITE.archive);
+const SHORT_MOVIES = asList(SITE.shortMovies);
 const SOCIAL = Object.assign({ instagram: "", youtube: "", linkedin: "" }, SITE.social || {});   // footer links — edited in the admin panel (Settings)
 document.title = SEO.siteTitle || (HERO.headline ? `${HERO.headline} — Osman Onur Tekin` : document.title);
 const metaDesc = document.querySelector('meta[name="description"]');
@@ -777,6 +774,7 @@ function thumbMarkup(item) {                                // synchronous part:
   return "";                                                // Vimeo: cover arrives from oEmbed (below)
 }
 function renderGallery() {
+  if (!grid) return Promise.resolve();                       // the All works section is not on the page
   grid.innerHTML = PORTFOLIO.map((item, i) => `
     <article class="gallery-card group relative overflow-hidden rounded-lg cursor-pointer bg-panel border border-white/8" data-cat="${item.category}" data-hide-all="${item.hideFromAll ? 1 : 0}" data-id="${item.id}" tabindex="0" role="button" aria-label="Play ${escH(item.title)}">
       <div class="thumb-wrap absolute inset-0 overflow-hidden bg-[#0d0f0d] transition duration-700 ease-out group-hover:scale-105">${thumbMarkup(item)}</div>
@@ -820,11 +818,13 @@ function renderGallery() {
 }
 
 function applyFilter(value) {
+  if (!grid) return;
   grid.dataset.mode = value === "9:16" ? "portrait" : "landscape";
   grid.querySelectorAll(".gallery-card").forEach(card => card.classList.toggle("is-hidden", !((value === "all" && card.dataset.hideAll !== "1") || card.dataset.cat === value)));
 }
 
 const filterBar = document.getElementById("filters");
+if (filterBar) {
 filterBar.innerHTML = FILTERS.map((f, i) => `<button class="filter-pill shrink-0 rounded-full border border-white/10 text-sm px-4 py-2 text-muted" data-filter="${f.value}" data-active="${i === 0}">${f.label}</button>`).join("");
 filterBar.querySelectorAll(".filter-pill").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -833,6 +833,7 @@ filterBar.querySelectorAll(".filter-pill").forEach(btn => {
     applyFilter(btn.dataset.filter);
   });
 });
+}
 
 /* ---------------- stills (picture gallery) — every picture loads in ONE pass, then the whole gallery fades in together ---------------- */
 function renderStills() {
@@ -920,7 +921,7 @@ const heroStack = document.getElementById("heroStack");
 document.getElementById("heroHeadline").textContent = HERO.headline || "Osman Onur Tekin";   // visually hidden h1 (SEO)
 const pad2 = n => String(n).padStart(2, "0");
 
-function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used by the homepage hero AND the Work Archive page
+function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies pages
   return `
   <article class="hero-banner" data-i="${i}">
     <div class="hero-frame">
@@ -994,26 +995,29 @@ function wireBanners(stack, list) {                          // pause / sound / 
 }
 const heroEls = wireBanners(heroStack, banners);
 
-/* ---------------- WORK ARCHIVE (its own page: /work-archive) ----------------
-   Same banner look as the hero, managed in the admin panel under "Work Archive" (its own list, independent of the hero
-   banners and of All Work). It is only built on its own page, so the homepage never loads these videos. Videos are LAZY:
-   only metadata is fetched until they come within ~400px of the screen; each one starts playing when scrolled to, pauses
-   when scrolled away, and goes back to its first frame. */
-const archiveStack = document.getElementById("archiveStack");
-let archiveEls = [];
-if (document.documentElement.dataset.page === "work-archive" && archiveStack) {
-  const items = ARCHIVE.map(a => ({ ...a, _label: "Work Archive" }));
-  archiveStack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, "WORK ARCHIVE · ", true)).join("") : `
+/* ---------------- COMMERCIAL and SHORT MOVIES (their own pages: /commercial, /short-movies) ----------------
+   Same banner look as the hero, each managed in the admin panel as its own list (independent of the hero banners, of each
+   other and of the old All Work list). A page is only built when it is the page being viewed, so the homepage never loads
+   these videos. Videos are LAZY: only metadata is fetched until they come within ~400px of the screen; each one starts
+   playing when scrolled to, pauses when scrolled away, and goes back to its first frame. */
+function buildCollection(page, stackId, label, list) {
+  const stack = document.getElementById(stackId);
+  if (document.documentElement.dataset.page !== page || !stack) return [];
+  const items = list.map(a => ({ ...a, _label: label }));
+  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true)).join("") : `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
-      <h2 class="font-display font-medium text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">Work Archive</h2>
+      <h2 class="font-display font-medium text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
       <p class="mt-5 text-sm md:text-base text-white/70 max-w-md">More work is on its way — check back soon.</p>
     </div>
   </article>`;
-  registerAuto(archiveStack);
-  archiveEls = wireBanners(archiveStack, items);
-  archiveEls.forEach(h => { if (h.media) h.media.dataset.restart = "1"; });
+  registerAuto(stack);
+  const els = wireBanners(stack, items);
+  els.forEach(h => { if (h.media) h.media.dataset.restart = "1"; });
+  return els;
 }
+const commercialEls = buildCollection("commercial", "commercialStack", "Commercial", COMMERCIAL);
+const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
 
 // Warm EVERY hero video right now (not on scroll): src is already set at render time, this also builds the
 // decode pipeline so each banner is ready to paint/play the instant it is reached. No fade, no opacity-0 state.
@@ -1026,7 +1030,7 @@ heroEls.forEach(h => warmUp(h.media));
    that is on screen has really PRESENTED A FRAME (requestVideoFrameCallback) or, for Vimeo/YouTube, its player has
    started. That video keeps playing underneath, so when the loader fades the video is already running.
    Tune MIN / MAX: shortest time the loader shows, and the hard cap so a slow file can never trap the visitor. */
-const bannerEls = [...heroEls, ...archiveEls];
+const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls];
 (function runEntryLoader() {
   const pre = document.getElementById("preloader"); if (!pre) return;
   const root = document.documentElement;
@@ -1100,7 +1104,7 @@ const bannerEls = [...heroEls, ...archiveEls];
 
 /* header: transparent over the full-screen hero, solid once you scroll past it */
 (function headerSolid() {
-  const hdr = document.getElementById("siteHeader"), top = document.getElementById(document.documentElement.dataset.page === "work-archive" ? "archive" : "top"); if (!hdr || !top) return;
+  const hdr = document.getElementById("siteHeader"), top = document.getElementById(({ commercial: "commercial", "short-movies": "short-movies" })[document.documentElement.dataset.page] || "top"); if (!hdr || !top) return;
   const upd = () => hdr.classList.toggle("is-solid", window.scrollY > top.offsetHeight - hdr.offsetHeight - 8);
   window.addEventListener("scroll", upd, { passive: true }); window.addEventListener("resize", upd); upd();
 })();
