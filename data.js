@@ -12,8 +12,10 @@
 //   Editing, adding, deleting or reordering a WorkItem can never change a Banner, and vice versa: the admin panel
 //   enforces it in code, and index.html never reads portfolio[] to build the hero. Array order === render order.
 //
-//   archive[]       — the WORK ARCHIVE page (/work-archive): banner-style videos, a third independent list. Same fields as a Banner.
-//                     Videos load lazily and start only when scrolled to. Managed in the admin panel under "Work Archive".
+//   commercial[]    — the COMMERCIAL page (/commercial): banner-style videos, its own independent list. Same fields as a Banner.
+//   shortMovies[]   — the SHORT MOVIES page (/short-movies): same, another independent list.
+//                     Both load lazily and each video starts only when scrolled to. Managed in the admin panel (Commercial / Short Movies).
+//   portfolio[]     — the old "All works" grid. It is NOT shown on the site right now; the admin panel keeps the data for later.
 //
 // social = { instagram, youtube, linkedin } → footer icons (replace the placeholder URLs; empty = icon hidden). The e-mail icon uses seo.email.
 // Other keys: about, seo, filters, categoryLabel.
@@ -89,7 +91,8 @@ window.SITE_DATA = {
     "email": "",
     "formspreeEndpoint": ""
   },
-  "archive": [],
+  "commercial": [],
+  "shortMovies": [],
   "social": {
     "instagram": "https://www.instagram.com/",
     "youtube": "https://www.youtube.com/",
