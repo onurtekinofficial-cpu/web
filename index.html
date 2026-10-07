@@ -309,11 +309,19 @@
 
   <!-- ============ STILLS (picture gallery — filled from the admin panel, hidden when empty) ============ -->
   <style>
-    .st-set{display:flex;flex-wrap:wrap;gap:6px}.st-set::after{content:"";flex-grow:1e6}
-    .st-item{position:relative;overflow:hidden;background:#0d0f0d;min-width:0}
-    .st-item img{display:block;width:100%;height:auto;pointer-events:none;user-select:none;-webkit-user-drag:none}
+    /* mosaic grid: most tiles are 1 cell, a tile marked "big" in the admin panel spans more cells — like billyboman.com/stills */
+    .st-set{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-auto-rows:150px;grid-auto-flow:dense;gap:6px}
+    .st-item{position:relative;overflow:hidden;background:#0d0f0d;grid-column:span 2;grid-row:span 2}
+    .st-item.st-big{grid-column:span 4;grid-row:span 4}
+    .st-item.st-huge{grid-column:1/-1;grid-row:span 7}
+    .st-item img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none;-webkit-user-drag:none}
     #stillsBody{opacity:0;transition:opacity .9s ease}#stillsBody.show{opacity:1}
-    @media(max-width:640px){.st-set{gap:4px}}
+    @media(max-width:640px){
+      .st-set{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));grid-auto-rows:110px;gap:4px}
+      .st-item{grid-column:span 2;grid-row:span 2}
+      .st-item.st-big{grid-column:span 4;grid-row:span 4}
+      .st-item.st-huge{grid-column:1/-1;grid-row:span 5}
+    }
   </style>
   <section id="stills" class="mx-auto max-w-[1400px] px-5 md:px-10 pt-24 md:pt-32 pb-10 relative z-10" style="display:none">
     <h2 id="stillsTitle" class="font-display text-3xl md:text-4xl mb-10"></h2>
@@ -870,7 +878,7 @@ filterBar.querySelectorAll(".filter-pill").forEach(btn => {
 /* ---------------- stills (picture gallery) — every picture loads in ONE pass, then the whole gallery fades in together ---------------- */
 function renderStills() {
   const S = SITE.stills, sec = document.getElementById("stills"), body = document.getElementById("stillsBody");
-  const groups = ((S && S.sections) || []).map(g => ({ title: g.title || "", images: (g.images || []).filter(u => /^https?:\/\//i.test(String(u).trim())) })).filter(g => g.images.length);
+  const groups = ((S && S.sections) || []).map(g => ({ title: g.title || "", images: (g.images || []).map(u => String(u).trim()).filter(u => /^(big\s+|huge\s+)?https?:\/\//i.test(u)) })).filter(g => g.images.length);
   if (!sec || !groups.length) return Promise.resolve();
   const name = (S.title || "").trim() || "Imagery";
   document.getElementById("stillsTitle").textContent = name;
@@ -883,13 +891,16 @@ function renderStills() {
     groups.forEach(g => {
       if (g.title) { const h = document.createElement("h3"); h.className = "font-display text-xl md:text-2xl mt-10 mb-4 uppercase tracking-wide"; h.textContent = g.title; body.appendChild(h); }
       const set = document.createElement("div"); set.className = "st-set";
-      g.images.forEach(url => {
+      g.images.forEach(raw => {
+        const huge = /^huge\s+/i.test(raw);
+        const big = !huge && /^big\s+/i.test(raw);
+        const url = raw.replace(/^(big|huge)\s+/i, "");
         total++;
-        const item = document.createElement("div"); item.className = "st-item";
+        const item = document.createElement("div"); item.className = "st-item" + (huge ? " st-huge" : big ? " st-big" : "");
         const img = new Image(); img.decoding = "async"; img.alt = ""; img.draggable = false;
-        img.onload = () => { const ar = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1.5; item.style.flex = ar + " 1 " + (ar * 230) + "px"; tick(); };
+        img.onload = tick;
         img.onerror = () => { item.remove(); tick(); };
-        img.src = url.trim(); item.appendChild(img); set.appendChild(item);
+        img.src = url; item.appendChild(img); set.appendChild(item);
       });
       body.appendChild(set);
     });
