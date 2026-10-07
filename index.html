@@ -973,12 +973,16 @@ const heroStack = document.getElementById("heroStack");
 document.getElementById("heroHeadline").textContent = HERO.headline || "Osman Onur Tekin";   // visually hidden h1 (SEO)
 const pad2 = n => String(n).padStart(2, "0");
 
-function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies pages
+function bannerHTML(b, i, n, label, lazy, fit) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies / Short-form Video pages
+  // fit === true (Short-form Video page only): the frame stays full-width/full-height like every other banner,
+  // but the 9:16 video is shown WHOLE (pillarboxed) at its real aspect ratio instead of being cropped to fill —
+  // same treatment as billyboman.com's vertical "Selected Work" videos. A blurred, darkened copy of the poster
+  // fills the space on either side so there's never flat black bars. Commercial / Short Movies are unaffected.
   return `
   <article class="hero-banner" data-i="${i}">
     <div class="hero-frame">
       <div class="hero-stage absolute inset-0 z-0 cursor-pointer" role="button" tabindex="0" aria-label="View case study: ${escH(b.title || 'featured work')}">
-        <div class="auto-wrap">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover", lazy)}</div>
+        <div class="auto-wrap${fit ? ' fit-contain' : ''}">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover", lazy)}</div>
       </div>
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
 
@@ -1052,11 +1056,11 @@ const heroEls = wireBanners(heroStack, banners);
    other and of the old All Work list). A page is only built when it is the page being viewed, so the homepage never loads
    these videos. Videos are LAZY: only metadata is fetched until they come within ~400px of the screen; each one starts
    playing when scrolled to, pauses when scrolled away, and goes back to its first frame. */
-function buildCollection(page, stackId, label, list) {
+function buildCollection(page, stackId, label, list, fit) {
   const stack = document.getElementById(stackId);
   if (document.documentElement.dataset.page !== page || !stack) return [];
   const items = list.map(a => ({ ...a, _label: label }));
-  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true)).join("") : `
+  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true, fit)).join("") : `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
       <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
@@ -1070,7 +1074,7 @@ function buildCollection(page, stackId, label, list) {
 }
 const commercialEls = buildCollection("commercial", "commercialStack", "Commercial", COMMERCIAL);
 const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
-const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO);
+const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO, true);
 
 // Warm EVERY hero video right now (not on scroll): src is already set at render time, this also builds the
 // decode pipeline so each banner is ready to paint/play the instant it is reached. No fade, no opacity-0 state.
