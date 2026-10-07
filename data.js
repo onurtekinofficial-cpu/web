@@ -94,7 +94,26 @@ window.SITE_DATA = {
   },
   "commercial": [],
   "shortMovies": [],
-  "shortFormVideo": [],
+  "shortFormVideo": [
+    {
+      "id": 1,
+      "title": "Nick's",
+      "subtitle": "AI Production Partner",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      "aspect": "9:16",
+      "description": "A vertical, 9:16 piece shown whole inside the full-width banner — not cropped to fill it.",
+      "tools": ["Kling AI", "Runway Gen-3"]
+    },
+    {
+      "id": 2,
+      "title": "Full AI Production",
+      "subtitle": "AI Production Partner",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+      "aspect": "9:16",
+      "description": "Another 9:16 example: the frame stays full-screen, the video stays vertical, with a blurred ambient fill on either side.",
+      "tools": ["Pika", "ElevenLabs"]
+    }
+  ],
   "social": {
     "instagram": "https://www.instagram.com/",
     "youtube": "https://www.youtube.com/",
