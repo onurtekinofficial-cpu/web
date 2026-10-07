@@ -112,8 +112,7 @@
   #menuBtn.is-open { color: #CCFF00; }
   #menuBtn span {
     transform-origin: center;
-    transition: transform .4s cubic-bezier(.65,0,.35,1), width .35s ease, height .35s ease,
-      border-radius .35s ease, background-color .3s ease .05s, border-color .3s ease .05s;
+    transition: transform .4s cubic-bezier(.65,0,.35,1), width .35s ease, height .35s ease, border-radius .35s ease;
   }
   #menuBtn.is-open span:nth-child(1) {
     width: 6px; height: 6px; border-radius: 50%; background: currentColor;
@@ -124,8 +123,7 @@
     transform: translate(6px, -5px);
   }
   #menuBtn.is-open span:nth-child(3) {
-    width: 18px; height: 9px; background: transparent; border-radius: 0 0 18px 18px;
-    border: 1.5px solid transparent; border-top-color: transparent; border-bottom-color: currentColor;
+    width: 18px; height: 9px; background: currentColor; border-radius: 0 0 18px 18px;
     transform: translateY(6px);
   }
 
