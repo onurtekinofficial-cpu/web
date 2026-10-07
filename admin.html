@@ -587,7 +587,7 @@
   </div>
 
 
-  <!-- Add / Edit WORK ARCHIVE video modal -->
+  <!-- Add / Edit COMMERCIAL / SHORT MOVIES video modal -->
   <div id="archiveModal" class="modal-overlay" aria-hidden="true">
     <div class="modal-backdrop" data-close-archive></div>
     <div class="modal-panel">
@@ -656,7 +656,8 @@
       },
       seo: { siteTitle: "Osman Onur Tekin — AI Video Editor & Producer", metaDescription: "Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work.", logoText: "Osman Tekin", email: "", formspreeEndpoint: "" },
       social: { instagram: "", youtube: "", linkedin: "" },
-      archive: [],                                                   // Work Archive page (banner-style videos)
+      commercial: [],                                                // Commercial page (banner-style videos)
+      shortMovies: [],                                               // Short Movies page (banner-style videos)
       filters: [{ label: "9:16", value: "9:16" }, { label: "16:9", value: "16:9" }, { label: "UGC", value: "ugc" }],
       categoryLabel: { "9:16": "9:16", "16:9": "16:9", ugc: "UGC" },
       portfolio: [
@@ -679,10 +680,15 @@
       s.about = { ...clone(DEFAULT_DATA.about), ...s.about };
       s.seo = { ...clone(DEFAULT_DATA.seo), ...(s.seo || {}) };
       s.social = { ...clone(DEFAULT_DATA.social), ...(s.social || {}) };
-      if (!Array.isArray(s.archive)) s.archive = [];                               // Work Archive: its own list, never derived from banners / work
-      let nextAid = s.archive.reduce((m, a) => Math.max(m, a.id || 0), 0) + 1;
-      s.archive = s.archive.map(a => ({ ...a, id: a.id || nextAid++, title: a.title || '', subtitle: a.subtitle || '', videoUrl: a.videoUrl || '',
-        thumbnailUrl: a.thumbnailUrl || '', aspect: a.aspect || '', description: a.description || '', tools: Array.isArray(a.tools) ? [...a.tools] : [] }));          // footer links (Instagram / YouTube / LinkedIn); e-mail comes from seo.email
+      // "archive" (Work Archive) was the first name of Commercial: carry it over once, so nothing already added is lost.
+      if (!Array.isArray(s.commercial)) s.commercial = Array.isArray(s.archive) ? s.archive : [];
+      delete s.archive;
+      if (!Array.isArray(s.shortMovies)) s.shortMovies = [];                       // Commercial and Short Movies: own lists, never derived from banners / work
+      for (const key of ['commercial', 'shortMovies']) {
+        let nextId = s[key].reduce((m, a) => Math.max(m, a.id || 0), 0) + 1;
+        s[key] = s[key].map(a => ({ ...a, id: a.id || nextId++, title: a.title || '', subtitle: a.subtitle || '', videoUrl: a.videoUrl || '',
+          thumbnailUrl: a.thumbnailUrl || '', aspect: a.aspect || '', description: a.description || '', tools: Array.isArray(a.tools) ? [...a.tools] : [] }));
+      }          // footer links (Instagram / YouTube / LinkedIn); e-mail comes from seo.email
       if (!Array.isArray(s.about.workflow) || !s.about.workflow.length) s.about.workflow = clone(DEFAULT_DATA.about.workflow);
 
       // hero: upgrade every banner to the full schema (id / subtitle / description / tools),
@@ -718,13 +724,14 @@
 
     /* ---------- ISOLATION GUARD ----------
        STATE.hero.banners (hero) and STATE.portfolio (All Work) are independent data models with their own id counters.
-       Every create / edit / delete / reorder goes through commitBanners(), commitWork() or commitArchive(). Each one snapshots the OTHER list
+       Every create / edit / delete / reorder goes through commitBanners(), commitWork() or commitCollection(). Each one snapshots the OTHER list
        first and, if anything it did changed that other list, restores it and reports — so no code path (present or future)
        can make an All Work change touch a banner or the other way round. */
     const SLICES = {
       banners: { get: () => STATE.hero.banners, set: v => { STATE.hero.banners = v; } },
       work:    { get: () => STATE.portfolio,    set: v => { STATE.portfolio = v; } },
-      archive: { get: () => STATE.archive,      set: v => { STATE.archive = v; } },     // Work Archive page — its own list too
+      commercial:  { get: () => STATE.commercial,  set: v => { STATE.commercial = v; } },     // Commercial page — its own list
+      shortMovies: { get: () => STATE.shortMovies, set: v => { STATE.shortMovies = v; } },    // Short Movies page — its own list
     };
     function commit(owner, mutate) {
       const others = Object.keys(SLICES).filter(k => k !== owner);
@@ -740,7 +747,7 @@
     }
     const commitBanners = fn => commit('banners', fn);
     const commitWork = fn => commit('work', fn);
-    const commitArchive = fn => commit('archive', fn);
+    const commitCollection = (key, fn) => commit(key, fn);          // key: 'commercial' | 'shortMovies'
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const $ = (sel, root = document) => root.querySelector(sel);
     function moveInArray(arr, index, dir) { const j = index + dir; if (j < 0 || j >= arr.length) return false;[arr[index], arr[j]] = [arr[j], arr[index]]; return true; }
@@ -751,13 +758,14 @@
     const NAV = [
       { id: 'hero', label: 'Hero Banners' },
       { id: 'portfolio', label: 'Portfolio' },
-      { id: 'archive', label: 'Work Archive' },
+      { id: 'commercial', label: 'Commercial' },
+      { id: 'shortMovies', label: 'Short Movies' },
       { id: 'stills', label: 'Stills (pictures)' },
       { id: 'about', label: 'About & Process' },
       { id: 'seo', label: 'SEO & Settings' },
       { id: 'inbox', label: 'Inbox', soon: true },
     ];
-    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, archive: renderArchiveView, stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
+    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, commercial: () => renderCollectionView('commercial'), shortMovies: () => renderCollectionView('shortMovies'), stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
     let activeView = 'hero';
     function renderNav() {
       $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
@@ -879,20 +887,26 @@
       paintBanners(); toast('Banner deleted.');
     }
 
-    /* ================= MODULE — Work Archive (own list: STATE.archive, banner-style videos on /work-archive) ================= */
-    function renderArchiveView() {
-      const view = $('#view');
-      view.innerHTML = `
+    /* ================= MODULES — Commercial & Short Movies (each its own list; banner-style videos on /commercial and /short-movies) ================= */
+    const COLLECTIONS = {
+      commercial:  { label: 'Commercial',   path: '/commercial',   menu: 'Commercial' },
+      shortMovies: { label: 'Short Movies', path: '/short-movies', menu: 'Short Movies' },
+    };
+    let activeCollection = 'commercial';
+    function renderCollectionView(key) {
+      activeCollection = key;
+      const c = COLLECTIONS[key];
+      $('#view').innerHTML = `
     <div class="card space-y-4">
-      <div><p class="card-title">Work Archive</p><p class="card-sub">The “Work Archive” page of the site (menu: Work Archive, just before About). Full-screen banner-style videos, top to bottom in exactly this order. They load lazily: each video starts playing only when a visitor scrolls to it, and stops again when it scrolls away. Reorder with ↑ / ↓. This list is completely separate from the hero banners and from All Work — changing one never touches the others.</p></div>
-      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="archiveCount"></p><button id="addArchiveBtn" class="btn btn-primary btn-sm" type="button">+ Add archive video</button></div>
+      <div><p class="card-title">${c.label}</p><p class="card-sub">The “${c.menu}” page of the site (${c.path}, in the top menu). Full-screen banner-style videos, top to bottom in exactly this order. They load lazily: each video starts playing only when a visitor scrolls to it, and stops again when it scrolls away. Reorder with ↑ / ↓. This list is completely separate from the hero banners, the other pages and the Portfolio — changing one never touches the others.</p></div>
+      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="archiveCount"></p><button id="addArchiveBtn" class="btn btn-primary btn-sm" type="button">+ Add ${c.label} video</button></div>
       <div id="archiveList" class="space-y-2"></div>
     </div>`;
-      $('#addArchiveBtn').addEventListener('click', () => openArchiveForm(null));
-      paintArchive();
+      $('#addArchiveBtn').addEventListener('click', () => openCollectionForm(null));
+      paintCollection();
     }
-    function paintArchive() {
-      const list = STATE.archive;
+    function paintCollection() {
+      const list = STATE[activeCollection], c = COLLECTIONS[activeCollection];
       $('#archiveCount').textContent = `${list.length} video${list.length === 1 ? '' : 's'}`;
       $('#archiveList').innerHTML = list.length ? list.map((b, i) => `
     <div class="vrow" data-id="${b.id}">
@@ -908,22 +922,22 @@
       </div>
       <button class="btn btn-sm" type="button" data-edit="${b.id}">Edit</button>
       <button class="btn btn-sm btn-danger" type="button" data-del="${b.id}">Delete</button>
-    </div>`).join('') : '<p class="text-sm text-muted">No archive videos yet — click "Add archive video" to add your first one. Until then the Work Archive page shows a “check back soon” message.</p>';
+    </div>`).join('') : `<p class="text-sm text-muted">No ${esc(c.label)} videos yet — click "Add ${esc(c.label)} video" to add your first one. Until then the ${esc(c.label)} page shows a “check back soon” message.</p>`;
       const L = $('#archiveList');
-      L.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openArchiveForm(Number(btn.dataset.edit))));
-      L.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeArchive(Number(btn.dataset.del))));
-      L.querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderArchive(Number(e.target.closest('[data-id]').dataset.id), -1)));
-      L.querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderArchive(Number(e.target.closest('[data-id]').dataset.id), 1)));
+      L.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCollectionForm(Number(btn.dataset.edit))));
+      L.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeCollectionItem(Number(btn.dataset.del))));
+      L.querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderCollection(Number(e.target.closest('[data-id]').dataset.id), -1)));
+      L.querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderCollection(Number(e.target.closest('[data-id]').dataset.id), 1)));
     }
-    function reorderArchive(id, dir) {
-      const i = STATE.archive.findIndex(b => b.id === id);
+    function reorderCollection(id, dir) {
+      const key = activeCollection, i = STATE[key].findIndex(b => b.id === id);
       if (i < 0) return;
-      let moved = false; commitArchive(() => { moved = moveInArray(STATE.archive, i, dir); });
-      if (moved) paintArchive();
+      let moved = false; commitCollection(key, () => { moved = moveInArray(STATE[key], i, dir); });
+      if (moved) paintCollection();
     }
-    function openArchiveForm(id) {
-      const item = id ? STATE.archive.find(b => b.id === id) : null;
-      $('#archiveModalTitle').textContent = item ? 'Edit archive video' : 'Add archive video';
+    function openCollectionForm(id) {
+      const item = id ? STATE[activeCollection].find(b => b.id === id) : null, label = COLLECTIONS[activeCollection].label;
+      $('#archiveModalTitle').textContent = (item ? 'Edit ' : 'Add ') + label + ' video';
       $('#a-id').value = item ? item.id : '';
       $('#a-title').value = item?.title || ''; $('#a-subtitle').value = item?.subtitle || '';
       $('#a-video').value = item?.videoUrl || ''; $('#a-thumb').value = item?.thumbnailUrl || ''; $('#a-aspect').value = item?.aspect || '';
@@ -931,28 +945,30 @@
       $('#a-error').classList.add('hidden');
       $('#archiveModal').classList.add('open'); $('#archiveModal').setAttribute('aria-hidden', 'false');
     }
-    function closeArchiveForm() { $('#archiveModal').classList.remove('open'); $('#archiveModal').setAttribute('aria-hidden', 'true'); }
-    document.querySelectorAll('[data-close-archive]').forEach(el => el.addEventListener('click', closeArchiveForm));
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#archiveModal').classList.contains('open')) closeArchiveForm(); });
+    function closeCollectionForm() { $('#archiveModal').classList.remove('open'); $('#archiveModal').setAttribute('aria-hidden', 'true'); }
+    document.querySelectorAll('[data-close-archive]').forEach(el => el.addEventListener('click', closeCollectionForm));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#archiveModal').classList.contains('open')) closeCollectionForm(); });
     $('#archiveForm').addEventListener('submit', e => {
       e.preventDefault();
+      const key = activeCollection, label = COLLECTIONS[key].label;
       const err = m => { $('#a-error').textContent = m; $('#a-error').classList.remove('hidden'); };
       const title = $('#a-title').value.trim(), videoUrl = $('#a-video').value.trim();
       if (!title || !videoUrl) return err('Title and Video URL are required.');
       if (/vimeo\.com/i.test(videoUrl) && !/progressive_redirect|\.(mp4|mov|m4v|webm)(\?|$)/i.test(videoUrl) && !/\d{5,}/.test(videoUrl)) return err("Couldn't find the Vimeo video number in that link. Use e.g. https://vimeo.com/123456789 (unlisted videos: https://vimeo.com/123456789/abcdef1234).");
       const payload = { title, subtitle: $('#a-subtitle').value.trim(), videoUrl, thumbnailUrl: $('#a-thumb').value.trim(), aspect: $('#a-aspect').value, description: $('#a-desc').value.trim(), tools: $('#a-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
       const idRaw = $('#a-id').value;
-      commitArchive(() => {
-        if (idRaw) { const i = STATE.archive.findIndex(b => b.id === Number(idRaw)); STATE.archive[i] = { ...STATE.archive[i], ...payload }; }
-        else { const nextId = STATE.archive.reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE.archive.push({ id: nextId, ...payload }); }
+      commitCollection(key, () => {
+        if (idRaw) { const i = STATE[key].findIndex(b => b.id === Number(idRaw)); STATE[key][i] = { ...STATE[key][i], ...payload }; }
+        else { const nextId = STATE[key].reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE[key].push({ id: nextId, ...payload }); }
       });
-      closeArchiveForm(); paintArchive();
-      toast(idRaw ? 'Archive video updated.' : 'Archive video added.');
+      closeCollectionForm(); paintCollection();
+      toast(label + (idRaw ? ' video updated.' : ' video added.'));
     });
-    function removeArchive(id) {
-      if (!confirm('Delete this archive video? This cannot be undone.')) return;
-      commitArchive(() => { STATE.archive = STATE.archive.filter(b => b.id !== id); });
-      paintArchive(); toast('Archive video deleted.');
+    function removeCollectionItem(id) {
+      if (!confirm('Delete this video? This cannot be undone.')) return;
+      const key = activeCollection;
+      commitCollection(key, () => { STATE[key] = STATE[key].filter(b => b.id !== id); });
+      paintCollection(); toast('Video deleted.');
     }
 
     /* ================= MODULE 2 — Portfolio CRUD (reorderable) ================= */
@@ -960,6 +976,7 @@
       const view = $('#view');
       view.innerHTML = `
     <div class="flex items-center justify-between mb-5"><p class="text-sm text-muted" id="vCount"></p><button id="addBtn" class="btn btn-primary btn-sm" type="button">+ Add new video</button></div>
+    <div class="card mb-4"><p class="text-sm">ℹ️ The “All works” grid is <b>not shown on the live site right now</b> (it was removed from the home page). Everything here is kept safely, so you can switch it back on later.</p></div>
     <p class="text-xs text-muted -mt-3 mb-4">Reorder with ↑ / ↓ — array order is render order on the live grid, top to bottom, left to right.</p>
     <div id="vlist" class="space-y-2"></div>
     <div class="card mt-8">
