@@ -14,7 +14,8 @@
 //
 //   commercial[]    — the COMMERCIAL page (/commercial): banner-style videos, its own independent list. Same fields as a Banner.
 //   shortMovies[]   — the SHORT MOVIES page (/short-movies): same, another independent list.
-//                     Both load lazily and each video starts only when scrolled to. Managed in the admin panel (Commercial / Short Movies).
+//   shortFormVideo[]— the SHORT-FORM VIDEO page (/short-form-video): same, another independent list.
+//                     All three load lazily and each video starts only when scrolled to. Managed in the admin panel (Commercial / Short Movies / Short-form Video).
 //   portfolio[]     — the old "All works" grid. It is NOT shown on the site right now; the admin panel keeps the data for later.
 //
 // social = { instagram, youtube, linkedin } → footer icons (replace the placeholder URLs; empty = icon hidden). The e-mail icon uses seo.email.
@@ -93,6 +94,7 @@ window.SITE_DATA = {
   },
   "commercial": [],
   "shortMovies": [],
+  "shortFormVideo": [],
   "social": {
     "instagram": "https://www.instagram.com/",
     "youtube": "https://www.youtube.com/",
