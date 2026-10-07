@@ -370,7 +370,7 @@
     <div data-social-block class="mx-auto max-w-[1400px] px-5 md:px-10 pt-14 md:pt-16 pb-10 flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-white/8">
       <div>
         <p class="font-mono text-[11px] tracking-[0.25em] text-accent">FOLLOW / CONNECT</p>
-        <p class="font-display font-medium text-3xl md:text-4xl tracking-tight mt-3"></p>
+        <p class="font-display font-medium text-3xl md:text-4xl tracking-tight mt-3">Find me elsewhere.</p>
       </div>
       <nav id="socialLinks" aria-label="Social media and email" class="flex items-center gap-3 md:gap-4"></nav>
     </div>
@@ -949,8 +949,8 @@ function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used
       <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 pointer-events-none">
         <div class="min-w-0">
           ${(label || n > 1) ? `<p class="font-mono text-[11px] tracking-[0.2em] text-white/60 mb-3 md:mb-4">${label}${pad2(i + 1)} — ${pad2(n)}</p>` : ''}
-          <h2 class="font-display font-medium text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(b.title)}</h2>
-          ${b.subtitle ? `<p class="mt-4 md:mt-5 text-sm md:text-base text-white/70 max-w-md">${escH(b.subtitle)}</p>` : ''}
+          <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(b.title)}</h2>
+          ${b.subtitle ? `<p class="mt-4 md:mt-5 text-xs md:text-sm text-white/70 max-w-md">${escH(b.subtitle)}</p>` : ''}
         </div>
         <div class="pointer-events-auto shrink-0 flex items-center gap-5 md:gap-6">
           <button type="button" class="hero-pp hero-ctl" aria-label="Pause video" title="Pause"></button>
@@ -965,8 +965,8 @@ function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used
 heroStack.innerHTML = !banners.length ? `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
-      <h2 class="font-display font-medium text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(HERO.headline || "")}</h2>
-      ${HERO.subheadline ? `<p class="mt-5 text-sm md:text-base text-white/70 max-w-md">${escH(HERO.subheadline)}</p>` : ""}
+      <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(HERO.headline || "")}</h2>
+      ${HERO.subheadline ? `<p class="mt-5 text-xs md:text-sm text-white/70 max-w-md">${escH(HERO.subheadline)}</p>` : ""}
     </div>
   </article>` : banners.map((b, i) => bannerHTML(b, i, banners.length, "", false)).join("");
 
@@ -1023,8 +1023,8 @@ function buildCollection(page, stackId, label, list) {
   stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true)).join("") : `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
-      <h2 class="font-display font-medium text-[clamp(2.5rem,8vw,7.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
-      <p class="mt-5 text-sm md:text-base text-white/70 max-w-md">More work is on its way — check back soon.</p>
+      <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
+      <p class="mt-5 text-xs md:text-sm text-white/70 max-w-md">More work is on its way — check back soon.</p>
     </div>
   </article>`;
   registerAuto(stack);
