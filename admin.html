@@ -1062,7 +1062,7 @@
       if (!STATE.stills || !Array.isArray(STATE.stills.sections)) STATE.stills = { title: '', sections: [] };
       const S = STATE.stills;
       const urls = v => String(v || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-      const okCount = v => urls(v).filter(u => /^https?:\/\//i.test(u)).length;
+      const okCount = v => urls(v).filter(u => /^(big\s+|huge\s+)?https?:\/\//i.test(u)).length;
       const collect = () => {
         S.title = $('#st-title').value.trim();
         view.querySelectorAll('[data-sec]').forEach(box => { const i = Number(box.dataset.sec); S.sections[i] = { title: box.querySelector('.st-t').value.trim(), images: urls(box.querySelector('.st-u').value) }; });
@@ -1076,7 +1076,7 @@
     ${S.sections.map((sec, i) => `
     <div class="card mt-6 space-y-4" data-sec="${i}">
       <label class="block"><span class="label">GROUP TITLE (optional)</span><input class="input st-t" maxlength="80" placeholder="e.g. Cinematic Realism" value="${esc(sec.title)}" /></label>
-      <label class="block"><span class="label">IMAGE LINKS — ONE PER LINE</span><textarea class="input st-u" rows="6" spellcheck="false" placeholder="https://…/picture1.jpg&#10;https://…/picture2.jpg">${esc((sec.images || []).join('\n'))}</textarea><span class="hint st-c">${okCount((sec.images || []).join('\n'))} valid link(s)</span></label>
+      <label class="block"><span class="label">IMAGE LINKS — ONE PER LINE</span><textarea class="input st-u" rows="6" spellcheck="false" placeholder="https://…/picture1.jpg&#10;BIG https://…/picture2.jpg&#10;HUGE https://…/picture3.jpg&#10;https://…/picture4.jpg">${esc((sec.images || []).join('\n'))}</textarea><span class="hint">Three sizes. Plain link = small tile (several fit in a row). <b>BIG</b> + space before a link = a larger tile (pairs up two-in-a-row). <b>HUGE</b> + space before a link = one giant tile stretching the full width, alone, nothing beside it. Mix them — mostly small, BIG on standout shots, HUGE very occasionally.</span><span class="hint st-c">${okCount((sec.images || []).join('\n'))} valid link(s)</span></label>
       <div class="savebar"><button class="btn btn-sm st-up" type="button">↑ Up</button><button class="btn btn-sm st-dn" type="button">↓ Down</button><button class="btn btn-sm st-rm" type="button">Delete group</button></div>
     </div>`).join('')}
     <div class="savebar mt-6"><button id="st-add" class="btn" type="button">+ Add group</button><button id="st-save" class="btn btn-primary" type="button">Save stills</button></div>`;
