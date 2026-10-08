@@ -28,7 +28,7 @@
       if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); return; }
       try { hint(new URL(u, location.href).origin); } catch (e) {}
       var key = u + '#t=0.001';
-      if (i < 2 && !pre[key]) {
+      if (i < 1 && !pre[key]) {
         var v = document.createElement('video');
         v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = key;
         pre[key] = v;
@@ -82,20 +82,16 @@
   .hover-accent:hover { color: #CCFF00; }
   .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
 
-  /* header: no background box at all over the full-screen video — any rectangle there (even a fade-to-transparent
-     gradient) ends in a hard edge where it meets the video and reads as a line. Legibility instead comes from a
-     drop-shadow on the header's own content (logo, links, menu icon), which hugs the shapes themselves rather than
-     drawing a box, so nothing can seam against the video. Once scrolled past the video, the bar goes solid black. */
-  .nav-elevated {
-    background: transparent; border-bottom: 1px solid transparent; box-shadow: none;
-    filter: drop-shadow(0 1px 3px rgba(0,0,0,.85)) drop-shadow(0 2px 10px rgba(0,0,0,.6));
-    transition: background .35s ease, border-color .35s ease, box-shadow .35s ease, filter .35s ease;
+  /* solid, elevated header — deep black with a top bevel highlight and a real drop shadow, not a blur */
+  .nav-elevated {                         /* transparent over the full-screen hero (soft top shade for legibility) … */
+    background: linear-gradient(to bottom, rgba(0,0,0,0.62), rgba(0,0,0,0));
+    border-bottom: 1px solid transparent; box-shadow: none;
+    transition: background .35s ease, border-color .35s ease, box-shadow .35s ease;
   }
   .nav-elevated.is-solid {                /* … and the original solid, elevated bar once you scroll past it */
     background: linear-gradient(to bottom, #0b0b0b, #050505);
-    border-bottom-color: transparent;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
-    filter: none;
+    border-bottom-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -14px rgba(0,0,0,0.9);
   }
   .nav-link { transition: color .25s ease, text-shadow .25s ease; }
   .nav-link:hover { color: #CCFF00; text-shadow: 0 0 18px rgba(204,255,0,0.55); }
@@ -977,16 +973,12 @@ const heroStack = document.getElementById("heroStack");
 document.getElementById("heroHeadline").textContent = HERO.headline || "Osman Onur Tekin";   // visually hidden h1 (SEO)
 const pad2 = n => String(n).padStart(2, "0");
 
-function bannerHTML(b, i, n, label, lazy, fit) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies / Short-form Video pages
-  // fit === true (Short-form Video page only): the frame stays full-width/full-height like every other banner,
-  // but the 9:16 video is shown WHOLE (pillarboxed) at its real aspect ratio instead of being cropped to fill —
-  // same treatment as billyboman.com's vertical "Selected Work" videos. A blurred, darkened copy of the poster
-  // fills the space on either side so there's never flat black bars. Commercial / Short Movies are unaffected.
+function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies pages
   return `
   <article class="hero-banner" data-i="${i}">
     <div class="hero-frame">
       <div class="hero-stage absolute inset-0 z-0 cursor-pointer" role="button" tabindex="0" aria-label="View case study: ${escH(b.title || 'featured work')}">
-        <div class="auto-wrap${fit ? ' fit-contain' : ''}">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover", lazy)}</div>
+        <div class="auto-wrap">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover", lazy)}</div>
       </div>
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
 
@@ -1012,7 +1004,7 @@ heroStack.innerHTML = !banners.length ? `
       <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(HERO.headline || "")}</h2>
       ${HERO.subheadline ? `<p class="mt-5 text-xs md:text-sm text-white/70 max-w-md">${escH(HERO.subheadline)}</p>` : ""}
     </div>
-  </article>` : banners.map((b, i) => bannerHTML(b, i, banners.length, "", false)).join("");
+  </article>` : banners.map((b, i) => bannerHTML(b, i, banners.length, "", i > 0)).join("");
 
 // adopt the videos that <head> already started downloading, so the banners paint without waiting for a fresh fetch
 (function adoptPreloaded() {
@@ -1060,11 +1052,11 @@ const heroEls = wireBanners(heroStack, banners);
    other and of the old All Work list). A page is only built when it is the page being viewed, so the homepage never loads
    these videos. Videos are LAZY: only metadata is fetched until they come within ~400px of the screen; each one starts
    playing when scrolled to, pauses when scrolled away, and goes back to its first frame. */
-function buildCollection(page, stackId, label, list, fit) {
+function buildCollection(page, stackId, label, list) {
   const stack = document.getElementById(stackId);
   if (document.documentElement.dataset.page !== page || !stack) return [];
   const items = list.map(a => ({ ...a, _label: label }));
-  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true, fit)).join("") : `
+  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true)).join("") : `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
       <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
@@ -1078,12 +1070,14 @@ function buildCollection(page, stackId, label, list, fit) {
 }
 const commercialEls = buildCollection("commercial", "commercialStack", "Commercial", COMMERCIAL);
 const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
-const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO, true);
+const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO);
 
-// Warm EVERY hero video right now (not on scroll): src is already set at render time, this also builds the
-// decode pipeline so each banner is ready to paint/play the instant it is reached. No fade, no opacity-0 state.
+// Warm only the FIRST hero banner right now — the one the visitor actually sees. Loading every banner's video in
+// parallel on page load was the main cause of the homepage feeling slow: they all fought over the same bandwidth,
+// so even the visible one took far longer to show a frame. The rest warm up automatically (via warmIO, ~400px
+// before they're scrolled into view), exactly like the Commercial / Short Movies / Short-form Video pages already do.
 updateSoundUI();
-heroEls.forEach(h => warmUp(h.media));
+if (heroEls[0]) warmUp(heroEls[0].media);
 
 /* ---------------- entry loader ----------------
    WHY THERE WAS A BLACK SCREEN: a video has nothing to show until its first bytes are downloaded AND its first frame is
