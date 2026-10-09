@@ -25,7 +25,7 @@
       if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
       var u = String((b && b.videoUrl) || '').trim(); if (!u) return;
       if (/youtu\.?be|youtube\.com/.test(u)) { hint('https://www.youtube-nocookie.com'); return; }
-      if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); return; }
+      if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); hint('https://i.vimeocdn.com'); hint('https://f.vimeocdn.com'); return; }
       try { hint(new URL(u, location.href).origin); } catch (e) {}
       var key = u + '#t=0.001';
       if (i < 1 && !pre[key]) {
