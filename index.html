@@ -17,23 +17,30 @@
     var D = window.SITE_DATA;
     try { var raw = localStorage.getItem('siteData'); if (raw) { var pd = JSON.parse(raw), st = (D && D.publishedAt) || 0; if (pd && pd.hero && Array.isArray(pd.portfolio) && (!st || (pd.publishedAt || 0) > st)) D = pd; } } catch (e) {}   // a browser-only publish wins only if it is newer than the live (server) data
     if (!D || !D.hero) return;
-    var banners = D.hero.banners || [];            // banners are their own list — never borrowed from the All Work grid
     var seen = {}, pre = window.__preVideos = {};
     function hint(origin) { if (!origin || seen[origin]) return; seen[origin] = 1; var l = document.createElement('link'); l.rel = 'preconnect'; l.href = origin; document.head.appendChild(l); }
-    banners.forEach(function (b, i) {
-      var t = String((b && b.thumbnailUrl) || '').trim();
-      if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
-      var u = String((b && b.videoUrl) || '').trim(); if (!u) return;
-      if (/youtu\.?be|youtube\.com/.test(u)) { hint('https://www.youtube-nocookie.com'); return; }
-      if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); hint('https://i.vimeocdn.com'); hint('https://f.vimeocdn.com'); return; }
-      try { hint(new URL(u, location.href).origin); } catch (e) {}
-      var key = u + '#t=0.001';
-      if (i < 1 && !pre[key]) {
-        var v = document.createElement('video');
-        v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = key;
-        pre[key] = v;
-      }
-    });
+    function warm(list, n) {                       // kick off the first n videos of a given list right now, before Tailwind/anything else loads
+      (list || []).forEach(function (b, i) {
+        var t = String((b && b.thumbnailUrl) || '').trim();
+        if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
+        var u = String((b && b.videoUrl) || '').trim(); if (!u) return;
+        if (/youtu\.?be|youtube\.com/.test(u)) { hint('https://www.youtube-nocookie.com'); return; }
+        if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); hint('https://i.vimeocdn.com'); hint('https://f.vimeocdn.com'); return; }
+        try { hint(new URL(u, location.href).origin); } catch (e) {}
+        var key = u + '#t=0.001';
+        if (i < n && !pre[key]) {
+          var v = document.createElement('video');
+          v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = key;
+          pre[key] = v;
+        }
+      });
+    }
+    warm(D.hero.banners, 1);     // homepage hero: first video only (banners are their own list — never borrowed from the All Work grid)
+    // Whichever sub-page the visitor actually landed on gets the exact same head-start as the homepage hero,
+    // instead of waiting for Tailwind + the full script to run before its first video even starts downloading.
+    var p = location.pathname.replace(/\/+$/, '').replace(/^\/|\.html$/g, '').toLowerCase();
+    var pageList = { commercial: D.commercial, 'short-movies': D.shortMovies, 'short-form-video': D.shortFormVideo }[p];
+    if (pageList) warm(pageList, 1);
   } catch (e) {}
 })();
 </script>
@@ -1012,9 +1019,9 @@ heroStack.innerHTML = !banners.length ? `
   </article>` : banners.map((b, i) => bannerHTML(b, i, banners.length, "", i > 0)).join("");
 
 // adopt the videos that <head> already started downloading, so the banners paint without waiting for a fresh fetch
-(function adoptPreloaded() {
-  const pre = window.__preVideos; if (!pre) return;
-  heroStack.querySelectorAll('video[data-auto="file"]').forEach(el => {
+function adoptPreloaded(root) {
+  const pre = window.__preVideos; if (!pre || !root) return;
+  root.querySelectorAll('video[data-auto="file"]').forEach(el => {
     const key = el.getAttribute("src"), pv = pre[key]; if (!pv) return;
     delete pre[key];
     pv.className = el.className; pv.setAttribute("data-auto", "file"); pv.setAttribute("aria-label", el.getAttribute("aria-label") || "");
@@ -1022,7 +1029,8 @@ heroStack.innerHTML = !banners.length ? `
     pv.muted = true; pv.loop = true; pv.playsInline = true; pv.disablePictureInPicture = true; pv.preload = "auto";
     el.replaceWith(pv);
   });
-})();
+}
+adoptPreloaded(heroStack);
 registerAuto(heroStack);
 const syncPP = h => {
   const paused = h.media.dataset.userPaused === "1", label = paused ? "Play video" : "Pause video";
@@ -1061,13 +1069,16 @@ function buildCollection(page, stackId, label, list) {
   const stack = document.getElementById(stackId);
   if (document.documentElement.dataset.page !== page || !stack) return [];
   const items = list.map(a => ({ ...a, _label: label }));
-  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true)).join("") : `
+  // the FIRST banner is the one the visitor already sees on load, so it's eager (preload="auto", not lazy) exactly
+  // like the homepage hero's first banner — the rest stay lazy and warm up automatically as they're scrolled near.
+  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", i > 0)).join("") : `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
       <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
       <p class="mt-5 text-xs md:text-sm text-white/70 max-w-md">More work is on its way — check back soon.</p>
     </div>
   </article>`;
+  adoptPreloaded(stack);
   registerAuto(stack);
   const els = wireBanners(stack, items);
   els.forEach(h => { if (h.media) h.media.dataset.restart = "1"; });
@@ -1083,6 +1094,7 @@ const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoSta
 // before they're scrolled into view), exactly like the Commercial / Short Movies / Short-form Video pages already do.
 updateSoundUI();
 if (heroEls[0]) warmUp(heroEls[0].media);
+[commercialEls, shortMovieEls, shortFormVideoEls].forEach(els => { if (els[0]) warmUp(els[0].media); });   // whichever sub-page is open, its first banner gets the same instant head-start
 
 /* ---------------- entry loader ----------------
    WHY THERE WAS A BLACK SCREEN: a video has nothing to show until its first bytes are downloaded AND its first frame is
