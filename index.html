@@ -85,13 +85,12 @@
   /* solid, elevated header — deep black with a top bevel highlight and a real drop shadow, not a blur */
   .nav-elevated {                         /* transparent over the full-screen hero (soft top shade for legibility) … */
     background: linear-gradient(to bottom, rgba(0,0,0,0.62), rgba(0,0,0,0));
-    border-bottom: 1px solid transparent; box-shadow: none;
-    transition: background .35s ease, border-color .35s ease, box-shadow .35s ease;
+    box-shadow: inset 0 -1px 0 rgba(255,255,255,0);
+    transition: background .35s ease, box-shadow .35s ease;
   }
   .nav-elevated.is-solid {                /* … and the original solid, elevated bar once you scroll past it */
     background: linear-gradient(to bottom, #0b0b0b, #050505);
-    border-bottom-color: rgba(255,255,255,0.06);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -14px rgba(0,0,0,0.9);
+    box-shadow: inset 0 -1px 0 rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -14px rgba(0,0,0,0.9);
   }
   .nav-link { transition: color .25s ease, text-shadow .25s ease; }
   .nav-link:hover { color: #CCFF00; text-shadow: 0 0 18px rgba(204,255,0,0.55); }
@@ -206,6 +205,10 @@
   .auto-wrap.fit-contain { background: #0a0b0a; }
   .auto-wrap.fit-contain video { object-fit: contain; }
   .auto-wrap.fit-contain .auto-poster { filter: blur(22px) brightness(.5); transform: scale(1.2); }
+  /* Short-form Video page: the banner stays big and full-width like the other pages, but every clip is 9:16 —
+     shown whole (reels-style) instead of cropped to fill, with a soft blurred duplicate behind it for the sides. */
+  #short-form-video .auto-wrap video, #short-form-video .auto-wrap iframe { object-fit: contain; }
+  #short-form-video .auto-poster { filter: blur(22px) brightness(.5); transform: scale(1.2); }
   .auto-wrap.fit-contain .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 1.7778))); height: min(100cqh, calc(100cqw / var(--ar, 1.7778))); }
   .social-link { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 999px; color: #eef0ec;
     border: 1px solid rgba(255,255,255,.18); transition: color .25s ease, border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; }
