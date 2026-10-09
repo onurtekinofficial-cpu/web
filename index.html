@@ -209,6 +209,8 @@
      shown whole (reels-style) instead of cropped to fill, with a soft blurred duplicate behind it for the sides. */
   #short-form-video .auto-wrap video, #short-form-video .auto-wrap iframe { object-fit: contain; }
   #short-form-video .auto-poster { filter: blur(22px) brightness(.5); transform: scale(1.2); }
+  /* if a Short-form Video entry is a YouTube/Vimeo embed instead of a direct file, size it the same "fit, don't crop" way */
+  #short-form-video .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 0.5625))); height: min(100cqh, calc(100cqw / var(--ar, 0.5625))); }
   .auto-wrap.fit-contain .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 1.7778))); height: min(100cqh, calc(100cqw / var(--ar, 1.7778))); }
   .social-link { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 999px; color: #eef0ec;
     border: 1px solid rgba(255,255,255,.18); transition: color .25s ease, border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; }
