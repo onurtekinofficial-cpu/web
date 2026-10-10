@@ -6,6 +6,10 @@
 <title>Osman Onur Tekin — AI Video Editor &amp; Producer</title>
 <meta name="description" content="Osman Onur Tekin — AI-native video editor and producer. Selected commercial, narrative and vertical work." />
 
+<!-- GUARANTEED DARK FIRST PAINT — must be the very first thing in <head>, before any script or stylesheet,
+     so the browser can never paint a white frame while Tailwind's CDN script (further down) is downloading. -->
+<style>html,body{background:#050505 !important;}</style>
+
 <script src="data.js"></script>
 <script>
 /* EARLY START — runs before Tailwind and before the page is built, so the banner videos begin downloading
@@ -17,30 +21,23 @@
     var D = window.SITE_DATA;
     try { var raw = localStorage.getItem('siteData'); if (raw) { var pd = JSON.parse(raw), st = (D && D.publishedAt) || 0; if (pd && pd.hero && Array.isArray(pd.portfolio) && (!st || (pd.publishedAt || 0) > st)) D = pd; } } catch (e) {}   // a browser-only publish wins only if it is newer than the live (server) data
     if (!D || !D.hero) return;
+    var banners = D.hero.banners || [];            // banners are their own list — never borrowed from the All Work grid
     var seen = {}, pre = window.__preVideos = {};
     function hint(origin) { if (!origin || seen[origin]) return; seen[origin] = 1; var l = document.createElement('link'); l.rel = 'preconnect'; l.href = origin; document.head.appendChild(l); }
-    function warm(list, n) {                       // kick off the first n videos of a given list right now, before Tailwind/anything else loads
-      (list || []).forEach(function (b, i) {
-        var t = String((b && b.thumbnailUrl) || '').trim();
-        if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
-        var u = String((b && b.videoUrl) || '').trim(); if (!u) return;
-        if (/youtu\.?be|youtube\.com/.test(u)) { hint('https://www.youtube-nocookie.com'); return; }
-        if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); hint('https://i.vimeocdn.com'); hint('https://f.vimeocdn.com'); return; }
-        try { hint(new URL(u, location.href).origin); } catch (e) {}
-        var key = u + '#t=0.001';
-        if (i < n && !pre[key]) {
-          var v = document.createElement('video');
-          v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = key;
-          pre[key] = v;
-        }
-      });
-    }
-    warm(D.hero.banners, 1);     // homepage hero: first video only (banners are their own list — never borrowed from the All Work grid)
-    // Whichever sub-page the visitor actually landed on gets the exact same head-start as the homepage hero,
-    // instead of waiting for Tailwind + the full script to run before its first video even starts downloading.
-    var p = location.pathname.replace(/\/+$/, '').replace(/^\/|\.html$/g, '').toLowerCase();
-    var pageList = { commercial: D.commercial, 'short-movies': D.shortMovies, 'short-form-video': D.shortFormVideo }[p];
-    if (pageList) warm(pageList, 1);
+    banners.forEach(function (b, i) {
+      var t = String((b && b.thumbnailUrl) || '').trim();
+      if (t && i < 2) { var pl = document.createElement('link'); pl.rel = 'preload'; pl.as = 'image'; pl.href = t; document.head.appendChild(pl); }   // thumbnail paints with the first frame of the page
+      var u = String((b && b.videoUrl) || '').trim(); if (!u) return;
+      if (/youtu\.?be|youtube\.com/.test(u)) { hint('https://www.youtube-nocookie.com'); return; }
+      if (/vimeo\.com\/(?!progressive)/.test(u)) { hint('https://player.vimeo.com'); return; }
+      try { hint(new URL(u, location.href).origin); } catch (e) {}
+      var key = u + '#t=0.001';
+      if (i < 2 && !pre[key]) {
+        var v = document.createElement('video');
+        v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.preload = 'auto'; v.src = key;
+        pre[key] = v;
+      }
+    });
   } catch (e) {}
 })();
 </script>
@@ -92,12 +89,13 @@
   /* solid, elevated header — deep black with a top bevel highlight and a real drop shadow, not a blur */
   .nav-elevated {                         /* transparent over the full-screen hero (soft top shade for legibility) … */
     background: linear-gradient(to bottom, rgba(0,0,0,0.62), rgba(0,0,0,0));
-    box-shadow: inset 0 -1px 0 rgba(255,255,255,0);
-    transition: background .35s ease, box-shadow .35s ease;
+    border-bottom: 1px solid transparent; box-shadow: none;
+    transition: background .35s ease, border-color .35s ease, box-shadow .35s ease;
   }
   .nav-elevated.is-solid {                /* … and the original solid, elevated bar once you scroll past it */
     background: linear-gradient(to bottom, #0b0b0b, #050505);
-    box-shadow: inset 0 -1px 0 rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -14px rgba(0,0,0,0.9);
+    border-bottom-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -14px rgba(0,0,0,0.9);
   }
   .nav-link { transition: color .25s ease, text-shadow .25s ease; }
   .nav-link:hover { color: #CCFF00; text-shadow: 0 0 18px rgba(204,255,0,0.55); }
@@ -187,6 +185,7 @@
   .hero-banner, .hero-static { height: 100vh; height: 100svh; min-height: 520px; }
   .hero-static { position: relative; background: radial-gradient(ellipse 70% 55% at 50% 40%, rgba(204,255,0,0.07), transparent 70%), #050505; }
   .hero-frame { position: absolute; inset: 0; overflow: hidden; background: #0d0f0d; }
+  .hero-frame video, .hero-frame img { background: #0d0f0d; }   /* never show the browser's default white while a frame decodes */
   .hero-frame video { transition: transform 1.8s cubic-bezier(.2,.8,.2,1); }
   .hero-frame:hover video { transform: scale(1.02); }
   .hero-copy { animation: heroTextIn 1s cubic-bezier(.2,.8,.2,1) .2s both; }
@@ -212,12 +211,6 @@
   .auto-wrap.fit-contain { background: #0a0b0a; }
   .auto-wrap.fit-contain video { object-fit: contain; }
   .auto-wrap.fit-contain .auto-poster { filter: blur(22px) brightness(.5); transform: scale(1.2); }
-  /* Short-form Video page: the banner stays big and full-width like the other pages, but every clip is 9:16 —
-     shown whole (reels-style) instead of cropped to fill, with a soft blurred duplicate behind it for the sides. */
-  #short-form-video .auto-wrap video, #short-form-video .auto-wrap iframe { object-fit: contain; }
-  #short-form-video .auto-poster { filter: blur(22px) brightness(.5); transform: scale(1.2); }
-  /* if a Short-form Video entry is a YouTube/Vimeo embed instead of a direct file, size it the same "fit, don't crop" way */
-  #short-form-video .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 0.5625))); height: min(100cqh, calc(100cqw / var(--ar, 0.5625))); }
   .auto-wrap.fit-contain .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 1.7778))); height: min(100cqh, calc(100cqw / var(--ar, 1.7778))); }
   .social-link { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 999px; color: #eef0ec;
     border: 1px solid rgba(255,255,255,.18); transition: color .25s ease, border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; }
@@ -243,7 +236,7 @@
   .pl-bar { width: 100%; height: 1px; background: rgba(255,255,255,0.12); overflow: hidden; }
   .pl-bar i { display: block; height: 100%; width: 0; background: #CCFF00; box-shadow: 0 0 14px rgba(204,255,0,0.7); }
   @keyframes pl-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
-  html.is-loading .hero-copy { animation-play-state: paused; }       /* hero title animates in right as the loader leaves */
+  html.is-loading .hero-copy { animation-play-state: paused; visibility: hidden; }   /* title stays fully hidden, not just paused-at-0-opacity, so it can never flash */
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
@@ -985,12 +978,16 @@ const heroStack = document.getElementById("heroStack");
 document.getElementById("heroHeadline").textContent = HERO.headline || "Osman Onur Tekin";   // visually hidden h1 (SEO)
 const pad2 = n => String(n).padStart(2, "0");
 
-function bannerHTML(b, i, n, label, lazy) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies pages
+function bannerHTML(b, i, n, label, lazy, fit) {   // one full-screen banner — used by the homepage hero AND the Commercial / Short Movies / Short-form Video pages
+  // fit === true (Short-form Video page only): the frame stays full-width/full-height like every other banner,
+  // but the 9:16 video is shown WHOLE (pillarboxed) at its real aspect ratio instead of being cropped to fill —
+  // same treatment as billyboman.com's vertical "Selected Work" videos. A blurred, darkened copy of the poster
+  // fills the space on either side so there's never flat black bars. Commercial / Short Movies are unaffected.
   return `
   <article class="hero-banner" data-i="${i}">
     <div class="hero-frame">
       <div class="hero-stage absolute inset-0 z-0 cursor-pointer" role="button" tabindex="0" aria-label="View case study: ${escH(b.title || 'featured work')}">
-        <div class="auto-wrap">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover", lazy)}</div>
+        <div class="auto-wrap${fit ? ' fit-contain' : ''}">${autoMediaHTML(b, "absolute inset-0 h-full w-full object-cover", lazy)}</div>
       </div>
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
 
@@ -1016,12 +1013,12 @@ heroStack.innerHTML = !banners.length ? `
       <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(HERO.headline || "")}</h2>
       ${HERO.subheadline ? `<p class="mt-5 text-xs md:text-sm text-white/70 max-w-md">${escH(HERO.subheadline)}</p>` : ""}
     </div>
-  </article>` : banners.map((b, i) => bannerHTML(b, i, banners.length, "", i > 0)).join("");
+  </article>` : banners.map((b, i) => bannerHTML(b, i, banners.length, "", false)).join("");
 
 // adopt the videos that <head> already started downloading, so the banners paint without waiting for a fresh fetch
-function adoptPreloaded(root) {
-  const pre = window.__preVideos; if (!pre || !root) return;
-  root.querySelectorAll('video[data-auto="file"]').forEach(el => {
+(function adoptPreloaded() {
+  const pre = window.__preVideos; if (!pre) return;
+  heroStack.querySelectorAll('video[data-auto="file"]').forEach(el => {
     const key = el.getAttribute("src"), pv = pre[key]; if (!pv) return;
     delete pre[key];
     pv.className = el.className; pv.setAttribute("data-auto", "file"); pv.setAttribute("aria-label", el.getAttribute("aria-label") || "");
@@ -1029,8 +1026,7 @@ function adoptPreloaded(root) {
     pv.muted = true; pv.loop = true; pv.playsInline = true; pv.disablePictureInPicture = true; pv.preload = "auto";
     el.replaceWith(pv);
   });
-}
-adoptPreloaded(heroStack);
+})();
 registerAuto(heroStack);
 const syncPP = h => {
   const paused = h.media.dataset.userPaused === "1", label = paused ? "Play video" : "Pause video";
@@ -1065,20 +1061,17 @@ const heroEls = wireBanners(heroStack, banners);
    other and of the old All Work list). A page is only built when it is the page being viewed, so the homepage never loads
    these videos. Videos are LAZY: only metadata is fetched until they come within ~400px of the screen; each one starts
    playing when scrolled to, pauses when scrolled away, and goes back to its first frame. */
-function buildCollection(page, stackId, label, list) {
+function buildCollection(page, stackId, label, list, fit) {
   const stack = document.getElementById(stackId);
   if (document.documentElement.dataset.page !== page || !stack) return [];
   const items = list.map(a => ({ ...a, _label: label }));
-  // the FIRST banner is the one the visitor already sees on load, so it's eager (preload="auto", not lazy) exactly
-  // like the homepage hero's first banner — the rest stay lazy and warm up automatically as they're scrolled near.
-  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", i > 0)).join("") : `
+  stack.innerHTML = items.length ? items.map((b, i) => bannerHTML(b, i, items.length, label.toUpperCase() + " · ", true, fit)).join("") : `
   <article class="hero-static">
     <div class="hero-copy absolute left-5 right-5 md:left-12 md:right-12 bottom-8 md:bottom-12 z-10">
       <h2 class="font-display font-medium text-[clamp(2rem,5vw,4.5rem)] leading-[0.95] tracking-[-0.03em] max-w-[16ch]">${escH(label)}</h2>
       <p class="mt-5 text-xs md:text-sm text-white/70 max-w-md">More work is on its way — check back soon.</p>
     </div>
   </article>`;
-  adoptPreloaded(stack);
   registerAuto(stack);
   const els = wireBanners(stack, items);
   els.forEach(h => { if (h.media) h.media.dataset.restart = "1"; });
@@ -1086,15 +1079,12 @@ function buildCollection(page, stackId, label, list) {
 }
 const commercialEls = buildCollection("commercial", "commercialStack", "Commercial", COMMERCIAL);
 const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
-const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO);
+const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO, true);
 
-// Warm only the FIRST hero banner right now — the one the visitor actually sees. Loading every banner's video in
-// parallel on page load was the main cause of the homepage feeling slow: they all fought over the same bandwidth,
-// so even the visible one took far longer to show a frame. The rest warm up automatically (via warmIO, ~400px
-// before they're scrolled into view), exactly like the Commercial / Short Movies / Short-form Video pages already do.
+// Warm EVERY hero video right now (not on scroll): src is already set at render time, this also builds the
+// decode pipeline so each banner is ready to paint/play the instant it is reached. No fade, no opacity-0 state.
 updateSoundUI();
-if (heroEls[0]) warmUp(heroEls[0].media);
-[commercialEls, shortMovieEls, shortFormVideoEls].forEach(els => { if (els[0]) warmUp(els[0].media); });   // whichever sub-page is open, its first banner gets the same instant head-start
+heroEls.forEach(h => warmUp(h.media));
 
 /* ---------------- entry loader ----------------
    WHY THERE WAS A BLACK SCREEN: a video has nothing to show until its first bytes are downloaded AND its first frame is
