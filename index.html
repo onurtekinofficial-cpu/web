@@ -201,7 +201,11 @@
   .hero-case-btn { font: 500 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: #fff; padding: .5rem 0; border-bottom: 1px solid rgba(255,255,255,.45); transition: color .25s ease, border-color .25s ease, gap .25s ease; }
   .hero-case-btn:hover { color: #CCFF00; border-color: #CCFF00; }
   /* autoplay media layer: optional thumbnail sits underneath as the poster, the video / player plays on top of it */
-  .auto-poster { position: absolute; inset: 0; background: #0d0f0d center / cover no-repeat; }
+  /* sits ABOVE the video (z-index), not under it, and only fades out once JS has confirmed a real decoded frame is on
+     screen — never relies on the native <video poster> swap, which drops the image the instant playback is attempted,
+     whether or not a frame is actually ready (that's the "thumbnail flashes then disappears" gap). */
+  .auto-poster { position: absolute; inset: 0; z-index: 2; background: #0d0f0d center / cover no-repeat; transition: opacity .45s ease; }
+  .auto-poster.is-hidden { opacity: 0; pointer-events: none; }
   .auto-wrap { position: absolute; inset: 0; overflow: hidden; container-type: size; }
   .yt-cover { position: absolute; inset: 0; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
   .yt-cover.is-ready { opacity: 1; }
@@ -785,6 +789,17 @@ function registerAuto(root) {
       el.muted = true; el.defaultMuted = true;                 // muted is what lets browsers allow autoplay
       const fit = () => { if (el.videoWidth) setFit(wrap, el.videoWidth / el.videoHeight); };
       if (el.readyState >= 1) fit(); else el.addEventListener("loadedmetadata", fit, { once: true });
+      const posterEl = wrap.querySelector(".auto-poster");       // reveal the video only once a real frame is confirmed on screen
+      if (posterEl) {
+        const reveal = () => posterEl.classList.add("is-hidden");
+        if (!el.paused && el.currentTime > 0.03) reveal();
+        else {
+          el.addEventListener("playing", () => { if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(reveal); else reveal(); }, { once: true });
+          const tu = () => { if (el.currentTime > 0.03) { reveal(); el.removeEventListener("timeupdate", tu); } };
+          el.addEventListener("timeupdate", tu);                // fallback for browsers without requestVideoFrameCallback
+          el.addEventListener("error", reveal, { once: true });  // broken file: don't trap the thumbnail forever
+        }
+      }
     } else {
       setFit(wrap, parseFloat(el.style.getPropertyValue("--ar")) || 0);
       if (el.dataset.auto === "vimeo" && !el.dataset.ar) detectVimeoAR(el, wrap);
