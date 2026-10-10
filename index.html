@@ -1121,9 +1121,14 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls, ...shortFormV
   bannerEls.forEach(h => {                                   // detect "a real frame is on screen" for every direct-video banner
     const el = h.media; if (!el || el.dataset.auto !== "file") return;
     const mark = () => { el._frame = true; };
-    if (!el.paused && el.currentTime > 0) mark();
-    el.addEventListener("playing", () => { if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(mark); else mark(); }, { once: true });
-    el.addEventListener("timeupdate", () => { if (el.currentTime > 0.03) mark(); });   // fallback for browsers without requestVideoFrameCallback
+    // "loadeddata" (readyState >= 2, HAVE_CURRENT_DATA) = the browser can paint the current frame right now — this
+    // fires reliably whether or not play() ever actually succeeds. "playing" alone was unreliable here: the warm-up
+    // step starts playback and immediately pauses it again if the banner isn't on screen yet, and some browsers never
+    // fire "playing" for that fast a play→pause cycle, which used to leave this stuck waiting on the 2.5s fallback below.
+    if (el.readyState >= 2) mark();
+    else el.addEventListener("loadeddata", mark, { once: true });
+    el.addEventListener("playing", mark, { once: true });
+    el.addEventListener("timeupdate", () => { if (el.currentTime > 0.03) mark(); });   // extra fallback
     el.addEventListener("error", mark);                    // broken / unsupported file: stop waiting for it (the thumbnail stays on screen)
   });
 
@@ -1137,7 +1142,7 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls, ...shortFormV
     if (!best || bestVis < innerHeight * 0.3 || !best.media) return true;      // no hero on screen (e.g. restored scroll position)
     if (!best._poster) return false;
     const el = best.media;
-    if (el.dataset.auto === "file") return !!el._frame || (el.readyState >= 3 && elapsed > 2500);   // 2nd clause: browser refused autoplay but the file is fully buffered
+    if (el.dataset.auto === "file") return !!el._frame || el.readyState >= 2;   // readyState check is now the primary signal, not a 2.5s-delayed fallback
     const c = el.closest(".yt-cover"); return !!c && c.classList.contains("is-ready");
   }
   function finish() {
