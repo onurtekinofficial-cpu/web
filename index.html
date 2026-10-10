@@ -201,12 +201,11 @@
   .hero-case-btn { font: 500 12px 'JetBrains Mono', monospace; letter-spacing: .14em; color: #fff; padding: .5rem 0; border-bottom: 1px solid rgba(255,255,255,.45); transition: color .25s ease, border-color .25s ease, gap .25s ease; }
   .hero-case-btn:hover { color: #CCFF00; border-color: #CCFF00; }
   /* autoplay media layer: optional thumbnail sits underneath as the poster, the video / player plays on top of it */
-  /* ALWAYS visible underneath — never actively hidden, so there is never a black gap, even if the video fails
-     to load. The direct-file <video> (see .auto-wrap video rule below) starts transparent and fades in on TOP of
-     it once a real decoded frame is confirmed ready; until then this thumbnail is simply what's on screen. */
+  /* billyboman.com's actual trick (checked live): no fade/reveal choreography at all — the video container and
+     the video element itself are simply the SAME dark color as the rest of the page, so whatever is on screen
+     before the first frame decodes is indistinguishable from the page background. Nothing to flash. */
   .auto-poster { position: absolute; inset: 0; background: #0d0f0d center / cover no-repeat; }
-  .auto-wrap video[data-auto="file"] { opacity: 0; transition: opacity .5s ease; }
-  .auto-wrap video[data-auto="file"].is-ready { opacity: 1; }
+  .auto-wrap video[data-auto="file"] { background: #0d0f0d; }
   .auto-wrap { position: absolute; inset: 0; overflow: hidden; container-type: size; }
   .yt-cover { position: absolute; inset: 0; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
   .yt-cover.is-ready { opacity: 1; }
@@ -790,15 +789,7 @@ function registerAuto(root) {
       el.muted = true; el.defaultMuted = true;                 // muted is what lets browsers allow autoplay
       const fit = () => { if (el.videoWidth) setFit(wrap, el.videoWidth / el.videoHeight); };
       if (el.readyState >= 1) fit(); else el.addEventListener("loadedmetadata", fit, { once: true });
-      // fade the video IN on top of the ever-present thumbnail once a real frame is ready — the thumbnail itself
-      // is never touched/hidden, so a video that fails to load just leaves the thumbnail showing, never black.
-      let revealed = false;
-      const reveal = () => { if (revealed) return; revealed = true; el.classList.add("is-ready"); };
-      if (el.readyState >= 2) reveal();
-      else el.addEventListener("loadeddata", reveal, { once: true });
-      el.addEventListener("playing", reveal, { once: true });
-      el.addEventListener("error", reveal, { once: true });   // broken file: fall back to showing it (poster stays visible underneath regardless)
-      setTimeout(reveal, 2500);                                // safety net
+
     } else {
       setFit(wrap, parseFloat(el.style.getPropertyValue("--ar")) || 0);
       if (el.dataset.auto === "vimeo" && !el.dataset.ar) detectVimeoAR(el, wrap);
