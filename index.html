@@ -789,16 +789,17 @@ function registerAuto(root) {
       el.muted = true; el.defaultMuted = true;                 // muted is what lets browsers allow autoplay
       const fit = () => { if (el.videoWidth) setFit(wrap, el.videoWidth / el.videoHeight); };
       if (el.readyState >= 1) fit(); else el.addEventListener("loadedmetadata", fit, { once: true });
-      const posterEl = wrap.querySelector(".auto-poster");       // reveal the video only once a real frame is confirmed on screen
+      const posterEl = wrap.querySelector(".auto-poster");       // reveal the video once a real frame is ready — not dependent on playback ever actually starting
       if (posterEl) {
-        const reveal = () => posterEl.classList.add("is-hidden");
-        if (!el.paused && el.currentTime > 0.03) reveal();
-        else {
-          el.addEventListener("playing", () => { if (el.requestVideoFrameCallback) el.requestVideoFrameCallback(reveal); else reveal(); }, { once: true });
-          const tu = () => { if (el.currentTime > 0.03) { reveal(); el.removeEventListener("timeupdate", tu); } };
-          el.addEventListener("timeupdate", tu);                // fallback for browsers without requestVideoFrameCallback
-          el.addEventListener("error", reveal, { once: true });  // broken file: don't trap the thumbnail forever
-        }
+        let revealed = false;
+        const reveal = () => { if (revealed) return; revealed = true; posterEl.classList.add("is-hidden"); };
+        // "loadeddata" = the browser has decoded enough to paint the CURRENT frame — fires whether or not play()
+        // ever succeeds, unlike "playing" (which some browsers skip entirely on a fast warm-up play→pause cycle).
+        if (el.readyState >= 2) reveal();
+        else el.addEventListener("loadeddata", reveal, { once: true });
+        el.addEventListener("playing", reveal, { once: true });   // extra/earlier signal where supported
+        el.addEventListener("error", reveal, { once: true });     // broken file: don't trap the thumbnail forever
+        setTimeout(reveal, 2500);                                 // safety net: never stay stuck behind the thumbnail
       }
     } else {
       setFit(wrap, parseFloat(el.style.getPropertyValue("--ar")) || 0);
