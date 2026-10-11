@@ -1086,10 +1086,13 @@ const commercialEls = buildCollection("commercial", "commercialStack", "Commerci
 const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
 const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO, true);
 
-// Warm EVERY hero video right now (not on scroll): src is already set at render time, this also builds the
-// decode pipeline so each banner is ready to paint/play the instant it is reached. No fade, no opacity-0 state.
+// Warm the hero videos: src is already set at render time, this also builds the decode pipeline so each banner
+// is ready to paint/play the instant it is reached. The FIRST (visible) banner is warmed immediately and alone —
+// giving it the full connection instead of splitting bandwidth three ways — so the one video the entry loader is
+// actually waiting on becomes playable as fast as possible and consistently, instead of varying wildly run to run.
+// The other hero banners are warmed right after, slightly staggered, so they're ready by the time they're scrolled to.
 updateSoundUI();
-heroEls.forEach(h => warmUp(h.media));
+heroEls.forEach((h, i) => { if (i === 0) warmUp(h.media); else setTimeout(() => warmUp(h.media), 400 + i * 250); });
 
 /* ---------------- entry loader ----------------
    WHY THERE WAS A BLACK SCREEN: a video has nothing to show until its first bytes are downloaded AND its first frame is
@@ -1121,12 +1124,13 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls, ...shortFormV
   bannerEls.forEach(h => {                                   // detect "a real frame is on screen" for every direct-video banner
     const el = h.media; if (!el || el.dataset.auto !== "file") return;
     const mark = () => { el._frame = true; };
-    // "loadeddata" (readyState >= 2, HAVE_CURRENT_DATA) = the browser can paint the current frame right now — this
-    // fires reliably whether or not play() ever actually succeeds. "playing" alone was unreliable here: the warm-up
-    // step starts playback and immediately pauses it again if the banner isn't on screen yet, and some browsers never
-    // fire "playing" for that fast a play→pause cycle, which used to leave this stuck waiting on the 2.5s fallback below.
-    if (el.readyState >= 2) mark();
-    else el.addEventListener("loadeddata", mark, { once: true });
+    // "canplay" (readyState >= 3, HAVE_FUTURE_DATA) = the browser has enough buffered to keep playing for a bit, not
+    // just paint one frame — reveal only at that point so there's no native buffering spinner right after the loader
+    // leaves. "playing" alone was unreliable here: the warm-up step starts playback and immediately re-pauses it if
+    // the banner isn't on screen yet, and some browsers never fire "playing" for that fast a play→pause cycle.
+    if (el.readyState >= 3) mark();
+    else el.addEventListener("canplay", mark, { once: true });
+    el.addEventListener("loadeddata", () => { if (el.readyState >= 3) mark(); });
     el.addEventListener("playing", mark, { once: true });
     el.addEventListener("timeupdate", () => { if (el.currentTime > 0.03) mark(); });   // extra fallback
     el.addEventListener("error", mark);                    // broken / unsupported file: stop waiting for it (the thumbnail stays on screen)
@@ -1142,7 +1146,7 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls, ...shortFormV
     if (!best || bestVis < innerHeight * 0.3 || !best.media) return true;      // no hero on screen (e.g. restored scroll position)
     if (!best._poster) return false;
     const el = best.media;
-    if (el.dataset.auto === "file") return !!el._frame || el.readyState >= 2;   // readyState check is now the primary signal, not a 2.5s-delayed fallback
+    if (el.dataset.auto === "file") return !!el._frame || el.readyState >= 3;   // readyState check is now the primary signal, not a time-delayed fallback
     const c = el.closest(".yt-cover"); return !!c && c.classList.contains("is-ready");
   }
   function finish() {
