@@ -1089,13 +1089,13 @@ const commercialEls = buildCollection("commercial", "commercialStack", "Commerci
 const shortMovieEls = buildCollection("short-movies", "shortMoviesStack", "Short Movies", SHORT_MOVIES);
 const shortFormVideoEls = buildCollection("short-form-video", "shortFormVideoStack", "Short-form Video", SHORT_FORM_VIDEO, true);
 
-// Warm the hero videos: src is already set at render time, this also builds the decode pipeline so each banner
-// is ready to paint/play the instant it is reached. The FIRST (visible) banner is warmed immediately and alone —
-// giving it the full connection instead of splitting bandwidth three ways — so the one video the entry loader is
-// actually waiting on becomes playable as fast as possible and consistently, instead of varying wildly run to run.
-// The other hero banners are warmed right after, slightly staggered, so they're ready by the time they're scrolled to.
+// Warm ONLY the first (visible) hero banner immediately — it's the one the entry loader is waiting on, so it gets
+// the full connection instead of splitting bandwidth across every banner on the page (there can now be many, not
+// just 3). Every other banner — hero or not — is already wired to warmIO (see registerAuto below) and warms itself
+// lazily, ~400px before the visitor scrolls to it. Forcing them all to warm up-front doesn't scale past a handful
+// of banners: it was fine at 3, it was NOT fine at 9 (nine competing video/iframe loads at once).
 updateSoundUI();
-heroEls.forEach((h, i) => { if (i === 0) warmUp(h.media); else setTimeout(() => warmUp(h.media), 400 + i * 250); });
+if (heroEls[0]) warmUp(heroEls[0].media);
 
 /* ---------------- entry loader ----------------
    WHY THERE WAS A BLACK SCREEN: a video has nothing to show until its first bytes are downloaded AND its first frame is
