@@ -1161,6 +1161,11 @@ const bannerEls = [...heroEls, ...commercialEls, ...shortMovieEls, ...shortFormV
       electActive();
       setTimeout(() => pre.remove(), 600);
     }));
+    // The site is open and the ONE banner it was waiting on is already playing — now, in the background, start
+    // warming every other hero banner too (not just the ones the visitor has scrolled near yet), lightly staggered
+    // so they don't all fight for bandwidth at once. This doesn't delay the open; it just means a visitor who
+    // scrolls fast is much more likely to find each banner already buffered instead of waiting on it live.
+    heroEls.slice(1).forEach((h, i) => setTimeout(() => warmUp(h.media), 250 + i * 180));
   }
   function tick(now) {
     if (done) return;
