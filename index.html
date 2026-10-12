@@ -219,6 +219,15 @@
   .auto-wrap.fit-contain video { object-fit: contain; }
   .auto-wrap.fit-contain .auto-poster { filter: blur(22px) brightness(.5); transform: scale(1.2); }
   .auto-wrap.fit-contain .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 1.7778))); height: min(100cqh, calc(100cqw / var(--ar, 1.7778))); }
+  /* On phones, a landscape (16:9) banner video cropped with object-fit:cover loses most of its left/right content —
+     a tall, narrow viewport showing a wide video ends up zoomed into just the center strip. billyboman.com instead
+     shows the WHOLE video on mobile (letterboxed, like landscape photos in a portrait feed). Same fix here: below
+     768px, every banner video (hero, commercial, short movies, short-form) switches to object-fit:contain, with the
+     already-dark .auto-wrap/.hero-frame background showing as thin bars above/below instead of cropping the sides. */
+  @media (max-width: 768px) {
+    .auto-wrap video[data-auto="file"] { object-fit: contain !important; }
+    .auto-wrap .yt-cover iframe { width: min(100cqw, calc(100cqh * var(--ar, 1.7778))) !important; height: min(100cqh, calc(100cqw / var(--ar, 1.7778))) !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; }
+  }
   .social-link { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 999px; color: #eef0ec;
     border: 1px solid rgba(255,255,255,.18); transition: color .25s ease, border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; }
   .social-link svg { width: 22px; height: 22px; }
