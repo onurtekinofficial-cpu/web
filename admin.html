@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin — AI Video Producer Portfolio</title>
+
+  <script>
+    if (/\/admin\/$/.test(location.pathname)) { const base = document.createElement('base'); base.href = '../'; document.head.append(base); }
+  </script>
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/admin.css">
+  <script src="data.js"></script>
+  <script src="assets/core.js"></script>
+</head>
+
+<body class="bg-ink text-[#eef0ec] antialiased">
+
+  <aside id="sidebar">
+    <div class="px-5 h-16 flex items-center border-b border-white/10 shrink-0">
+      <div>
+        <p class="font-mono text-[10px] text-muted leading-none">OSMAN TEKIN / FILMS</p>
+        <p class="font-display font-semibold mt-1">Portfolio editor</p>
+      </div>
+    </div>
+    <nav id="sideNav" class="flex-1 p-3 space-y-1"></nav>
+    <div class="p-3 border-t border-white/10 space-y-2">
+      <button id="exportBtn" class="btn btn-primary w-full" type="button">Publish changes</button>
+      <button id="downloadData" class="btn btn-sm w-full" type="button">Download data.js</button>
+      <button id="resetBtn" class="btn btn-sm w-full" type="button">Reload site data</button>
+    </div>
+  </aside>
+  <div id="scrim"></div>
+
+  <div class="lg:pl-[260px] min-h-screen">
+    <header
+      class="sticky top-0 z-40 h-14 flex items-center gap-3 px-4 sm:px-6 lg:px-10 bg-ink/90 backdrop-blur border-b border-white/10">
+      <button id="menuBtn" class="lg:hidden btn btn-sm" style="min-height:38px;width:38px;padding:0" type="button"
+        aria-label="Open menu">☰</button>
+      <p id="pageTitle" class="font-display font-semibold flex-1"></p>
+      <a class="btn btn-sm" href="index.html" target="_blank" rel="noopener">View site ↗</a>
+    </header>
+    <p id="publishStatus" role="status" class="publish-status" hidden></p>
+    <main id="view" class="p-4 sm:p-6 lg:p-10 max-w-4xl mx-auto"></main>
+  </div>
+
+  <!-- Add / Edit PORTFOLIO video modal -->
+  <div id="videoModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-video></div>
+    <div class="modal-panel">
+      <div class="flex items-center justify-between mb-5">
+        <p id="videoModalTitle" class="card-title">Add video</p><button class="btn btn-sm btn-icon" type="button"
+          aria-label="Close" data-close-video>✕</button>
+      </div>
+      <form id="videoForm" class="space-y-4">
+        <input type="hidden" id="v-id" />
+        <label class="block"><span class="label">PROJECT TITLE</span><input id="v-title" class="input" maxlength="120"
+            required /></label>
+        <label class="block"><span class="label">CATEGORY</span><select id="v-category" class="input"></select></label>
+        <label class="block"><span class="label">FULL FILM · LINK OR FILE PATH</span><input id="v-video" class="input" type="text" spellcheck="false"
+            placeholder="Vimeo, YouTube, MP4 URL or assets/film.mp4" required /></label>
+        <label class="block"><span class="label">THUMBNAIL IMAGE URL (the cover shown in All Work — empty = automatic cover from the video)</span><input id="v-thumb" class="input" type="text" spellcheck="false"
+            placeholder="https://…/thumbnail.jpg" /></label>
+        <label class="flex items-start gap-3 cursor-pointer" style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+          <input type="checkbox" id="v-hide-all" style="width:18px;height:18px;margin-top:2px;accent-color:var(--ink);flex:none" />
+          <span><span class="label" style="display:block">HIDE FROM "ALL" TAB</span><span class="hint">When ON, this video is NOT shown under the "All" tab on the website. It still appears under its own category tab (e.g. UGC, 9:16, 16:9).</span></span>
+        </label>
+        <label class="block"><span class="label">TOOLS USED</span><input id="v-tools" class="input"
+            placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags
+            in the cinematic modal.</span></label>
+        <label class="block"><span class="label">DETAILED DESCRIPTION</span><textarea id="v-desc" class="input" rows="4"
+            placeholder="Shown inside the frontend case-study modal."></textarea></label>
+        <p id="v-error" class="text-sm text-red-400 hidden"></p>
+        <div class="savebar"><button type="button" class="btn" data-close-video>Cancel</button><button type="submit"
+            class="btn btn-primary">Save video</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add / Edit HERO BANNER modal -->
+  <div id="bannerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="bannerModalTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-banner></div>
+    <div class="modal-panel">
+      <div class="flex items-center justify-between mb-5">
+        <p id="bannerModalTitle" class="card-title">Add hero banner</p><button class="btn btn-sm btn-icon" type="button"
+          aria-label="Close" data-close-banner>✕</button>
+      </div>
+      <form id="bannerForm" class="space-y-4">
+        <input type="hidden" id="b-id" />
+        <label class="block"><span class="label">TITLE</span><input id="b-title" class="input" maxlength="120" required
+            placeholder="Solstice" /></label>
+        <label class="block"><span class="label">SUBTITLE / TAGLINE</span><input id="b-subtitle" class="input"
+            maxlength="160" placeholder="A generative-first spot for a fragrance launch." /></label>
+        <label class="block"><span class="label">FULL FILM · LINK OR FILE PATH</span><input id="b-video" class="input" type="text" spellcheck="false"
+            placeholder="Vimeo, YouTube, MP4 URL or assets/film.mp4" required /></label>
+        <label class="block"><span class="label">WIDE PREVIEW CLIP · OPTIONAL</span><input id="b-preview" class="input" type="text" spellcheck="false" placeholder="assets/preview.mp4 or a video URL" /><span class="hint">A muted teaser for the banner. Leave blank to use the full film. For a portrait film, the phone preview uses the original vertical frame.</span></label>
+        <label class="block"><span class="label">COVER IMAGE · OPTIONAL</span><input id="b-thumb" class="input" type="text" spellcheck="false"
+            placeholder="https://…/thumbnail.jpg" /></label>
+        <label class="block"><span class="label">VIDEO FORMAT (so vertical videos fit correctly)</span>
+          <select id="b-aspect" class="input">
+            <option value="">Auto-detect</option><option value="16:9">Horizontal — 16:9</option><option value="9:16">Vertical — 9:16</option>
+            <option value="1:1">Square — 1:1</option><option value="4:5">Portrait — 4:5</option>
+          </select></label>
+        <label class="block"><span class="label">TOOLS USED</span><input id="b-tools" class="input"
+            placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags
+            in the cinematic case-study pop-up.</span></label>
+        <label class="block"><span class="label">DETAILED DESCRIPTION / CASE STUDY</span><textarea id="b-desc"
+            class="input" rows="4"
+            placeholder="Shown when a visitor clicks this banner — opens the same cinematic modal as portfolio items."></textarea></label>
+        <p id="b-error" class="text-sm text-red-400 hidden"></p>
+        <div class="savebar"><button type="button" class="btn" data-close-banner>Cancel</button><button type="submit"
+            class="btn btn-primary">Save banner</button></div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Add / Edit COMMERCIAL / SHORT MOVIES video modal -->
+  <div id="archiveModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="archiveModalTitle" aria-hidden="true">
+    <div class="modal-backdrop" data-close-archive></div>
+    <div class="modal-panel">
+      <div class="flex items-center justify-between mb-5">
+        <p id="archiveModalTitle" class="card-title">Add archive video</p><button class="btn btn-sm btn-icon" type="button"
+          aria-label="Close" data-close-archive>✕</button>
+      </div>
+      <form id="archiveForm" class="space-y-4">
+        <input type="hidden" id="a-id" />
+        <label class="block"><span class="label">TITLE</span><input id="a-title" class="input" maxlength="120" required
+            placeholder="Solstice" /></label>
+        <label class="block"><span class="label">SUBTITLE / TAGLINE</span><input id="a-subtitle" class="input"
+            maxlength="160" placeholder="A generative-first spot for a fragrance launch." /></label>
+        <label class="block"><span class="label">FULL FILM · LINK OR FILE PATH</span><input id="a-video" class="input" type="text" spellcheck="false"
+            placeholder="Vimeo, YouTube, MP4 URL or assets/film.mp4" required /></label>
+        <label class="block"><span class="label">COVER IMAGE · OPTIONAL</span><input id="a-thumb" class="input" type="text" spellcheck="false"
+            placeholder="https://…/thumbnail.jpg" /></label>
+        <label class="block"><span class="label">VIDEO FORMAT (so vertical videos fit correctly)</span>
+          <select id="a-aspect" class="input">
+            <option value="">Auto-detect</option><option value="16:9">Horizontal — 16:9</option><option value="9:16">Vertical — 9:16</option>
+            <option value="1:1">Square — 1:1</option><option value="4:5">Portrait — 4:5</option>
+          </select></label>
+        <label class="block"><span class="label">TOOLS USED</span><input id="a-tools" class="input"
+            placeholder="Runway Gen-3, Midjourney, DaVinci Resolve" /><span class="hint">Comma-separated — shown as tags
+            in the cinematic case-study pop-up.</span></label>
+        <label class="block"><span class="label">DETAILED DESCRIPTION / CASE STUDY</span><textarea id="a-desc"
+            class="input" rows="4"
+            placeholder="Shown when a visitor clicks this video — opens the same cinematic modal as portfolio items."></textarea></label>
+        <p id="a-error" class="text-sm text-red-400 hidden"></p>
+        <div class="savebar"><button type="button" class="btn" data-close-archive>Cancel</button><button type="submit"
+            class="btn btn-primary">Save video</button></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const { copy: clone, DRAFT_KEY: STORAGE_KEY, PUBLISHED_KEY, normalize } = Portfolio;
+    const BASE_KEY = STORAGE_KEY + ':server';
+    const seed = window.SITE_DATA;
+    const savedDraft = Portfolio.read(STORAGE_KEY);
+    let baseVersion = Number(seed?.publishedAt) || 0;
+    try {
+      if (savedDraft) baseVersion = Number(localStorage.getItem(BASE_KEY) ?? savedDraft.publishedAt ?? 0);
+    } catch { /* Storage may be unavailable in private browsing. */ }
+    let STATE = normalize(savedDraft || Portfolio.published());
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+        localStorage.setItem(BASE_KEY, String(baseVersion));
+      } catch { statusLine('Browser storage is unavailable. Download data.js to keep your edits.'); }
+    }
+    function statusLine(message) {
+      const status = document.getElementById('publishStatus');
+      status.hidden = !message; status.textContent = message || '';
+    }
+
+    /* ---------- ISOLATION GUARD ----------
+       STATE.hero.banners (hero) and STATE.portfolio (All Work) are independent data models with their own id counters.
+       Every create / edit / delete / reorder goes through commitBanners(), commitWork() or commitCollection(). Each one snapshots the OTHER list
+       first and, if anything it did changed that other list, restores it and reports — so no code path (present or future)
+       can make an All Work change touch a banner or the other way round. */
+    const SLICES = {
+      banners: { get: () => STATE.hero.banners, set: v => { STATE.hero.banners = v; } },
+      work:    { get: () => STATE.portfolio,    set: v => { STATE.portfolio = v; } },
+      commercial:  { get: () => STATE.commercial,  set: v => { STATE.commercial = v; } },     // Commercial page — its own list
+      shortMovies: { get: () => STATE.shortMovies, set: v => { STATE.shortMovies = v; } },    // Short Movies page — its own list
+      shortFormVideo: { get: () => STATE.shortFormVideo, set: v => { STATE.shortFormVideo = v; } }, // Short-form Video page — its own list
+    };
+    function commit(owner, mutate) {
+      const others = Object.keys(SLICES).filter(k => k !== owner);
+      const before = Object.fromEntries(others.map(k => [k, JSON.stringify(SLICES[k].get())]));
+      mutate();
+      others.forEach(k => {
+        if (JSON.stringify(SLICES[k].get()) !== before[k]) {
+          SLICES[k].set(JSON.parse(before[k]));
+          console.error('[isolation] "' + owner + '" change tried to modify "' + k + '" — reverted.');
+        }
+      });
+      persist();
+    }
+    const commitBanners = fn => commit('banners', fn);
+    const commitWork = fn => commit('work', fn);
+    const commitCollection = (key, fn) => commit(key, fn);          // key: 'commercial' | 'shortMovies'
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const cssAsset = raw => esc(Portfolio.assetURL(raw).replace(/["'()]/g, c => '%' + c.charCodeAt(0).toString(16)));
+    const $ = (sel, root = document) => root.querySelector(sel);
+    function moveInArray(arr, index, dir) { const j = index + dir; if (j < 0 || j >= arr.length) return false;[arr[index], arr[j]] = [arr[j], arr[index]]; return true; }
+
+    function toast(msg) { const t = document.createElement('div'); t.setAttribute('role','status'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3600); }
+
+    /* ---------------- sidebar nav ---------------- */
+    const NAV = [
+      { id: 'hero', label: 'Homepage banners' },
+      { id: 'portfolio', label: 'Portfolio' },
+      { id: 'commercial', label: 'Commercial' },
+      { id: 'shortMovies', label: 'Short Movies' },
+      { id: 'shortFormVideo', label: 'Short-form Video' },
+      { id: 'stills', label: 'Stills (pictures)' },
+      { id: 'about', label: 'About & Process' },
+      { id: 'seo', label: 'SEO & Settings' },
+    ];
+    const VIEWS = { hero: renderHeroView, portfolio: renderPortfolioView, commercial: () => renderCollectionView('commercial'), shortMovies: () => renderCollectionView('shortMovies'), shortFormVideo: () => renderCollectionView('shortFormVideo'), stills: renderStillsView, about: renderAboutView, seo: renderSeoView };
+    let activeView = 'hero';
+    function renderNav() {
+      $('#sideNav').innerHTML = NAV.map(n => `<button type="button" class="nav-item ${n.soon ? 'disabled' : ''} ${activeView === n.id ? 'active' : ''}" data-view="${n.id}" ${n.soon ? 'disabled' : ''}>
+    <span class="flex-1 text-left">${n.label}</span>${n.soon ? '<span class="pill">soon</span>' : ''}</button>`).join('');
+    }
+    $('#sideNav').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b && !b.disabled) goTo(b.dataset.view); });
+    function goTo(view) { activeView = view; renderNav(); closeDrawer(); $('#pageTitle').textContent = NAV.find(n => n.id === view).label; VIEWS[view](); }
+
+    /* mobile drawer */
+    const sidebar = $('#sidebar'), scrim = $('#scrim');
+    function openDrawer() { sidebar.classList.add('open'); scrim.classList.add('open'); }
+    function closeDrawer() { sidebar.classList.remove('open'); scrim.classList.remove('open'); }
+    $('#menuBtn').addEventListener('click', openDrawer); scrim.addEventListener('click', closeDrawer);
+
+    /* ================= MODULE 1 — Hero Banners (multi, reorderable) ================= */
+    function renderHeroView() {
+      const view = $('#view');
+      view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">Homepage banners</p><p class="card-sub">The first visible film opens the homepage. Sample footage is managed in SEO &amp; Settings. Use the arrows to change the order. Visitors can switch featured films or select Play full film.</p></div>
+      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="bannerCount"></p><button id="addBannerBtn" class="btn btn-primary btn-sm" type="button">+ Add hero banner</button></div>
+      <div id="bannerList" class="space-y-2"></div>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Empty-banner text</p><p class="card-sub">Shown on the homepage when the featured film list is empty.</p></div>
+      <label class="block"><span class="label">FALLBACK HEADLINE</span><input id="h-headline" class="input" maxlength="200" /></label>
+      <label class="block"><span class="label">FALLBACK SUBHEADLINE</span><textarea id="h-sub" class="input" rows="2" maxlength="300"></textarea></label>
+      <div class="savebar"><button id="h-save" class="btn btn-primary" type="button">Save meta</button></div>
+    </div>
+
+    <div class="card mt-6">
+      <p class="card-title mb-1">Live preview</p><p class="card-sub">Featured films in playback order. The first one is the opening banner.</p>
+      <div id="pv-stack" class="space-y-3 max-h-[520px] overflow-y-auto pr-1"></div>
+    </div>`;
+
+      $('#addBannerBtn').addEventListener('click', () => openBannerForm(null));
+      $('#h-headline').value = STATE.hero.headline; $('#h-sub').value = STATE.hero.subheadline;
+      $('#h-save').addEventListener('click', () => {
+        STATE.hero.headline = $('#h-headline').value.trim(); STATE.hero.subheadline = $('#h-sub').value.trim();
+        persist(); toast('Page meta saved.');
+      });
+      paintBanners();
+    }
+    function paintBanners() {
+      const banners = STATE.hero.banners;
+      const publicCount = banners.filter(b => STATE.seo.showSampleFootage !== false || !Portfolio.isDemo(b)).length;
+      $('#bannerCount').textContent = banners.length + ' stored · ' + publicCount + ' visible on the site';
+      $('#bannerList').innerHTML = banners.length ? banners.map((b, i) => `
+    <div class="vrow" data-id="${b.id}">
+      <span class="pill-order">${i + 1}</span>
+      ${b.thumbnailUrl ? `<img src="${esc(b.thumbnailUrl)}" alt="" style="width:56px;height:34px;object-fit:cover;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.1)" />` : ''}
+      <div class="min-w-0 flex-1">
+        <p class="text-sm truncate">${esc(b.title) || '(untitled banner)'}</p>
+        <p class="text-xs text-muted truncate mt-0.5">${Portfolio.isDemo(b) && STATE.seo.showSampleFootage === false ? 'Sample · hidden on site / ' : ''}${esc(b.subtitle) || '—'}</p>
+      </div>
+      <div class="reorder-grp">
+        <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-icon" data-down ${i === banners.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>
+      <button class="btn btn-sm" type="button" data-edit="${b.id}">Edit</button>
+      <button class="btn btn-sm btn-danger" type="button" data-del="${b.id}">Delete</button>
+    </div>`).join('') : '<p class="text-sm text-muted">No hero banners yet — click "Add hero banner" to create your first one.</p>';
+
+      $('#bannerList').querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openBannerForm(Number(btn.dataset.edit))));
+      $('#bannerList').querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeBanner(Number(btn.dataset.del))));
+      $('#bannerList').querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderBanner(Number(e.target.closest('[data-id]').dataset.id), -1)));
+      $('#bannerList').querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderBanner(Number(e.target.closest('[data-id]').dataset.id), 1)));
+      paintHeroPreview();
+    }
+    function reorderBanner(id, dir) {
+      const i = STATE.hero.banners.findIndex(b => b.id === id);
+      if (i < 0) return;
+      let moved = false; commitBanners(() => { moved = moveInArray(STATE.hero.banners, i, dir); });
+      if (moved) paintBanners();
+    }
+    function paintHeroPreview() {
+      const banners = STATE.hero.banners.filter(b => STATE.seo.showSampleFootage !== false || !Portfolio.isDemo(b));
+      $('#pv-stack').innerHTML = banners.length ? banners.map((b, i) => `
+    <div class="pv-hero"${b.thumbnailUrl ? ` style="background-image:url('${cssAsset(b.thumbnailUrl)}');background-size:cover;background-position:center"` : ''}>
+      <div class="txt">
+        <p class="font-mono text-[10px] text-accent mb-1">${String(i + 1).padStart(2, '0')} / ${String(banners.length).padStart(2, '0')}${i === 0 ? ' · OPENING FILM' : ''}</p>
+        <p class="font-display text-base sm:text-lg leading-tight">${esc(b.title) || 'Untitled'}</p>
+        <p class="text-xs text-muted mt-0.5">${esc(b.subtitle)}</p>
+      </div>
+    </div>`).join('') : '<p class="text-sm text-muted">No banners yet.</p>';
+    }
+
+    function openBannerForm(id) {
+      const item = id ? STATE.hero.banners.find(b => b.id === id) : null;
+      $('#bannerModalTitle').textContent = item ? 'Edit hero banner' : 'Add hero banner';
+      $('#b-id').value = item ? item.id : '';
+      $('#b-title').value = item?.title || ''; $('#b-subtitle').value = item?.subtitle || '';
+      $('#b-preview').value = item?.previewUrl || '';
+      $('#b-video').value = item?.videoUrl || ''; $('#b-thumb').value = item?.thumbnailUrl || ''; $('#b-aspect').value = item?.aspect || '';
+      $('#b-tools').value = (item?.tools || []).join(', '); $('#b-desc').value = item?.description || '';
+      $('#b-error').classList.add('hidden');
+      $('#bannerModal').classList.add('open'); $('#bannerModal').setAttribute('aria-hidden', 'false');
+    }
+    function closeBannerForm() { $('#bannerModal').classList.remove('open'); $('#bannerModal').setAttribute('aria-hidden', 'true'); }
+    document.querySelectorAll('[data-close-banner]').forEach(el => el.addEventListener('click', closeBannerForm));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#bannerModal').classList.contains('open')) closeBannerForm(); });
+
+    function mediaField(value, video) {
+      if (!value) return true;
+      const web = /^https?:\/\//i.test(value);
+      const local = !/^[a-z][\w+.-]*:|^\/\//i.test(value) && /\.[a-z\d]{2,6}(?:[?#].*)?$/i.test(value);
+      return (web || local) && !!(video ? Portfolio.media(value) : Portfolio.assetURL(value));
+    }
+    function validateMedia(prefix, videoUrl) {
+      const thumb = $('#' + prefix + '-thumb').value.trim();
+      const teaser = prefix === 'b' ? $('#b-preview').value.trim() : '';
+      if (mediaField(videoUrl, true) && mediaField(teaser, true) && mediaField(thumb, false)) return true;
+      const error = $('#' + prefix + '-error'); error.textContent = 'Use a Vimeo, YouTube or direct video URL, or a packaged file path such as assets/film.mp4. Check the optional cover and preview links too.';
+      error.classList.remove('hidden'); return false;
+    }
+    // Replacing a film must never keep showing its previous teaser or poster.
+    $('#b-video').addEventListener('change', () => {
+      const old = STATE.hero.banners.find(b => b.id === Number($('#b-id').value));
+      if (!old || old.videoUrl === $('#b-video').value.trim()) return;
+      if ($('#b-preview').value === (old.previewUrl || '')) $('#b-preview').value = '';
+      if ($('#b-thumb').value === (old.thumbnailUrl || '')) $('#b-thumb').value = '';
+    });
+    $('#bannerForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = $('#b-title').value.trim(), videoUrl = $('#b-video').value.trim();
+      if (!title || !videoUrl) { $('#b-error').textContent = 'Title and Video URL are required.'; $('#b-error').classList.remove('hidden'); return; }
+
+      if (!validateMedia('b', videoUrl)) return;
+      const payload = { title, subtitle: $('#b-subtitle').value.trim(), videoUrl, previewUrl: $('#b-preview').value.trim(), thumbnailUrl: $('#b-thumb').value.trim(), aspect: $('#b-aspect').value, description: $('#b-desc').value.trim(), tools: $('#b-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+      const idRaw = $('#b-id').value;
+      commitBanners(() => {
+        if (idRaw) { const i = STATE.hero.banners.findIndex(b => b.id === Number(idRaw)); STATE.hero.banners[i] = { ...STATE.hero.banners[i], ...payload }; }
+        else { const nextId = STATE.hero.banners.reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE.hero.banners.push({ id: nextId, ...payload }); }
+      });
+      closeBannerForm(); paintBanners();
+      toast(idRaw ? 'Banner updated.' : 'Banner added.');
+    });
+    function removeBanner(id) {
+      if (!confirm('Delete this hero banner? This cannot be undone.')) return;
+      commitBanners(() => { STATE.hero.banners = STATE.hero.banners.filter(b => b.id !== id); });
+      paintBanners(); toast('Banner deleted.');
+    }
+
+    /* ================= MODULES — Commercial, Short Movies & Short-form Video (each its own list; banner-style videos on /commercial, /short-movies and /short-form-video) ================= */
+    const COLLECTIONS = {
+      commercial:  { label: 'Commercial',   path: '/commercial',   menu: 'Commercial' },
+      shortMovies: { label: 'Short Movies', path: '/short-movies', menu: 'Short Movies' },
+      shortFormVideo: { label: 'Short-form Video', path: '/short-form-video', menu: 'Short-form Video' },
+    };
+    let activeCollection = 'commercial';
+    function renderCollectionView(key) {
+      activeCollection = key;
+      const c = COLLECTIONS[key];
+      $('#view').innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">${c.label}</p><p class="card-sub">These films appear under Work → ${c.label}. Its first visible entry can appear on the homepage. Use ↑ / ↓ to set their order.</p></div>
+      <div class="flex items-center justify-between"><p class="text-sm text-muted" id="archiveCount"></p><button id="addArchiveBtn" class="btn btn-primary btn-sm" type="button">+ Add ${c.label} video</button></div>
+      <div id="archiveList" class="space-y-2"></div>
+    </div>`;
+      $('#addArchiveBtn').addEventListener('click', () => openCollectionForm(null));
+      paintCollection();
+    }
+    function paintCollection() {
+      const list = STATE[activeCollection], c = COLLECTIONS[activeCollection];
+      $('#archiveCount').textContent = `${list.length} video${list.length === 1 ? '' : 's'}`;
+      $('#archiveList').innerHTML = list.length ? list.map((b, i) => `
+    <div class="vrow" data-id="${b.id}">
+      <span class="pill-order">${i + 1}</span>
+      ${b.thumbnailUrl ? `<img src="${esc(b.thumbnailUrl)}" alt="" style="width:56px;height:34px;object-fit:cover;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.1)" />` : ''}
+      <div class="min-w-0 flex-1">
+        <p class="text-sm truncate">${esc(b.title) || '(untitled)'}</p>
+        <p class="text-xs text-muted truncate mt-0.5">${Portfolio.isDemo(b) && STATE.seo.showSampleFootage === false ? 'Sample · hidden on site / ' : ''}${esc(b.subtitle) || '—'}</p>
+      </div>
+      <div class="reorder-grp">
+        <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-icon" data-down ${i === list.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>
+      <button class="btn btn-sm" type="button" data-edit="${b.id}">Edit</button>
+      <button class="btn btn-sm btn-danger" type="button" data-del="${b.id}">Delete</button>
+    </div>`).join('') : `<p class="text-sm text-muted">No ${esc(c.label)} videos yet — click "Add ${esc(c.label)} video" to add your first one. Until then the ${esc(c.label)} page shows a “check back soon” message.</p>`;
+      const L = $('#archiveList');
+      L.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openCollectionForm(Number(btn.dataset.edit))));
+      L.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => removeCollectionItem(Number(btn.dataset.del))));
+      L.querySelectorAll('[data-up]').forEach(btn => btn.addEventListener('click', e => reorderCollection(Number(e.target.closest('[data-id]').dataset.id), -1)));
+      L.querySelectorAll('[data-down]').forEach(btn => btn.addEventListener('click', e => reorderCollection(Number(e.target.closest('[data-id]').dataset.id), 1)));
+    }
+    function reorderCollection(id, dir) {
+      const key = activeCollection, i = STATE[key].findIndex(b => b.id === id);
+      if (i < 0) return;
+      let moved = false; commitCollection(key, () => { moved = moveInArray(STATE[key], i, dir); });
+      if (moved) paintCollection();
+    }
+    function openCollectionForm(id) {
+      const item = id ? STATE[activeCollection].find(b => b.id === id) : null, label = COLLECTIONS[activeCollection].label;
+      $('#archiveModalTitle').textContent = (item ? 'Edit ' : 'Add ') + label + ' video';
+      $('#a-id').value = item ? item.id : '';
+      $('#a-title').value = item?.title || ''; $('#a-subtitle').value = item?.subtitle || '';
+      $('#a-video').value = item?.videoUrl || ''; $('#a-thumb').value = item?.thumbnailUrl || ''; $('#a-aspect').value = item?.aspect || '';
+      $('#a-tools').value = (item?.tools || []).join(', '); $('#a-desc').value = item?.description || '';
+      $('#a-error').classList.add('hidden');
+      $('#archiveModal').classList.add('open'); $('#archiveModal').setAttribute('aria-hidden', 'false');
+    }
+    function closeCollectionForm() { $('#archiveModal').classList.remove('open'); $('#archiveModal').setAttribute('aria-hidden', 'true'); }
+    document.querySelectorAll('[data-close-archive]').forEach(el => el.addEventListener('click', closeCollectionForm));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#archiveModal').classList.contains('open')) closeCollectionForm(); });
+    $('#archiveForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const key = activeCollection, label = COLLECTIONS[key].label;
+      const err = m => { $('#a-error').textContent = m; $('#a-error').classList.remove('hidden'); };
+      const title = $('#a-title').value.trim(), videoUrl = $('#a-video').value.trim();
+      if (!title || !videoUrl) return err('Title and Video URL are required.');
+
+      if (!validateMedia('a', videoUrl)) return;
+      const payload = { title, subtitle: $('#a-subtitle').value.trim(), videoUrl, thumbnailUrl: $('#a-thumb').value.trim(), aspect: $('#a-aspect').value, description: $('#a-desc').value.trim(), tools: $('#a-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+      const idRaw = $('#a-id').value;
+      commitCollection(key, () => {
+        if (idRaw) { const i = STATE[key].findIndex(b => b.id === Number(idRaw)); const old = STATE[key][i]; STATE[key][i] = { ...old, ...payload };
+          if (old.videoUrl !== payload.videoUrl) delete STATE[key][i].chapters; }
+        else { const nextId = STATE[key].reduce((m, b) => Math.max(m, b.id), 0) + 1; STATE[key].push({ id: nextId, ...payload }); }
+      });
+      closeCollectionForm(); paintCollection();
+      toast(label + (idRaw ? ' video updated.' : ' video added.'));
+    });
+    function removeCollectionItem(id) {
+      if (!confirm('Delete this video? This cannot be undone.')) return;
+      const key = activeCollection;
+      commitCollection(key, () => { STATE[key] = STATE[key].filter(b => b.id !== id); });
+      paintCollection(); toast('Video deleted.');
+    }
+
+    /* ================= MODULE 2 — Portfolio CRUD (reorderable) ================= */
+    function renderPortfolioView() {
+      const view = $('#view');
+      view.innerHTML = `
+    <div class="flex items-center justify-between mb-5"><p class="text-sm text-muted" id="vCount"></p><button id="addBtn" class="btn btn-primary btn-sm" type="button">+ Add new video</button></div>
+    <div class="card mb-4"><p class="text-sm">These projects appear in Work → Portfolio. The first visible entry can also appear in Selected work.</p></div>
+    <p class="text-xs text-muted -mt-3 mb-4">Reorder with ↑ / ↓ — array order is render order on the live grid, top to bottom, left to right.</p>
+    <div id="vlist" class="space-y-2"></div>
+    <div class="card mt-8">
+      <p class="card-title mb-1">Project order</p><p class="card-sub">Cover thumbnails in your chosen order.</p>
+      <div class="pv-grid" id="pv-grid"></div>
+    </div>`;
+      $('#addBtn').addEventListener('click', () => openForm(null));
+      paintList();
+    }
+    function paintList() {
+      const items = STATE.portfolio;
+      $('#vCount').textContent = `${items.length} video(s)`;
+      const list = $('#vlist');
+      list.innerHTML = items.length ? items.map((v, i) => `
+    <div class="vrow" data-id="${v.id}">
+      <span class="pill-order">${i + 1}</span>
+      ${v.thumbnailUrl ? `<img src="${esc(v.thumbnailUrl)}" alt="" style="width:56px;height:34px;object-fit:cover;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.1)" />` : ''}
+      <div class="min-w-0 flex-1"><p class="text-sm truncate">${esc(v.title)}</p>
+        <div class="flex gap-2 mt-1 flex-wrap"><span class="pill pill-accent">${esc(v.category)}</span></div></div>
+      <div class="reorder-grp">
+        <button type="button" class="btn btn-icon" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-icon" data-down ${i === items.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>
+      <button class="btn btn-sm" type="button" data-edit="${v.id}">Edit</button>
+      <button class="btn btn-sm btn-danger" type="button" data-del="${v.id}">Delete</button>
+    </div>`).join('') : '<p class="text-sm text-muted">No videos yet — click "Add new video" to create your first one.</p>';
+      list.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openForm(Number(b.dataset.edit))));
+      list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => removeVideo(Number(b.dataset.del))));
+      list.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', e => reorderVideo(Number(e.target.closest('[data-id]').dataset.id), -1)));
+      list.querySelectorAll('[data-down]').forEach(b => b.addEventListener('click', e => reorderVideo(Number(e.target.closest('[data-id]').dataset.id), 1)));
+      paintGridPreview();
+    }
+    function reorderVideo(id, dir) {
+      const i = STATE.portfolio.findIndex(v => v.id === id);
+      if (i < 0) return;
+      let moved = false; commitWork(() => { moved = moveInArray(STATE.portfolio, i, dir); });
+      if (moved) paintList();
+    }
+    function paintGridPreview() {
+      $('#pv-grid').innerHTML = STATE.portfolio.map(v => `<div class="pv-item"${v.thumbnailUrl ? ` style="background-image:url('${cssAsset(v.thumbnailUrl)}');background-size:cover;background-position:center"` : ''} title="${esc(v.title)}"><span>${esc(v.title)}</span></div>`).join('');
+    }
+
+    function fillCategorySelect() { $('#v-category').innerHTML = STATE.filters.map(f => `<option value="${f.value}">${esc(f.label)}</option>`).join(''); }
+    function openForm(id) {
+      fillCategorySelect();
+      const item = id ? STATE.portfolio.find(v => v.id === id) : null;
+      $('#videoModalTitle').textContent = item ? 'Edit video' : 'Add video';
+      $('#v-id').value = item ? item.id : '';
+      $('#v-title').value = item?.title || ''; $('#v-category').value = item?.category || STATE.filters[0]?.value || '';
+      $('#v-video').value = item?.videoUrl || ''; $('#v-thumb').value = item?.thumbnailUrl || '';
+      $('#v-tools').value = (item?.tools || []).join(', '); $('#v-desc').value = item?.description || ''; $('#v-hide-all').checked = !!item?.hideFromAll;
+      $('#v-error').classList.add('hidden');
+      $('#videoModal').classList.add('open'); $('#videoModal').setAttribute('aria-hidden', 'false');
+    }
+    function closeForm() { $('#videoModal').classList.remove('open'); $('#videoModal').setAttribute('aria-hidden', 'true'); }
+    document.querySelectorAll('[data-close-video]').forEach(el => el.addEventListener('click', closeForm));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#videoModal').classList.contains('open')) closeForm(); });
+
+    $('#videoForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = $('#v-title').value.trim(), videoUrl = $('#v-video').value.trim();
+      if (!title || !videoUrl) { $('#v-error').textContent = 'Title and Video URL are required.'; $('#v-error').classList.remove('hidden'); return; }
+
+      if (!validateMedia('v', videoUrl)) return;
+      const payload = { title, category: $('#v-category').value, videoUrl, thumbnailUrl: $('#v-thumb').value.trim(), hideFromAll: $('#v-hide-all').checked, description: $('#v-desc').value.trim(), tools: $('#v-tools').value.split(',').map(t => t.trim()).filter(Boolean) };
+      const idRaw = $('#v-id').value;
+      commitWork(() => {
+        if (idRaw) { const i = STATE.portfolio.findIndex(v => v.id === Number(idRaw)); STATE.portfolio[i] = { ...STATE.portfolio[i], ...payload }; }
+        else { const nextId = STATE.portfolio.reduce((m, v) => Math.max(m, v.id), 0) + 1; STATE.portfolio.push({ id: nextId, createdAt: new Date().toISOString().slice(0, 10), ...payload }); }
+      });
+      closeForm(); paintList();
+      toast(idRaw ? 'Video updated.' : 'Video added.');
+    });
+    async function removeVideo(id) {
+      if (!confirm('Delete this video? This cannot be undone.')) return;
+      commitWork(() => { STATE.portfolio = STATE.portfolio.filter(v => v.id !== id); });
+      paintList(); toast('Video deleted.');
+    }
+
+    /* ================= MODULE 3 — About & Process steps ================= */
+    /* ================= Stills — picture gallery (links only; saved with the same Publish button) ================= */
+    function renderStillsView() {
+      const view = $('#view');
+      if (!STATE.stills || !Array.isArray(STATE.stills.sections)) STATE.stills = { title: '', sections: [] };
+      const S = STATE.stills;
+      const urls = v => String(v || '').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      const okCount = v => urls(v).filter(u => Portfolio.assetURL(u.replace(/^(big|huge)\s+/i, ''))).length;
+      const collect = () => {
+        S.title = $('#st-title').value.trim();
+        view.querySelectorAll('[data-sec]').forEach(box => { const i = Number(box.dataset.sec); S.sections[i] = { title: box.querySelector('.st-t').value.trim(), images: urls(box.querySelector('.st-u').value) }; });
+      };
+      const paint = () => {
+        view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">Stills — picture gallery</p><p class="card-sub">A gallery of pictures (not clickable). Paste image links, one per line. Visitors can find it in Work once images have been added. Click Save, then Publish.</p></div>
+      <label class="block"><span class="label">GALLERY NAME (menu link + big heading)</span><input id="st-title" class="input" maxlength="60" placeholder="e.g. Frames" value="${esc(S.title)}" /></label>
+    </div>
+    ${S.sections.map((sec, i) => `
+    <div class="card mt-6 space-y-4" data-sec="${i}">
+      <label class="block"><span class="label">GROUP TITLE (optional)</span><input class="input st-t" maxlength="80" placeholder="e.g. Cinematic Realism" value="${esc(sec.title)}" /></label>
+      <label class="block"><span class="label">IMAGE LINKS — ONE PER LINE</span><textarea class="input st-u" rows="6" spellcheck="false" placeholder="https://…/picture1.jpg&#10;https://…/picture2.jpg">${esc((sec.images || []).join('\n'))}</textarea><span class="hint st-c">${okCount((sec.images || []).join('\n'))} valid link(s)</span></label>
+      <div class="savebar"><button class="btn btn-sm st-up" type="button">↑ Up</button><button class="btn btn-sm st-dn" type="button">↓ Down</button><button class="btn btn-sm st-rm" type="button">Delete group</button></div>
+    </div>`).join('')}
+    <div class="savebar mt-6"><button id="st-add" class="btn" type="button">+ Add group</button><button id="st-save" class="btn btn-primary" type="button">Save stills</button></div>`;
+        view.querySelectorAll('[data-sec]').forEach(box => {
+          const i = Number(box.dataset.sec), u = box.querySelector('.st-u'), c = box.querySelector('.st-c');
+          u.addEventListener('input', () => { c.textContent = okCount(u.value) + ' valid link(s)'; });
+          box.querySelector('.st-up').onclick = () => { collect(); if (i > 0) { S.sections.splice(i - 1, 0, S.sections.splice(i, 1)[0]); } paint(); };
+          box.querySelector('.st-dn').onclick = () => { collect(); if (i < S.sections.length - 1) { S.sections.splice(i + 1, 0, S.sections.splice(i, 1)[0]); } paint(); };
+          box.querySelector('.st-rm').onclick = () => { if (!confirm('Delete this group and its links?')) return; collect(); S.sections.splice(i, 1); paint(); };
+        });
+        $('#st-add').onclick = () => { collect(); S.sections.push({ title: '', images: [] }); paint(); };
+        $('#st-save').onclick = () => { collect(); persist(); toast('Stills saved — now press Publish.'); };
+      };
+      if (!S.sections.length) S.sections.push({ title: '', images: [] });
+      paint();
+    }
+    function renderAboutView() {
+      const view = $('#view');
+      view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">About — bio</p><p class="card-sub">Main paragraph(s) in the About section. Leave a blank line between paragraphs.</p></div>
+      <label class="block"><span class="label">BIO TEXT</span><textarea id="a-content" class="input" rows="8" maxlength="2000"></textarea></label>
+      <div class="savebar"><button id="a-save" class="btn btn-primary" type="button">Save bio</button></div>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Process steps</p><p class="card-sub">The numbered workflow list shown next to your bio. Reorder, rename, or rewrite each step.</p></div>
+      <div id="steps-list" class="space-y-3"></div>
+      <button id="add-step" class="btn btn-sm" type="button">+ Add step</button>
+      <div class="savebar"><button id="steps-save" class="btn btn-primary" type="button">Save steps</button></div>
+    </div>
+
+    <div class="card mt-6">
+      <p class="card-title mb-1">Live preview</p><p class="card-sub">Updates as you type — nothing is saved until you click Save.</p>
+      <div class="grid sm:grid-cols-2 gap-8">
+        <div id="pv-bio" class="text-sm text-muted leading-relaxed space-y-3"></div>
+        <ol id="pv-steps" class="space-y-4"></ol>
+      </div>
+    </div>`;
+
+      const q = sel => view.querySelector(sel);
+      q('#a-content').value = STATE.about.content;
+      let steps = STATE.about.workflow.map(s => ({ ...s }));   // local draft — committed to STATE on "Save steps"
+
+      // ---- bio: live preview + save ----
+      function paintBio() { q('#pv-bio').innerHTML = (q('#a-content').value || '').split(/\n{2,}/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join('') || '<p class="text-[#565a52]">Bio preview…</p>'; }
+      paintBio();
+      q('#a-content').addEventListener('input', paintBio);
+      q('#a-save').addEventListener('click', () => { STATE.about.content = q('#a-content').value.trim(); persist(); toast('Bio saved.'); });
+
+      // ---- process steps: edit, reorder, preview, save ----
+      function paintSteps() {
+        q('#steps-list').innerHTML = steps.map((s, i) => `
+      <div class="p-3 rounded-lg border border-white/10 space-y-2" data-row="${i}">
+        <div class="flex items-center gap-2">
+          <span class="pill pill-accent shrink-0">${String(i + 1).padStart(2, '0')}</span>
+          <input class="input flex-1" data-f="title" maxlength="60" placeholder="Step title" value="${esc(s.title)}" />
+          <div class="flex gap-1 shrink-0">
+            <button type="button" class="btn btn-sm" style="width:36px;padding:0" data-up aria-label="Move up">↑</button>
+            <button type="button" class="btn btn-sm" style="width:36px;padding:0" data-down aria-label="Move down">↓</button>
+            <button type="button" class="btn btn-sm btn-danger" style="width:36px;padding:0" data-remove aria-label="Remove">✕</button>
+          </div>
+        </div>
+        <textarea class="input" rows="2" maxlength="300" data-f="text" placeholder="Short description">${esc(s.text)}</textarea>
+      </div>`).join('') || '<p class="text-sm text-muted">No steps yet — click "+ Add step".</p>';
+        paintStepsPreview();
+      }
+      function paintStepsPreview() {
+        q('#pv-steps').innerHTML = steps.map((s, i) => `<li class="flex gap-4"><span class="font-mono text-accent text-sm pt-0.5">${String(i + 1).padStart(2, '0')}</span>
+      <div><p class="font-display text-sm">${esc(s.title) || 'Step title…'}</p><p class="text-muted text-xs mt-0.5">${esc(s.text)}</p></div></li>`).join('');
+      }
+      paintSteps();
+      q('#steps-list').addEventListener('input', e => {
+        const row = e.target.closest('[data-row]'); if (!row) return;
+        steps[Number(row.dataset.row)][e.target.dataset.f] = e.target.value;
+        paintStepsPreview();                                   // live preview only — full repaint (with renumbering) waits for structural changes
+      });
+      q('#steps-list').addEventListener('click', e => {
+        const row = e.target.closest('[data-row]'); if (!row) return;
+        const i = Number(row.dataset.row);
+        if (e.target.closest('[data-remove]')) { steps.splice(i, 1); return paintSteps(); }
+        if (e.target.closest('[data-up]') && i > 0) { [steps[i - 1], steps[i]] = [steps[i], steps[i - 1]]; return paintSteps(); }
+        if (e.target.closest('[data-down]') && i < steps.length - 1) { [steps[i + 1], steps[i]] = [steps[i], steps[i + 1]]; return paintSteps(); }
+      });
+      q('#add-step').addEventListener('click', () => { steps.push({ title: 'New step', text: '' }); paintSteps(); });
+      q('#steps-save').addEventListener('click', () => {
+        STATE.about.workflow = steps.map(s => ({ title: s.title.trim(), text: s.text.trim() })).filter(s => s.title);
+        persist(); steps = STATE.about.workflow.map(s => ({ ...s })); paintSteps();
+        toast('Process steps saved.');
+      });
+    }
+
+
+    /* ================= MODULE 4 — SEO & Settings (+ contact-form delivery) ================= */
+    const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    function normalizeEndpoint(v) { v = (v || '').trim(); return /^[A-Za-z0-9]{6,}$/.test(v) ? 'https://formspree.io/f/' + v : v; }
+    const isFormspreeUrl = v => /^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/.test(v);
+    function describeRoute(seo) {
+      const ep = normalizeEndpoint(seo.formspreeEndpoint), to = (seo.email || '').trim();
+      if (isFormspreeUrl(ep)) return { provider: 'formspree', url: ep, text: 'Formspree → delivers to the Gmail verified on that Formspree form' + (to ? ' (should be ' + to + ')' : '') };
+      if (EMAIL_RE.test(to)) return { provider: 'formsubmit', url: 'https://formsubmit.co/ajax/' + encodeURIComponent(to), text: 'FormSubmit → delivers directly to ' + to + ' (one-time activation email on first message)' };
+      return { provider: null, text: 'The enquiry form will open when you add an email or a Formspree endpoint' };
+    }
+
+    function renderSeoView() {
+      const view = $('#view');
+      view.innerHTML = `
+    <div class="card space-y-4">
+      <div><p class="card-title">SEO &amp; branding</p><p class="card-sub">Browser tab title, search-result description and the logo text in the nav.</p></div>
+      <label class="block"><span class="label">BROWSER / SITE TITLE</span><input id="s-title" class="input" maxlength="120" /></label>
+      <label class="block"><span class="label">META DESCRIPTION</span><textarea id="s-desc" class="input" rows="3" maxlength="300"></textarea></label>
+      <label class="flex items-start gap-3"><input type="checkbox" id="show-samples"><span>Show the original sample films on the public site<span class="hint">Demo entries stay in this editor. Replacing a sample URL with your own film makes that film public.</span></span></label>
+      <label class="block"><span class="label">LOGO TEXT</span><input id="s-logo" class="input" maxlength="40" /></label>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Social links (footer)</p><p class="card-sub">Add your profile URLs to show them in the footer. The email link uses the contact address below.</p></div>
+      <label class="block"><span class="label">YOUTUBE URL</span><input id="soc-youtube" class="input" placeholder="https://youtube.com/@yourchannel" maxlength="200" /></label>
+      <label class="block"><span class="label">INSTAGRAM URL</span><input id="soc-instagram" class="input" placeholder="https://instagram.com/yourname" maxlength="200" /></label>
+      <label class="block"><span class="label">LINKEDIN URL</span><input id="soc-linkedin" class="input" placeholder="https://linkedin.com/in/yourname" maxlength="200" /></label>
+      <div class="savebar"><button id="soc-save" class="btn btn-primary" type="button">Save social links</button></div>
+    </div>
+
+    <div class="card mt-6 space-y-4">
+      <div><p class="card-title">Contact form delivery</p><p class="card-sub">Messages from the contact form go straight to your inbox — no mail client, no backend. No messages are stored on the site.</p></div>
+      <label class="block"><span class="label">CONTACT EMAIL</span><input id="s-email" class="input" type="email" placeholder="you@gmail.com" maxlength="120" />
+        <span class="hint">Shown on the site. Also the recipient when no Formspree endpoint is set (FormSubmit mode).</span></label>
+      <label class="block"><span class="label">FORMSPREE ENDPOINT (recommended, optional)</span><input id="s-endpoint" class="input" placeholder="https://formspree.io/f/abcdwxyz" maxlength="120" />
+        <span class="hint">Create a free form at formspree.io, set its email to your Gmail, and paste the form URL (or just the ID). Formspree routes by the form, so the recipient is whatever Gmail is registered there — this field can't change it.</span></label>
+      <div class="rounded-md border border-white/10 px-4 py-3"><p class="label mb-1">ACTIVE ROUTE</p><p id="s-route" class="text-sm"></p></div>
+      <div class="savebar flex flex-wrap gap-3">
+        <button id="s-save" class="btn btn-primary" type="button">Save settings</button>
+        <button id="s-test" class="btn" type="button">Send test message</button>
+      </div>
+      <p class="hint">After saving, click “Publish changes” — the server confirms when the site is live for everyone.</p>
+    </div>`;
+
+      const q = sel => view.querySelector(sel);
+      const S = STATE.seo; q('#show-samples').checked = S.showSampleFootage !== false;
+      ['instagram', 'youtube', 'linkedin'].forEach(k => { q('#soc-' + k).value = (STATE.social || {})[k] || ''; });
+      q('#soc-save').addEventListener('click', () => {
+        const fix = v => { v = v.trim(); return v && !/^https?:\/\//i.test(v) ? 'https://' + v.replace(/^\/+/, '') : v; };
+        const next = {};
+        for (const k of ['instagram', 'youtube', 'linkedin']) {
+          const v = fix(q('#soc-' + k).value);
+          if (v && /^(javascript|data|vbscript):/i.test(v)) return toast('That ' + k + ' link isn\'t valid.');
+          try { if (v) new URL(v); } catch (_) { return toast('That ' + k + ' link doesn\'t look like a web address.'); }
+          next[k] = v; q('#soc-' + k).value = v;
+        }
+        STATE.social = next; persist(); toast('Social links saved. Publish changes to update the site.');
+      });
+      q('#s-title').value = S.siteTitle; q('#s-desc').value = S.metaDescription; q('#s-logo').value = S.logoText;
+      q('#s-email').value = S.email; q('#s-endpoint').value = S.formspreeEndpoint;
+      const draft = () => ({ email: q('#s-email').value.trim(), formspreeEndpoint: normalizeEndpoint(q('#s-endpoint').value) });
+      const paintRoute = () => { q('#s-route').textContent = describeRoute(draft()).text; };
+      q('#s-email').addEventListener('input', paintRoute); q('#s-endpoint').addEventListener('input', paintRoute); paintRoute();
+
+      q('#s-save').addEventListener('click', () => {
+        const d = draft();
+        if (d.email && !EMAIL_RE.test(d.email)) return toast('That contact email doesn\'t look valid.');
+        if (d.formspreeEndpoint && !isFormspreeUrl(d.formspreeEndpoint)) return toast('Endpoint must look like https://formspree.io/f/abcdwxyz');
+        STATE.seo = { ...STATE.seo, showSampleFootage: q('#show-samples').checked, siteTitle: q('#s-title').value.trim(), metaDescription: q('#s-desc').value.trim(), logoText: q('#s-logo').value.trim(), email: d.email, formspreeEndpoint: d.formspreeEndpoint };
+        persist(); q('#s-endpoint').value = d.formspreeEndpoint; paintRoute(); toast('Settings saved.');
+      });
+
+      q('#s-test').addEventListener('click', async () => {
+        const d = draft(), route = describeRoute(d);
+        if (!route.provider) return toast('Set an email or Formspree endpoint first.');
+        const btn = q('#s-test'); btn.disabled = true;
+        const payload = { name: 'Admin test', email: d.email || 'test@example.com', message: 'Test message from the Admin Panel — your contact form is wired up.', wants_to_work: 'Yes', _subject: 'Portfolio contact form — test' };
+        if (route.provider === 'formsubmit') { payload._template = 'table'; payload._captcha = 'false'; }
+        try {
+          const res = await fetch(route.url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(payload) });
+          let data = {}; try { data = await res.json(); } catch (_) { }
+          if (!res.ok || (data.errors && data.errors.length) || data.success === 'false') throw new Error((data.errors && data.errors[0] && data.errors[0].message) || data.message || 'HTTP ' + res.status);
+          toast(route.provider === 'formsubmit' ? 'Sent — check Gmail for the FormSubmit activation email (also spam).' : 'Test sent — check your inbox.');
+        } catch (err) { console.error(err); toast('Test failed: ' + err.message); }
+        btn.disabled = false;
+      });
+    }
+
+    function exportedData(data) {
+      const header = '// Portfolio content — exported from the site editor.\n';
+      const oldNames = { HERO: 'hero', ABOUT: 'about', FILTERS: 'filters', CATEGORY_LABEL: 'categoryLabel', PORTFOLIO: 'portfolio' };
+      const aliases = Object.entries(oldNames).map(([name, key]) => 'const ' + name + ' = window.SITE_DATA.' + key + ';');
+      const output = clone(data); delete output.publishedAt;
+      return header + 'window.SITE_DATA = ' + JSON.stringify(output, null, 2) + ';\n' + aliases.join('\n') + '\n';
+    }
+
+    $('#downloadData').addEventListener('click', () => {
+      const url = URL.createObjectURL(new Blob([exportedData(STATE)], { type: 'text/javascript' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'data.js'; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    });
+
+    function savePreview(data) {
+      try { localStorage.setItem(PUBLISHED_KEY, JSON.stringify(data)); return true; }
+      catch { return false; }
+    }
+    $('#exportBtn').addEventListener('click', async () => {
+      if (!Portfolio.valid(seed)) { statusLine('Restore data.js before publishing. You can still download this draft.'); return; }
+      const snapshot = clone(STATE);
+      const btn = $('#exportBtn'); btn.disabled = true; btn.textContent = 'Publishing…';
+      let previewSaved = false;
+      function localPreview(reason) {
+        snapshot.publishedAt = Date.now();
+        previewSaved = savePreview(snapshot);
+        statusLine(reason + (previewSaved ? ' Your preview is saved in this browser. ' : ' ') + 'For a static copy, download data.js and replace the file beside index.html.');
+      }
+      try {
+        if (location.protocol === 'file:') { localPreview('Opened from a local file.'); return; }
+        const res = await fetch('/api/publish', { method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-Portfolio-Version': String(baseVersion) }, body: JSON.stringify(snapshot) });
+        const body = await res.json().catch(() => ({}));
+        if (res.ok && body.ok) {
+          baseVersion = Number(body.publishedAt); snapshot.publishedAt = baseVersion; STATE.publishedAt = baseVersion;
+          savePreview(snapshot); statusLine('Published. Your changes are live for all visitors.');
+        } else if (res.status === 409) statusLine('A newer version is live. Download your draft if needed. Reload site data and reapply your changes.');
+        else if (res.status === 401) statusLine('The server requires an admin login. Reload this page, sign in, then publish.');
+        else if (res.status === 413) statusLine('The metadata is too large. Use media links instead of embedded file data.');
+        else if ([404, 405, 501, 503].includes(res.status) || (res.ok && !body.ok)) localPreview('Live publishing is unavailable on this host.');
+        else statusLine('The server could not confirm publication. Your draft is still in the editor.');
+      } catch { localPreview('The publishing server could not be reached.'); }
+      finally { persist(); btn.disabled = false; btn.textContent = 'Publish changes'; }
+    });
+    $('#resetBtn').addEventListener('click', () => {
+      if (!confirm('Discard this browser draft and reload the site data?')) return;
+      try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(BASE_KEY); localStorage.removeItem(PUBLISHED_KEY); } catch {}
+      location.reload();
+    });
+    for (const modal of document.querySelectorAll('.modal-overlay')) {
+      let trigger = null;
+      const observer = new MutationObserver(() => {
+        if (modal.classList.contains('open')) {
+          trigger = document.activeElement;
+          modal.querySelector('input:not([type="hidden"])')?.focus();
+        } else if (trigger?.isConnected) { trigger.focus(); trigger = null; }
+      });
+      observer.observe(modal, { attributes: true, attributeFilter: ['aria-hidden'] });
+      modal.addEventListener('keydown', e => {
+        if (e.key !== 'Tab') return;
+        const fields = Array.from(modal.querySelectorAll('button:not(:disabled), input:not([type="hidden"]), textarea, select'));
+        const first = fields[0], last = fields[fields.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      });
+    }
+
+    /* ---------------- boot ---------------- */
+    goTo('hero');
+    if (!Portfolio.valid(seed)) statusLine('The site data file is missing. Restore data.js before publishing.');
+    else if (savedDraft && Number(seed.publishedAt || 0) > baseVersion) statusLine('A newer version is live. Download your draft if needed, then reload site data before publishing.');
+  </script>
+</body>
+
+</html>

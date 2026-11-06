@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff3cc">
+  <meta name="description" content="Osman Onur Tekin is an AI video producer and filmmaker in Istanbul. Watch selected commercials, short films and vertical cuts.">
+  <title>Osman Onur Tekin — Film &amp; AI production</title>
+  <script>
+    // Keep packaged assets relative, including on the legacy Vercel routes with a trailing slash.
+    if (/\/(about|contact|imagery|commercial|short-movies|short-form-video|work|portfolio)\/$/.test(location.pathname)) {
+      const base = document.createElement('base'); base.href = '../'; document.head.append(base);
+    }
+  </script>
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/site.css">
+  <script defer src="data.js"></script>
+  <script defer src="assets/core.js"></script>
+  <script defer src="assets/site.js"></script>
+</head>
+<body>
+  <a href="#main" class="skip" id="skip">Skip to content</a>
+  <header class="mast wrap">
+    <a href="#home" class="signature" aria-label="Portfolio home">
+      <svg aria-hidden="true" class="mark" viewBox="0 0 48 40" fill="none"><path d="M24 20C20 9 16 4 11 4a8 8 0 0 0-1 16c5 0 9-1 14 0Zm0 0c4 11 8 16 13 16a8 8 0 0 0 1-16c-5 0-9 1-14 0Zm0 0C28 9 32 4 37 4a8 8 0 0 1 1 16c-5 0-9-1-14 0Zm0 0c-4 11-8 16-13 16a8 8 0 0 1-1-16c5 0 9 1 14 0Z" stroke="currentColor" stroke-width="3.8" stroke-linejoin="round"/></svg>
+      <span class="brand-lock"><span data-brand>Osman Tekin</span><small>AI video &amp; filmmaking</small></span>
+    </a>
+    <span class="role">AI video producer<br>&amp; filmmaker</span>
+    <nav aria-label="Main navigation" class="primary">
+      <a href="#work" data-nav="work">Work</a><a href="#about" data-nav="about">About</a><a class="contact-link" href="#contact" data-nav="contact">Contact <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1"></main>
+  <noscript><p class="wrap">Please enable JavaScript to explore the films and open the player.</p></noscript>
+  <footer class="footer">
+    <div class="wrap footer-inner"><div class="foot-bio"><a href="#home" data-brand>Osman Tekin</a><span>AI video production &amp; filmmaking · Istanbul</span></div><nav id="social" aria-label="Contact and social profiles"></nav><a class="top-link" href="#top" id="back-top">Back to top ↑</a></div>
+  </footer>
+  <dialog id="player" aria-labelledby="film-title">
+    <div class="player-inner">
+      <div class="player-bar"><span class="micro" id="film-label">Screening room</span><button id="player-close" type="button">Close <span aria-hidden="true">×</span></button></div>
+      <div id="film-screen" class="film-screen"></div>
+      <div class="film-copy"><div><p class="micro" id="film-type"></p><h2 id="film-title"></h2></div><div><p id="film-desc"></p><p id="film-tools" class="film-tools"></p><a id="film-source" target="_blank" rel="noopener noreferrer" hidden>Open original video ↗</a></div></div>
+    </div>
+  </dialog>
+</body>
+</html>

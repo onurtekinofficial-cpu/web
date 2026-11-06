@@ -1,0 +1,50 @@
+OSMAN TEKİN  /  AI VİDEO PRODÜKSİYONU VE FİLM
+────────────────────────────────────────────
+
+SİTEYİ AÇ
+
+ZIP’i bir klasöre çıkar ve index.html dosyasını aç. assets klasörü ile data.js aynı dizinde kalmalı. Ironvault filmi, geniş banner kurgusu ve filmin kareleri paketin içinde. Bunları izlemek için internet gerekmez.
+
+İLK VİDEONU EKLE
+
+1. admin.html dosyasını aç. Soldan “Homepage banners”ı seç.
+2. “+ Add hero banner”a bas. Başlığı ve tam filmin adresini gir. Vimeo, YouTube, doğrudan MP4/WebM bağlantısı veya assets/filmim.mp4 gibi göreli bir dosya yolu kullanabilirsin. Yerel bir video kullanıyorsan dosyayı önce assets klasörüne kopyala.
+3. İstersen kapak görseli ve ayrı bir geniş önizleme klibi ekle. Dikey bir tam film için “Vertical — 9:16” seç. Masaüstü geniş klibi, telefon dikey filmi kullanır. “Play full film” her iki ekranda da tam filmi açar.
+4. “Save banner”a bas. Yeni filmin açılışta görünmesi için ↑ ile görünür filmlerin ilk sırasına taşı. Birden çok görünür film olduğunda ileri/geri düğmeleri kendiliğinden çıkar.
+
+DEĞİŞİKLİKLERİ GÖSTER
+
+Bilgisayarda en kolay yöntem — Panelden “Download data.js”e bas. İndirilen dosyayı site klasöründeki data.js ile değiştir, index.html sayfasını yenile. Tarayıcı dosyayı data (1).js diye adlandırırsa adını data.js yap.
+
+İki sekmede anlık önizleme için — Python yüklüyse, site klasöründe terminal açıp şu komutu çalıştır:
+    python3 -m http.server 8000
+Windows’ta gerekirse:
+    py -m http.server 8000
+Tarayıcıda http://localhost:8000/admin.html ve http://localhost:8000/ adreslerini aç. Panelde “Publish changes”e basınca aynı tarayıcıdaki önizleme yenilenir. Paylaşmak veya başka bilgisayara taşımak için data.js’i dışa aktar.
+
+CANLI VERCEL SİTESİ
+
+Paket içeriğini mevcut Vercel projenin köküne koy. index.html, admin.html, data.js, middleware.js, vercel.json ve assets aynı seviyede olmalı. Statik proje için framework seçimi “Other”; bu dosyalar derleme adımı gerektirmez.
+
+Mevcut yayındaki /data.js, daha önce panelden Redis’e kaydedilmiş içeriği öncelikli getirir. Yeni dosyaları yüklediğinde eski yayınını görmen bu yüzdendir. Yeni Ironvault açılışını kullanmak istersen panelden başlığı “Ironvault”, video yolunu assets/ironvault.mp4, geniş önizleme yolunu assets/ironvault-preview.mp4, kapak yolunu assets/ironvault-cover.jpg, formatı 9:16 gir ve ilk sıraya taşı.
+
+Vercel proje ayarlarında ADMIN_USER ile ADMIN_PASSWORD tanımlı olmalı. Yayın kaydı için KV_REST_API_URL ve KV_REST_API_TOKEN veya UPSTASH_REDIS_REST_URL ve UPSTASH_REDIS_REST_TOKEN kullanılır. Mevcut bağlantının değerlerini koru. Ortam değişkenlerini değiştirdiysen projeyi yeniden deploy et.
+
+Kendi alan adında /admin.html adresinden oturum aç. “Publish changes”ten sonra “Published. Your changes are live for all visitors.” bildirimi canlı kaydı doğrular. Yalnızca tarayıcı önizlemesine kaydedildiği yazıyorsa değişiklikleri herkesin görmesi için Vercel bağlantısını kur veya statik dağıtımda dışa aktardığın data.js dosyasını kullan. Statik önizleme sunucusu admin oturumunu uygulamaz.
+
+PORTFOLYO VE İLETİŞİM
+
+• Bu pakette ziyaretçiye açılan film, bodybuild.mov dosyasının kapanışında adı görünen Ironvault reklamıdır. Masaüstü banner’ı 7,5 saniyelik sessiz bir film şeridi, tam film yaklaşık 35 saniyedir. “Inside the cut” altındaki üç kare filmde ilgili ana gider. Arşive başka bir gerçek proje eklediğinde bu alan seçilmiş filmlere dönüşür.
+• Homepage banners, Commercial, Short Movies, Short-form Video ve Portfolio ayrı listelerdir. Banner eklemek arşive aynı filmi eklemez. Kategoriye eklenen işler Work altında görünür. Stills’e görsel eklediğinde fotoğraf galerisi de Work altına gelir.
+• Gönderdiğin eski şablondaki örnek filmler panelde saklı. URL’yi kendi videonla değiştirdiğinde film görünür olur. Harici demo bağlantılarını da göstermek istersen SEO & Settings → “Show the original sample films on the public site” seçeneğini işaretle, “Save settings” ve ardından “Publish changes”e bas. Harici oynatım, sağlayıcının erişim ve paylaşım ayarlarına bağlıdır.
+• İletişim adresi kaynak dosyalarda boştu. Alıcıyı SEO & Settings → Contact email veya Formspree endpoint alanından tanımla, kaydet ve yayımla. İlk FormSubmit kullanımında alıcıya gelen etkinleştirme iletisini onayla. Sosyal profil adreslerini aynı panelde ekleyebilirsin.
+
+TASARIM REFERANSLARI
+
+AI25 Studio — Açılış filmi, altındaki proje seçkisi ve işten tam filme geçiş mantığı.
+https://ai25.studio/
+
+Mario Monteiro — Portfolyo arşivinde kategoriyle gezinme.
+https://mariomonteiro.tv/work
+
+Bu portfolyoya özel görsel dil krem ve koyu mürdüm üzerine kuruldu. Film görüntüleri kendi renkleriyle oynar.
